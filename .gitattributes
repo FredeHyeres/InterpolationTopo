@@ -1,0 +1,8 @@
+# L'import VBA MicroStation exige des fins de ligne Windows (CRLF)
+# sinon les .cls sont importes comme modules standard
+*.bas text eol=crlf
+*.cls text eol=crlf
+*.frm text eol=crlf
+*.html text
+*.dgn binary
+*.mvba binary
