@@ -29,18 +29,19 @@ imprimer les altitudes sans les symboles de points).
 1. Télécharger le dépôt (**Code > Download ZIP**) et le décompresser
 2. Double-cliquer sur **`install.cmd`**
 
-Le script copie le projet VBA (`InterpolationTopo.mvba`) dans le workspace, installe
-la boîte à outils (`MesMacros.dgnlib`) et configure le chargement automatique au
-démarrage de MicroStation. Relançable sans risque. Au prochain démarrage de
-MicroStation, le bouton et le key-in sont opérationnels.
+Le script installe la macro dans le **Default MVBA** (chargé automatiquement par
+MicroStation, aucun autoload à configurer) et la boîte à outils
+(`MesMacros.dgnlib`). Relançable sans risque : il ne remplace **jamais** un
+`Default.mvba` existant (pour ne pas écraser vos propres macros — dans ce cas,
+importer les fichiers de `src/` manuellement, voir ci-dessous).
 
 > Le script suppose le workspace dans `Documents\MicroStV8i\WorkSpace`
 > (sinon, modifier la variable `$Workspace` en tête de `install.ps1`).
 
 ## Installation manuelle
 
-1. MicroStation : *Utilitaires > Macros > Gestionnaire de projets VBA* > **Nouveau projet**
-   (MicroStation crée le fichier `.mvba`)
+1. MicroStation : *Utilitaires > Macros > Gestionnaire de projets VBA*, projet
+   **Default** (ou un nouveau projet dédié)
 2. Éditeur VBA (`Alt+F11`) : *Fichier > Importer un fichier* (`Ctrl+M`) et importer les
    4 fichiers du dossier [`src/`](src) :
 
@@ -61,14 +62,18 @@ MicroStation, le bouton et le key-in sont opérationnels.
 
 ## Lancement
 
-Key-in :
+Key-in (macro dans le Default MVBA) :
 
 ```
-vba run [InterpolationTopo]InterpolerPoint
+vba run InterpolerPoint
 ```
+
+(Si la macro est dans un `.mvba` dédié, utiliser
+`vba run [NomProjet.InterpolerPoint]`.)
 
 Le key-in peut être associé à une **touche de fonction** (*Utilitaires > Touches de
-fonction*) ou à un **bouton de boîte à outils** (*Espace de travail > Personnaliser*).
+fonction*) ou à un **bouton de boîte à outils** — la ToolBox `MesMacros.dgnlib`
+installée par le script contient déjà ce bouton.
 
 📖 Guide détaillé pas à pas (installation, utilisation, touche de fonction, boîte à
 outils, dépannage) : **[Mode_Emploi_InterpolationTopo.html](Mode_Emploi_InterpolationTopo.html)**

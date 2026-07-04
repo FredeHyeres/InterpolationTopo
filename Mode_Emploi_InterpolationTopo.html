@@ -195,11 +195,20 @@
 <section id="installation">
   <h2>2. Installation</h2>
 
-  <h3>2.1 Créer le projet VBA</h3>
+  <h3>2.0 Installation automatique (recommandée)</h3>
+  <p>Télécharger le dépôt GitHub (<em>Code &gt; Download ZIP</em>), décompresser,
+     puis double-cliquer sur <code>install.cmd</code> : la macro est installée dans le
+     <strong>Default MVBA</strong> (chargé d'office par MicroStation) et la ToolBox
+     <code>MesMacros.dgnlib</code> est copiée dans le workspace. Redémarrer MicroStation
+     et c'est prêt. Les étapes 2.1 et 2.2 ci-dessous ne servent que pour une
+     installation manuelle (ou si un <code>Default.mvba</code> existe déjà —
+     le script ne l'écrase jamais).</p>
+
+  <h3>2.1 Ouvrir le projet VBA (installation manuelle)</h3>
   <ol>
     <li>Dans MicroStation : <strong>Utilitaires &gt; Macros &gt; Gestionnaire de projets VBA</strong></li>
-    <li>Bouton <strong>Nouveau projet</strong> : nommez-le <code>InterpolationTopo</code>
-        (MicroStation crée le fichier <code>.mvba</code>)</li>
+    <li>Utilisez le projet <strong>Default</strong> (chargé automatiquement au démarrage,
+        key-in sans crochets) — ou créez un projet dédié si vous préférez</li>
     <li>Ouvrez l'éditeur VBA : <kbd>Alt</kbd>+<kbd>F11</kbd></li>
   </ol>
 
@@ -226,15 +235,11 @@
     convertissez-les en fins de ligne Windows (CRLF) puis réimportez.
   </div>
 
-  <h3>2.3 Chargement automatique (recommandé)</h3>
-  <p>Pour que la macro soit disponible sans manipulation :</p>
-  <ol>
-    <li>Placez le fichier <code>.mvba</code> dans un dossier scruté par MicroStation, par exemple
-        <code>...\Workspace\Standards\vba\</code> (ou tout dossier listé dans la variable
-        <code>MS_VBASEARCHDIRECTORIES</code>)</li>
-    <li>Facultatif — chargement au démarrage : <strong>Espace de travail &gt; Configuration</strong>,
-        variable <code>MS_VBAAUTOLOADPROJECTS</code>, valeur <code>InterpolationTopo</code></li>
-  </ol>
+  <h3>2.3 Chargement automatique</h3>
+  <p>Avec le <strong>Default MVBA</strong> : rien à faire, il est chargé d'office par
+     MicroStation à chaque démarrage.</p>
+  <p>Avec un <code>.mvba</code> dédié seulement : <em>Utilities &gt; Macros &gt;
+     Project Manager</em>, clic droit sur le projet &gt; <strong>Autoload</strong>.</p>
 </section>
 
 <!-- ==================== UTILISATION ==================== -->
@@ -296,16 +301,17 @@
   <h2>4. Lancement par key-in</h2>
   <ol>
     <li>Ouvrez la fenêtre de saisie : <strong>Utilitaires &gt; Saisie au clavier</strong> (Key-in)</li>
-    <li>Tapez :
-      <pre>vba run [InterpolationTopo]InterpolerPoint</pre>
+    <li>Tapez (macro dans le <strong>Default MVBA</strong>) :
+      <pre>vba run InterpolerPoint</pre>
+      (macro dans un <code>.mvba</code> dédié :
+      <code>vba run [NomProjet.InterpolerPoint]</code>)
     </li>
     <li>Validez par <kbd>Entrée</kbd></li>
   </ol>
   <div class="astuce">
     &#9989; La fenêtre Key-in garde l'historique : <kbd>&#8593;</kbd> puis <kbd>Entrée</kbd>
-    pour relancer la dernière commande. Si le projet n'est pas chargé, <code>vba run</code>
-    le charge automatiquement à condition qu'il soit dans un dossier de
-    <code>MS_VBASEARCHDIRECTORIES</code> (voir §&nbsp;2.3).
+    pour relancer la dernière commande. Le Default MVBA est chargé automatiquement
+    par MicroStation — aucune configuration nécessaire.
   </div>
 </section>
 
@@ -317,7 +323,7 @@
     <li>Sélectionnez une touche libre, par exemple <kbd>F6</kbd>
         (les combinaisons <kbd>Ctrl</kbd>/<kbd>Alt</kbd>/<kbd>Maj</kbd>+F sont aussi possibles)</li>
     <li>Dans le champ <strong>Action</strong>, saisissez :
-      <pre>vba run [InterpolationTopo]InterpolerPoint</pre>
+      <pre>vba run InterpolerPoint</pre>
     </li>
     <li>Cliquez <strong>OK</strong> — le menu de touches de fonction est enregistré
         (fichier <code>.mnu</code> du workspace)</li>
