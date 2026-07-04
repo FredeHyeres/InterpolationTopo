@@ -30,7 +30,7 @@ imprimer les altitudes sans les symboles de points).
    (ou **Code > Download ZIP**) et le décompresser
 2. Double-cliquer sur **`install.cmd`**
 
-Le script copie le projet **`InterpolationTopo.mvba`** dans le workspace
+Le script copie le projet **`Interpolation.mvba`** dans le workspace
 (`Standards\vba`), installe la boîte à outils (`MesMacros.dgnlib`) et configure
 son chargement automatique au démarrage dans le `.ucf` utilisateur. Il ne touche
 **jamais** au `Default.mvba` personnel. Relançable sans risque.
@@ -62,14 +62,11 @@ son chargement automatique au démarrage dans le `.ucf` utilisateur. Il ne touch
 
 ## Lancement
 
-Key-in (installation automatique — projet `InterpolationTopo.mvba`) :
+Key-in (le projet `Interpolation.mvba` étant chargé automatiquement) :
 
 ```
-vba run [InterpolationTopo.InterpolerPoint]
+vba run InterpolerPoint
 ```
-
-(Si vous avez importé les sources dans votre Default MVBA :
-`vba run InterpolerPoint`, sans crochets.)
 
 Le key-in peut être associé à une **touche de fonction** (*Utilitaires > Touches de
 fonction*) ou à un **bouton de boîte à outils** — la ToolBox `MesMacros.dgnlib`
