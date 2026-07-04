@@ -24,7 +24,20 @@ imprimer les altitudes sans les symboles de points).
 - Paramètres au lancement : diamètre et couleur du cercle, niveau choisi dans la
   **liste des calques existants** du fichier
 
-## Installation
+## Installation automatique (recommandée)
+
+1. Télécharger le dépôt (**Code > Download ZIP**) et le décompresser
+2. Double-cliquer sur **`install.cmd`**
+
+Le script copie le projet VBA (`InterpolationTopo.mvba`) dans le workspace, installe
+la boîte à outils (`MesMacros.dgnlib`) et configure le chargement automatique au
+démarrage de MicroStation. Relançable sans risque. Au prochain démarrage de
+MicroStation, le bouton et le key-in sont opérationnels.
+
+> Le script suppose le workspace dans `Documents\MicroStV8i\WorkSpace`
+> (sinon, modifier la variable `$Workspace` en tête de `install.ps1`).
+
+## Installation manuelle
 
 1. MicroStation : *Utilitaires > Macros > Gestionnaire de projets VBA* > **Nouveau projet**
    (MicroStation crée le fichier `.mvba`)
