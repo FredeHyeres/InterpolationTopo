@@ -30,11 +30,10 @@ imprimer les altitudes sans les symboles de points).
    (ou **Code > Download ZIP**) et le décompresser
 2. Double-cliquer sur **`install.cmd`**
 
-Le script installe la macro dans le **Default MVBA** (chargé automatiquement par
-MicroStation, aucun autoload à configurer) et la boîte à outils
-(`MesMacros.dgnlib`). Relançable sans risque : il ne remplace **jamais** un
-`Default.mvba` existant (pour ne pas écraser vos propres macros — dans ce cas,
-importer les fichiers de `src/` manuellement, voir ci-dessous).
+Le script copie le projet **`InterpolationTopo.mvba`** dans le workspace
+(`Standards\vba`), installe la boîte à outils (`MesMacros.dgnlib`) et configure
+son chargement automatique au démarrage dans le `.ucf` utilisateur. Il ne touche
+**jamais** au `Default.mvba` personnel. Relançable sans risque.
 
 > Le script suppose le workspace dans `Documents\MicroStV8i\WorkSpace`
 > (sinon, modifier la variable `$Workspace` en tête de `install.ps1`).
@@ -63,14 +62,14 @@ importer les fichiers de `src/` manuellement, voir ci-dessous).
 
 ## Lancement
 
-Key-in (macro dans le Default MVBA) :
+Key-in (installation automatique — projet `InterpolationTopo.mvba`) :
 
 ```
-vba run InterpolerPoint
+vba run [InterpolationTopo.InterpolerPoint]
 ```
 
-(Si la macro est dans un `.mvba` dédié, utiliser
-`vba run [NomProjet.InterpolerPoint]`.)
+(Si vous avez importé les sources dans votre Default MVBA :
+`vba run InterpolerPoint`, sans crochets.)
 
 Le key-in peut être associé à une **touche de fonction** (*Utilitaires > Touches de
 fonction*) ou à un **bouton de boîte à outils** — la ToolBox `MesMacros.dgnlib`

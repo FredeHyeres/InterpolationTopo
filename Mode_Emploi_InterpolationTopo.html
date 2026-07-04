@@ -202,12 +202,12 @@
      (ou <em>Code &gt; Download ZIP</em> sur
      <a href="https://github.com/FredeHyeres/InterpolationTopo">la page du dépôt</a>),
      décompresser,
-     puis double-cliquer sur <code>install.cmd</code> : la macro est installée dans le
-     <strong>Default MVBA</strong> (chargé d'office par MicroStation) et la ToolBox
-     <code>MesMacros.dgnlib</code> est copiée dans le workspace. Redémarrer MicroStation
-     et c'est prêt. Les étapes 2.1 et 2.2 ci-dessous ne servent que pour une
-     installation manuelle (ou si un <code>Default.mvba</code> existe déjà —
-     le script ne l'écrase jamais).</p>
+     puis double-cliquer sur <code>install.cmd</code> : le projet
+     <code>InterpolationTopo.mvba</code> est copié dans le workspace avec chargement
+     automatique au démarrage, et la ToolBox <code>MesMacros.dgnlib</code> est
+     installée. Le <code>Default.mvba</code> personnel n'est jamais touché.
+     Redémarrer MicroStation et c'est prêt. Les étapes 2.1 et 2.2 ci-dessous
+     ne servent que pour une installation manuelle.</p>
 
   <h3>2.1 Ouvrir le projet VBA (installation manuelle)</h3>
   <ol>
@@ -306,10 +306,10 @@
   <h2>4. Lancement par key-in</h2>
   <ol>
     <li>Ouvrez la fenêtre de saisie : <strong>Utilitaires &gt; Saisie au clavier</strong> (Key-in)</li>
-    <li>Tapez (macro dans le <strong>Default MVBA</strong>) :
-      <pre>vba run InterpolerPoint</pre>
-      (macro dans un <code>.mvba</code> dédié :
-      <code>vba run [NomProjet.InterpolerPoint]</code>)
+    <li>Tapez (installation automatique — projet <code>InterpolationTopo.mvba</code>) :
+      <pre>vba run [InterpolationTopo.InterpolerPoint]</pre>
+      (macro importée dans le <strong>Default MVBA</strong> :
+      <code>vba run InterpolerPoint</code>, sans crochets)
     </li>
     <li>Validez par <kbd>Entrée</kbd></li>
   </ol>

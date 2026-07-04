@@ -29,33 +29,21 @@ if (-not (Test-Path $Workspace)) {
 }
 Write-Host "Workspace : $Workspace"
 
-# --- 1. Installer le projet VBA (Default MVBA) -------------------------------
-# La macro vit dans le Default MVBA : charge automatiquement par MicroStation,
-# aucun autoload a configurer, key-in sans crochets (vba run InterpolerPoint).
-# Le Default.mvba est PERSONNEL et lie au projet MicroStation actif
-# (WorkSpace\Projects\<projet>\vba\Default.mvba) : on ne le copie que la ou il
-# n'existe pas encore, pour ne jamais ecraser les macros de l'utilisateur.
-$Mvba = Join-Path $Source "Default.mvba"
-$ProjectsDir = Join-Path $Workspace "Projects"
-if (-not (Test-Path $Mvba)) {
-    Write-Host "[!] Default.mvba absent du dossier d'installation :" -ForegroundColor Yellow
-    Write-Host "    importez les 4 fichiers de src\ dans votre Default MVBA (voir README)."
-} elseif (-not (Test-Path $ProjectsDir)) {
-    Write-Host "[!] Dossier Projects introuvable : macro non installee." -ForegroundColor Yellow
+# --- 1. Installer le projet VBA (InterpolationTopo.mvba dedie) ---------------
+# Le Default.mvba existe deja sur tout MicroStation et ne doit jamais etre
+# ecrase : la macro est donc livree dans son propre projet InterpolationTopo.mvba,
+# copie dans le workspace et charge automatiquement via le .ucf (etape 3).
+$Mvba = Join-Path $Source "InterpolationTopo.mvba"
+$VbaDir = Join-Path $Workspace "Standards\vba"
+$MvbaOk = $false
+if (Test-Path $Mvba) {
+    New-Item -ItemType Directory -Force $VbaDir | Out-Null
+    Copy-Item $Mvba $VbaDir -Force
+    $MvbaOk = $true
+    Write-Host "[OK] InterpolationTopo.mvba copie vers $VbaDir" -ForegroundColor Green
 } else {
-    foreach ($Proj in Get-ChildItem $ProjectsDir -Directory) {
-        $VbaDir = Join-Path $Proj.FullName "vba"
-        $Cible = Join-Path $VbaDir "Default.mvba"
-        if (Test-Path $Cible) {
-            Write-Host "[!] $($Proj.Name) : Default.mvba existe deja - non remplace." -ForegroundColor Yellow
-            Write-Host "    (pour ne pas ecraser vos macros existantes ; importez les"
-            Write-Host "     fichiers de src\ dans ce Default MVBA via Alt+F11 > Ctrl+M)"
-        } else {
-            New-Item -ItemType Directory -Force $VbaDir | Out-Null
-            Copy-Item $Mvba $Cible
-            Write-Host "[OK] Macro installee : $Cible" -ForegroundColor Green
-        }
-    }
+    Write-Host "[!] InterpolationTopo.mvba absent du dossier d'installation :" -ForegroundColor Yellow
+    Write-Host "    importez les 4 fichiers de src\ dans un projet VBA (voir README)."
 }
 
 # --- 2. Copier la boite a outils (.dgnlib) -----------------------------------
@@ -72,13 +60,39 @@ if (Test-Path $Dgnlib) {
     Write-Host "[!] MesMacros.dgnlib absente : pas de ToolBox installee." -ForegroundColor Yellow
 }
 
-# --- 3. Recapitulatif --------------------------------------------------------
-# Pas d'autoload a configurer : le Default MVBA est charge d'office.
+# --- 3. Chargement automatique du projet (fichier .ucf utilisateur) ----------
+if ($MvbaOk) {
+    $UsersDir = Join-Path $Workspace "Users"
+    $UcfFiles = @()
+    if (Test-Path $UsersDir) {
+        $UcfFiles = @(Get-ChildItem $UsersDir -Filter *.ucf -File)
+    }
+    if ($UcfFiles.Count -eq 0) {
+        Write-Host "[!] Aucun fichier .ucf dans $UsersDir : configurez l'autoload" -ForegroundColor Yellow
+        Write-Host "    dans MicroStation (Utilities > Macros > Project Manager >"
+        Write-Host "    clic droit sur InterpolationTopo > Autoload)."
+    } else {
+        foreach ($UcfFile in $UcfFiles) {
+            $Contenu = Get-Content $UcfFile.FullName -Raw
+            if ($Contenu -match "MS_VBAAUTOLOADPROJECTS.*InterpolationTopo") {
+                Write-Host "[OK] Autoload deja configure dans $($UcfFile.Name)" -ForegroundColor Green
+            } else {
+                $Lignes = "`r`n# --- Interpolation Topo (ajoute par install.ps1) ---`r`n" + `
+                          "MS_VBASEARCHDIRECTORIES < $VbaDir\`r`n" + `
+                          "MS_VBAAUTOLOADPROJECTS > InterpolationTopo.mvba`r`n"
+                Add-Content -Path $UcfFile.FullName -Value $Lignes -Encoding ASCII
+                Write-Host "[OK] Autoload configure dans $($UcfFile.Name)" -ForegroundColor Green
+            }
+        }
+    }
+}
+
+# --- 4. Recapitulatif --------------------------------------------------------
 Write-Host ""
 Write-Host "=== Installation terminee ===" -ForegroundColor Cyan
 Write-Host "1. (Re)demarrez MicroStation"
 Write-Host "2. La ToolBox : Workspace > Customize doit lister MesMacros.dgnlib ;"
 Write-Host "   ouvrez la ToolBox via clic droit > Open si elle n'apparait pas."
-Write-Host "3. Test key-in (F9) : vba run InterpolerPoint"
+Write-Host "3. Test key-in (F9) : vba run [InterpolationTopo.InterpolerPoint]"
 Write-Host ""
 Read-Host "Appuyez sur Entree pour fermer"
