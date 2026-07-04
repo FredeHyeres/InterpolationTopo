@@ -68,7 +68,8 @@ outils, dépannage) : **[Mode_Emploi_InterpolationTopo.html](Mode_Emploi_Interpo
 3. Cliquer près du texte altitude du **point 2** → pente et gisement s'affichent
 4. Déplacer le curseur : la position est projetée sur la droite P1–P2, l'altitude
    interpolée s'affiche en dynamique
-5. **Data** = créer le point (répétable) · **Reset** = terminer
+5. **Data** = créer le point (répétable) · **Reset** = nouvelle sélection de points
+   (retour à l'étape 2, mêmes paramètres) · **Reset** au choix du point 1 = quitter
 
 ## Notes de compatibilité
 

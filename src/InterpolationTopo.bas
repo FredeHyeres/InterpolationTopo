@@ -218,7 +218,7 @@ Sub CreateTopoPoint(oProj As Point3d, dZInterp As Double)
     ActiveModelReference.AddElement oCercle
 
     ShowPrompt "Point cree Z=" & sAltitude & _
-               "  |  Data = autre point sur la meme droite, Reset = terminer"
+               "  |  Data = autre point sur la meme droite, Reset = nouvelle selection"
 End Sub
 
 '------------------------------------------------------------------------------

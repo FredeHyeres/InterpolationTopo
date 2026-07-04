@@ -17,7 +17,7 @@ Implements IPrimitiveCommandEvents
 
 Private Sub IPrimitiveCommandEvents_Start()
     ShowCommand "Interpolation Topo"
-    ShowPrompt InfoSegment() & "  |  Deplacez le curseur : Data=creer  Reset=terminer"
+    ShowPrompt InfoSegment() & "  |  Deplacez le curseur : Data=creer  Reset=nouv. selection"
     ' Indispensable : active l'evenement Dynamics (apercu provisoire)
     CommandState.StartDynamics
 End Sub
@@ -65,7 +65,7 @@ Private Sub IPrimitiveCommandEvents_Dynamics(Point As Point3d, ByVal View As Vie
                    "  ATTENTION : hors segment P1-P2 (extrapolation)"
     Else
         ShowPrompt "Z=" & sAlt & "  t=" & Format$(dT, "0.000") & "  " & InfoSegment() & _
-                   "  (Data=creer  Reset=terminer)"
+                   "  (Data=creer  Reset=nouv. selection)"
     End If
 End Sub
 
@@ -95,9 +95,11 @@ End Sub
 Private Sub IPrimitiveCommandEvents_Keyin(ByVal Keyin As String)
 End Sub
 
+' Reset = nouvelle selection de points (memes parametres de cercle).
+' Un second Reset, une fois revenu a la selection de P1, quitte la commande.
 Private Sub IPrimitiveCommandEvents_Reset()
-    ShowPrompt "Interpolation Topo : termine."
-    CommandState.StartDefaultCommand
+    ShowPrompt "Nouvelle selection : cliquez pres du texte altitude du POINT 1  (Reset=quitter)"
+    CommandState.StartPrimitive New CSelectP1
 End Sub
 
 Private Sub IPrimitiveCommandEvents_Cleanup()

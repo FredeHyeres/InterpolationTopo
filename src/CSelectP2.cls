@@ -43,7 +43,7 @@ Private Sub IPrimitiveCommandEvents_DataPoint(Point As Point3d, ByVal View As Vi
     If nDec > g_nDecimals Then g_nDecimals = nDec
 
     ShowPrompt "P2 = " & oText.Text & "  |  " & InfoSegment() & _
-               "  ->  deplacez le curseur. Data=creer  Reset=terminer"
+               "  ->  deplacez le curseur. Data=creer  Reset=nouv. selection"
     CommandState.StartPrimitive New CPlacerPoint
 End Sub
 
@@ -54,9 +54,10 @@ End Sub
 Private Sub IPrimitiveCommandEvents_Keyin(ByVal Keyin As String)
 End Sub
 
+' Reset pendant le choix de P2 = revenir au choix de P1
 Private Sub IPrimitiveCommandEvents_Reset()
-    ShowPrompt "Interpolation Topo : annule."
-    CommandState.StartDefaultCommand
+    ShowPrompt "Retour au POINT 1 : cliquez pres du texte altitude  (Reset=quitter)"
+    CommandState.StartPrimitive New CSelectP1
 End Sub
 
 Private Sub IPrimitiveCommandEvents_Cleanup()

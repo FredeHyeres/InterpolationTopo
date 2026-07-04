@@ -16,7 +16,7 @@ Implements IPrimitiveCommandEvents
 
 Private Sub IPrimitiveCommandEvents_Start()
     ShowCommand "Interpolation Topo"
-    ShowPrompt "Cliquez pres du texte altitude du POINT 1"
+    ShowPrompt "Cliquez pres du texte altitude du POINT 1  (Reset=quitter)"
 End Sub
 
 Private Sub IPrimitiveCommandEvents_DataPoint(Point As Point3d, ByVal View As View)
@@ -50,8 +50,9 @@ End Sub
 Private Sub IPrimitiveCommandEvents_Keyin(ByVal Keyin As String)
 End Sub
 
+' Reset au choix de P1 = sortie de la commande
 Private Sub IPrimitiveCommandEvents_Reset()
-    ShowPrompt "Interpolation Topo : annule."
+    ShowPrompt "Interpolation Topo : termine."
     CommandState.StartDefaultCommand
 End Sub
 
