@@ -26,7 +26,8 @@ imprimer les altitudes sans les symboles de points).
 
 ## Installation automatique (recommandée)
 
-1. Télécharger le dépôt (**Code > Download ZIP**) et le décompresser
+1. Télécharger le dépôt : [**⬇ télécharger le ZIP**](https://github.com/FredeHyeres/InterpolationTopo/archive/refs/heads/main.zip)
+   (ou **Code > Download ZIP**) et le décompresser
 2. Double-cliquer sur **`install.cmd`**
 
 Le script installe la macro dans le **Default MVBA** (chargé automatiquement par
