@@ -328,35 +328,90 @@
 <!-- ==================== BOITE A OUTILS ==================== -->
 <section id="boite">
   <h2>6. Bouton dans une boîte à outils personnalisée</h2>
-  <p>La méthode la plus confortable pour un usage quotidien. Les personnalisations
-     sont enregistrées dans une bibliothèque DGN (<code>.dgnlib</code>) et peuvent
-     donc être partagées entre plusieurs postes.</p>
+  <p>La méthode la plus confortable pour un usage quotidien.
+     <em>Procédure testée et validée sur V8i SS3 (08.11.09.578).</em></p>
+
+  <div class="attention">
+    &#9888;&#65039; <strong>Piège n°1 :</strong> dans <em>Workspace &gt; Customize</em>,
+    si les menus sont grisés et qu'aucune création n'est possible, c'est qu'il manque un
+    fichier <code>.dgnlib</code> valide comme cible des personnalisations.<br>
+    <strong>Piège n°2 :</strong> un <code>.dgnlib</code> créé via <em>File &gt; New</em>
+    (ou en renommant l'extension d'un <code>.dgn</code>) n'est <u>pas reconnu</u> —
+    sa structure interne est incorrecte. Il faut <strong>copier un .dgnlib existant</strong>.
+  </div>
+
+  <h3>Étape 1 — Créer un vrai fichier .dgnlib</h3>
   <ol>
-    <li>Menu <strong>Espace de travail &gt; Personnaliser</strong> (Workspace &gt; Customize)</li>
-    <li>Onglet <strong>Outils</strong>. Si demandé, acceptez la création de la
-        bibliothèque <code>Personal.dgnlib</code></li>
-    <li>Dans l'arborescence, clic droit &gt; <strong>Nouvelle boîte à outils</strong> :
-        nommez-la par exemple <code>Topo</code></li>
-    <li>Clic droit sur la boîte <code>Topo</code> &gt; <strong>Nouvel outil</strong> :
-        nommez-le <code>Interpolation altitude</code></li>
-    <li>Dans les propriétés de l'outil :
+    <li>Aller dans le dossier scanné automatiquement par MicroStation :<br>
+        <code>C:\Users\[VotreNom]\Documents\MicroStV8i\WorkSpace\System\GUI</code></li>
+    <li>Copier le fichier <code>VectorIcon.dgnlib</code> (structure interne valide)</li>
+    <li>Renommer la copie en <code>MesMacros.dgnlib</code></li>
+    <li>Redémarrer MicroStation</li>
+  </ol>
+
+  <h3>Étape 2 — Vérifier que le fichier est reconnu</h3>
+  <ol>
+    <li><strong>Workspace &gt; Customize</strong> : <code>MesMacros.dgnlib</code> doit
+        apparaître dans la liste des librairies</li>
+    <li>Sinon, vérifier qu'il est bien dans <code>System\GUI</code></li>
+  </ol>
+
+  <h3>Étape 3 — Ouvrir le .dgnlib pour le rendre éditable</h3>
+  <ol>
+    <li><strong>File &gt; Open</strong>, changer le filtre de type pour afficher les
+        <code>.dgnlib</code></li>
+    <li>Ouvrir <code>MesMacros.dgnlib</code> comme fichier actif</li>
+    <li>Retourner dans <strong>Workspace &gt; Customize</strong> :
+        les menus sont maintenant déverrouillés</li>
+  </ol>
+
+  <h3>Étape 4 — Créer la ToolBox</h3>
+  <ol>
+    <li>Sélectionner <code>MesMacros.dgnlib</code> comme fichier cible
+        (menu déroulant en haut)</li>
+    <li>Onglet <strong>Tool Boxes</strong> &gt; clic droit dans la liste &gt;
+        <strong>New Tool Box</strong>, nommer (ex. <code>MesMacros</code>)</li>
+  </ol>
+
+  <h3>Étape 5 — Créer le bouton</h3>
+  <ol>
+    <li>Sélectionner la ToolBox, panneau de droite &gt; clic droit &gt;
+        <strong>New Tool</strong></li>
+    <li>Remplir :
       <table>
         <tr><th>Propriété</th><th>Valeur</th></tr>
-        <tr><td>Key-in</td><td><code>vba run [InterpolationTopo]InterpolerPoint</code></td></tr>
-        <tr><td>Infobulle (Balloon)</td><td>Interpolation d'altitude entre 2 points topo</td></tr>
-        <tr><td>Icône</td><td>à dessiner dans l'éditeur d'icônes intégré, ou réutiliser une icône existante</td></tr>
+        <tr><td>Key-in</td><td><code>vba run InterpolerPoint</code> <small>(macro dans le Default MVBA)</small></td></tr>
+        <tr><td>Balloon text</td><td>Interpoler un point</td></tr>
+        <tr><td>Icon</td><td>laisser vide ou choisir une icône</td></tr>
       </table>
     </li>
-    <li>Fermez la boîte de dialogue Personnaliser</li>
-    <li>Affichez la boîte à outils : <strong>Outils &gt; Boîtes à outils</strong>
-        (ou clic droit sur une barre d'outils existante), cochez <code>Topo</code>
-        et ancrez-la où vous voulez</li>
   </ol>
-  <div class="astuce">
-    &#9989; <strong>Partage :</strong> placez la <code>.dgnlib</code> dans le dossier
-    standards du workspace (variable <code>MS_DGNLIBLIST</code>) pour que la boîte à outils
-    soit disponible sur tous les postes qui utilisent ce workspace.
+  <div class="attention">
+    &#9888;&#65039; <strong>Syntaxe du key-in selon l'emplacement de la macro :</strong>
+    <ul>
+      <li>Macro dans le <strong>Default MVBA</strong> :
+          <code>vba run InterpolerPoint</code> (sans crochets, sans nom de module)</li>
+      <li>Macro dans un <strong>.mvba dédié</strong> (ex. InterpolationTopo.mvba) :
+          <code>vba run [InterpolationTopo.InterpolerPoint]</code></li>
+    </ul>
+    En cas de doute, tester d'abord la commande via <strong>Utilities &gt; Key-in</strong> (F9)
+    avant de l'assigner au bouton.
   </div>
+
+  <h3>Étape 6 — Afficher la ToolBox</h3>
+  <ol>
+    <li>Clic droit sur la ToolBox dans la liste &gt; <strong>Open</strong> :
+        elle apparaît flottante</li>
+    <li>La docker contre une barre d'outils existante par glisser-déposer</li>
+  </ol>
+
+  <h3>Étape 7 — Autoload de la macro (indispensable)</h3>
+  <ol>
+    <li><strong>Utilities &gt; Macros &gt; Project Manager</strong></li>
+    <li>Charger le projet VBA s'il ne l'est pas déjà</li>
+    <li>Clic droit sur le projet &gt; <strong>Autoload</strong> : la macro sera chargée
+        à chaque ouverture de MicroStation et le bouton fonctionnera sans manipulation</li>
+  </ol>
 </section>
 
 <!-- ==================== DEPANNAGE ==================== -->
@@ -392,6 +447,26 @@
     <tr>
       <td>« P1 et P2 confondus »</td>
       <td>Les deux clics ont attrapé le même texte : cliquez plus près du second point.</td>
+    </tr>
+    <tr>
+      <td>Menus grisés dans Workspace &gt; Customize</td>
+      <td>Aucun <code>.dgnlib</code> cible valide. Copier <code>VectorIcon.dgnlib</code>
+          (dossier <code>WorkSpace\System\GUI</code>), renommer la copie
+          (ex. <code>MesMacros.dgnlib</code>), redémarrer, puis l'ouvrir comme fichier
+          actif pour déverrouiller Customize (voir §&nbsp;6).</td>
+    </tr>
+    <tr>
+      <td>Le <code>.dgnlib</code> n'apparaît pas dans Customize</td>
+      <td>Un <code>.dgnlib</code> créé via File &gt; New (ou un <code>.dgn</code> renommé)
+          n'est pas reconnu : il faut copier un <code>.dgnlib</code> existant valide.
+          Vérifier aussi qu'il est bien dans <code>WorkSpace\System\GUI</code>.</td>
+    </tr>
+    <tr>
+      <td>Le bouton de la ToolBox ne fait rien au démarrage</td>
+      <td>Le projet VBA n'est pas chargé : Utilities &gt; Macros &gt; Project Manager,
+          clic droit sur le projet &gt; <strong>Autoload</strong>. Vérifier aussi la
+          syntaxe du key-in (avec ou sans crochets selon l'emplacement de la macro,
+          voir §&nbsp;6 étape&nbsp;5) en la testant via Utilities &gt; Key-in.</td>
     </tr>
   </table>
 </section>
