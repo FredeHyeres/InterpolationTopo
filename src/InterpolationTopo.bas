@@ -207,7 +207,7 @@ Sub CreateTopoPoint(oProj As Point3d, dZInterp As Double)
     PositionTexteAltitude oProj, oPosTxt
     RotationTexteModele oRotTxt
     Dim oTextElem As TextElement
-    Set oTextElem = CreateTextElement1(g_oTextTemplate, sAltitude, oProj, oRotTxt)
+    Set oTextElem = CreateTextElement1(g_oTextTemplate, sAltitude, oPosTxt, oRotTxt)
     ActiveModelReference.AddElement oTextElem
 
     Dim oCercle As EllipseElement
@@ -224,9 +224,7 @@ End Sub
 '------------------------------------------------------------------------------
 ' Position du texte altitude par rapport au point projete (idem apercu dynamique)
 Sub PositionTexteAltitude(oProj As Point3d, oRes As Point3d)
-    oRes.X = oProj.X + g_dCircRayon * 0.2
-    oRes.Y = oProj.Y + g_dCircRayon * 1.5
-    oRes.Z = oProj.Z
+    oRes = oProj
 End Sub
 
 '------------------------------------------------------------------------------
