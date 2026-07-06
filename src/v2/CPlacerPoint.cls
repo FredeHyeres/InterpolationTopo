@@ -119,7 +119,7 @@ Private Sub IPrimitiveCommandEvents_DataPoint(Point As Point3d, ByVal View As Vi
         Dim dZFinal As Double
         dZFinal = m_dZInterp
         If g_oSettings.bAppliquerPente Then
-            dZFinal = m_dZInterp + dOffset * g_oSettings.dPenteDecalage / 100#
+            dZFinal = m_dZInterp + Abs(dOffset) * g_oSettings.dPenteDecalage / 100#
         End If
 
         g_oMoteur.CreerPointTopo oPtDecale, dZFinal, g_oSettings, g_oCalc

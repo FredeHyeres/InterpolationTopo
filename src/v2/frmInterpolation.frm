@@ -71,6 +71,8 @@ Private WithEvents chkPente As MSForms.CheckBox
 Attribute chkPente.VB_VarHelpID = -1
 Private WithEvents txtPente As MSForms.TextBox
 Attribute txtPente.VB_VarHelpID = -1
+Private WithEvents btnInverserPente As MSForms.CommandButton
+Attribute btnInverserPente.VB_VarHelpID = -1
 Private lblP1       As MSForms.Label
 Private lblP2       As MSForms.Label
 Private lblSegment  As MSForms.Label
@@ -96,7 +98,7 @@ Private Sub ConstruireControles()
     ' --- Cadre Cercle -------------------------------------------------------
     Dim fraCercle As MSForms.Frame
     Set fraCercle = Me.Controls.Add("Forms.Frame.1", "fraCercle")
-    fraCercle.Caption = "Cercle"
+    fraCercle.Caption = "Cercle si Alti est un texte"
     fraCercle.Left = 6: fraCercle.Top = 6
     fraCercle.Width = 192: fraCercle.Height = 126
 
@@ -123,7 +125,7 @@ Private Sub ConstruireControles()
     ' --- Cadre Texte altitude ------------------------------------------------
     Dim fraTexte As MSForms.Frame
     Set fraTexte = Me.Controls.Add("Forms.Frame.1", "fraTexte")
-    fraTexte.Caption = "Texte altitude"
+    fraTexte.Caption = "Texte altitude si alti est un texte"
     fraTexte.Left = 6: fraTexte.Top = 138
     fraTexte.Width = 192: fraTexte.Height = 104
 
@@ -162,6 +164,12 @@ Private Sub ConstruireControles()
     txtPente.Width = 48: txtPente.Height = 16
     txtPente.Text = "0"
     txtPente.Enabled = False
+
+    Set btnInverserPente = fraPente.Controls.Add("Forms.CommandButton.1", "btnInverserPente")
+    btnInverserPente.Caption = "+/-"
+    btnInverserPente.Left = 122: btnInverserPente.Top = 28
+    btnInverserPente.Width = 28: btnInverserPente.Height = 16
+    btnInverserPente.Enabled = False
 
     ' --- Cadre Etat ---------------------------------------------------------
     Dim fraEtat As MSForms.Frame
@@ -213,6 +221,7 @@ Sub Initialiser(oSettings As CMstSettings)
     chkPente.Value = m_oSettings.bAppliquerPente
     txtPente.Text = Format$(m_oSettings.dPenteDecalage, "0.00")
     txtPente.Enabled = m_oSettings.bAppliquerPente
+    btnInverserPente.Enabled = m_oSettings.bAppliquerPente
 
     ' Etat : reinitialiser
     ReinitialiserEtat
@@ -377,6 +386,13 @@ Private Sub chkPente_Change()
     If m_oSettings Is Nothing Then Exit Sub
     m_oSettings.bAppliquerPente = (chkPente.Value = True)
     txtPente.Enabled = m_oSettings.bAppliquerPente
+    btnInverserPente.Enabled = m_oSettings.bAppliquerPente
+End Sub
+
+Private Sub btnInverserPente_Click()
+    If m_oSettings Is Nothing Then Exit Sub
+    m_oSettings.dPenteDecalage = -m_oSettings.dPenteDecalage
+    txtPente.Text = Format$(m_oSettings.dPenteDecalage, "0.00")
 End Sub
 
 Private Sub txtPente_Change()
@@ -408,5 +424,7 @@ Private Sub UserForm_QueryClose(Cancel As Integer, CloseMode As Integer)
         CommandState.StartDefaultCommand
     End If
 End Sub
+
+
 
 
