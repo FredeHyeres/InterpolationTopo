@@ -73,6 +73,7 @@ Function TrouverTexteProche(oPt As Point3d, dRayon As Double) As TextElement
     Dim oScan As New ElementScanCriteria
     oScan.ExcludeAllTypes
     oScan.IncludeType msdElementTypeText
+    oScan.IncludeType msdElementTypeCellHeader
 
     Dim oEnum As ElementEnumerator
     Set oEnum = ActiveModelReference.Scan(oScan)
@@ -81,9 +82,15 @@ Function TrouverTexteProche(oPt As Point3d, dRayon As Double) As TextElement
     Dim oNearest As TextElement
 
     Do While oEnum.MoveNext
-        If oEnum.Current.IsTextElement Then
+        Dim oElem As Element
+        Set oElem = oEnum.Current
+
+        ' Ignorer les elements sur un niveau gele (non affiche)
+        If EstSurNiveauGele(oElem) Then GoTo SuivantElem
+
+        If oElem.IsTextElement Then
             Dim oTxt As TextElement
-            Set oTxt = oEnum.Current
+            Set oTxt = oElem
             If g_oCalc.EstNombre(Replace(Trim$(oTxt.Text), ",", ".")) Then
                 Dim dD As Double
                 dD = g_oCalc.Dist2D(oPt, oTxt.Origin)
@@ -92,8 +99,57 @@ Function TrouverTexteProche(oPt As Point3d, dRayon As Double) As TextElement
                     Set oNearest = oTxt
                 End If
             End If
+
+        ElseIf oElem.Type = msdElementTypeCellHeader Then
+            Dim oCell As CellElement
+            Set oCell = oElem
+            Dim oTxtCell As TextElement
+            Set oTxtCell = ExtraireTexteDeCellule(oCell)
+            If Not oTxtCell Is Nothing Then
+                Dim dDC As Double
+                dDC = g_oCalc.Dist2D(oPt, oCell.Origin)
+                If dDC < dMinDist Then
+                    dMinDist = dDC
+                    Set oNearest = oTxtCell
+                End If
+            End If
         End If
+SuivantElem:
     Loop
 
     If Not oNearest Is Nothing Then Set TrouverTexteProche = oNearest
+End Function
+
+'------------------------------------------------------------------------------
+' Teste si l'element est sur un niveau gele. Renvoie False en cas d'erreur
+' (element sans niveau valide) pour ne pas bloquer le scan.
+Private Function EstSurNiveauGele(oElem As Element) As Boolean
+    On Error GoTo Securite
+    Dim oLvl As Level
+    Set oLvl = oElem.Level
+    EstSurNiveauGele = Not oLvl.IsDisplayedInView(ActiveDesignFile.Views(1))
+    Exit Function
+Securite:
+    EstSurNiveauGele = False
+End Function
+
+'------------------------------------------------------------------------------
+' Parcourt les sous-elements d'une cellule et renvoie le premier TextElement
+' dont le contenu est un nombre (altitude). Renvoie Nothing si aucun trouve.
+Private Function ExtraireTexteDeCellule(oCell As CellElement) As TextElement
+    Set ExtraireTexteDeCellule = Nothing
+    Dim oSubEnum As ElementEnumerator
+    Set oSubEnum = oCell.GetSubElements
+    Do While oSubEnum.MoveNext
+        If EstSurNiveauGele(oSubEnum.Current) Then GoTo SuivantSub
+        If oSubEnum.Current.IsTextElement Then
+            Dim oT As TextElement
+            Set oT = oSubEnum.Current
+            If g_oCalc.EstNombre(Replace(Trim$(oT.Text), ",", ".")) Then
+                Set ExtraireTexteDeCellule = oT
+                Exit Function
+            End If
+        End If
+SuivantSub:
+    Loop
 End Function
