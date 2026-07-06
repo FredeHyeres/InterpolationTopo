@@ -54,7 +54,7 @@ Trois strategies selon le type de l'element source (dans `CMoteurGraphique`) :
 |---|---|---|
 | Texte simple | `CreerTexteEtCercle` | Cree un TextElement (modele P1) + EllipseElement |
 | Cellule | `ClonerCellule` | Clone la cellule entiere, deplace, modifie le texte ou tag interne |
-| Tag isole | `ClonerTag` | Clone le tag seul (apparait "orphelin" - probleme connu) |
+| Tag isole | `ClonerTag` | Clone l'element hote (BaseElement) + reassocie un tag ; fallback texte + cercle si tag orphelin |
 
 ### Placement en 2 etapes (`CPlacerPoint`)
 
@@ -83,17 +83,33 @@ Controles crees au runtime (pas de dependance au designer) :
 
 ## Problemes connus
 
-### Tags isoles (non resolus)
+### Tags isoles (resolu)
 
-Quand l'altitude source est un tag **isole** (pas dans une cellule), le clonage
-du tag seul produit un element "orphelin" affiche en pointille. La recherche du
-parent via `ParentID` n'a pas fonctionne. La detection des tags **a l'interieur
-des cellules** fonctionne correctement (via `ExtraireAltitudeDeCellule`).
+Un tag MicroStation est toujours attache a un element hote via sa propriete
+`TagElement.BaseElement`. Le clonage du tag seul produisait un "orphelin" affiche
+en pointille. `ParentID` ne concernait que l'appartenance a un element complexe
+(composant de cellule), pas l'association du tag a son hote : ce n'etait donc pas
+la bonne API.
 
-Piste : certains tags sont des sous-elements de cellules mais le scan
-`msdElementTypeTag` les trouve en premier (avant le scan `msdElementTypeCellHeader`).
-La fonction `ExtraireAltitudeDeCellule` cherche deja les tags dans les cellules,
-mais il faut que la cellule parente soit effectivement scannee.
+Solution appliquee :
+
+1. **Reroutage dans `TrouverTexteProche`** : quand un tag devient le candidat le
+   plus proche, on interroge `oTag.BaseElement` (protege par `On Error`). Si
+   l'hote est une cellule (`msdElementTypeCellHeader`), le hit est traite comme un
+   **cas cellule** (`oCellNearest` + `sTagDef`), donc la creation passe par
+   `ClonerCellule` (chemin fiable). Cela regle aussi le cas ou le scan
+   `msdElementTypeTag` trouve un tag de cellule avant que la cellule soit scannee.
+
+2. **Reecriture de `ClonerTag`** : recupere l'hote via `BaseElement`.
+   - Hote present : copie l'hote, le deplace, puis reassocie un tag a la copie.
+     Approche A = copier le tag source + `Set oCopyTag.BaseElement = oCopyHost`.
+     Approche B (fallback) = `oCopyHost.AddTag(...)` avec la `TagDefinition`
+     retrouvee via `TrouverTagDefinition` (boucle sur `ActiveDesignFile.TagSets`),
+     symbologie reprise du tag source. Les deux approches sont protegees par
+     `On Error` car la disponibilite exacte de l'API varie selon la version.
+   - Aucun hote (tag reellement orphelin) : pas de clonage d'orphelin, fallback
+     `CreerTexteEtCercle` (texte + cercle). Ce chemin supporte desormais
+     `oTextModele Is Nothing` (cas ou P1 etait un tag).
 
 ### Modele texte pour tags
 
@@ -131,3 +147,11 @@ par `CreateTextElement1`. Le clonage de cellule contourne ce probleme.
 
 8. **Pente transversale** : parametres `dPenteDecalage` / `bAppliquerPente`
    dans `CMstSettings`, cadre dans le formulaire, application a l'etape 2
+
+9. **Correctif tags isoles** : reroutage des tags de cellule vers le cas cellule
+   dans `TrouverTexteProche` (via `TagElement.BaseElement`) ; reecriture de
+   `ClonerTag` (copie de l'hote + reassociation du tag via `BaseElement` ou
+   `AddTag`, fallback texte + cercle si tag orphelin) ; `CreerTexteEtCercle` et
+   `ResolverNiveau` rendus robustes au cas `oTextModele Is Nothing` ; ajout de
+   `oSettings`/`oCalc` en parametres de `ClonerTag` (appel mis a jour dans
+   `CreerPointTopo`)

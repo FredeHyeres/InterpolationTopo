@@ -109,9 +109,36 @@ Function TrouverTexteProche(oPt As Point3d, dRayon As Double) As TextElement
                 dDT = g_oCalc.Dist2D(oPt, oTag.Origin)
                 If dDT < dMinDist Then
                     dMinDist = dDT
+
+                    ' Un tag est toujours attache a un element hote (BaseElement).
+                    ' Si l'hote est une cellule, on reroute le hit vers le cas
+                    ' cellule (chemin ClonerCellule, qui fonctionne) au lieu de
+                    ' cloner un tag orphelin. On protege l'acces a BaseElement
+                    ' car un tag reellement orphelin peut lever une erreur.
+                    Dim oBase As Element
+                    Set oBase = Nothing
+                    On Error Resume Next
+                    Set oBase = oTag.BaseElement
+                    On Error GoTo 0
+
+                    If Not oBase Is Nothing Then
+                        If oBase.Type = msdElementTypeCellHeader Then
+                            ' Cas cellule : la creation passera par ClonerCellule
+                            Set oNearest = Nothing
+                            Set oTagNearest = Nothing
+                            Set oCellNearest = oBase
+                            sTagDef = oTag.TagDefinitionName
+                            ptOrigine = oTag.Origin
+                            sValeur = sTagVal
+                            GoTo SuivantElem
+                        End If
+                    End If
+
+                    ' Cas tag isole (hote non-cellule ou tag orphelin)
                     Set oNearest = Nothing
                     Set oTagNearest = oTag
                     Set oCellNearest = Nothing
+                    sTagDef = ""
                     ptOrigine = oTag.Origin
                     sValeur = sTagVal
                 End If

@@ -36,8 +36,8 @@ Sub CreerPointTopo(oProj As Point3d, dZInterp As Double, oSettings As CMstSettin
         ClonerCellule oProj, sAlt, oCalc
 
     ElseIf Not g_oTagTrouve Is Nothing Then
-        ' --- Cas tag : cloner, deplacer, modifier la valeur ---
-        ClonerTag oProj, sAlt
+        ' --- Cas tag : cloner l'hote et reassocier un tag ---
+        ClonerTag oProj, sAlt, oSettings, oCalc
 
     Else
         ' --- Cas texte classique : texte + cercle ---
@@ -48,15 +48,17 @@ End Sub
 '------------------------------------------------------------------------------
 Private Sub CreerTexteEtCercle(oProj As Point3d, sAlt As String, _
                                 oSettings As CMstSettings, oCalc As CInterpolation)
+    ' oTextModele peut etre Nothing (cas ou P1 etait un tag) :
+    ' CreateTextElement1 accepte Nothing comme modele (attributs actifs)
     Dim oRot As Matrix3d
     oRot = Matrix3dIdentity()
     On Error Resume Next
-    oRot = oSettings.oTextModele.Rotation
+    If Not oSettings.oTextModele Is Nothing Then oRot = oSettings.oTextModele.Rotation
     On Error GoTo 0
 
     Dim oTxt As TextElement
     Set oTxt = CreateTextElement1(oSettings.oTextModele, sAlt, oProj, oRot)
-    If Not oSettings.oTexte.CommeModele Then
+    If oSettings.oTextModele Is Nothing Or Not oSettings.oTexte.CommeModele Then
         oTxt.Color = oSettings.oTexte.Couleur
         Set oTxt.Level = ResolverNiveau(oSettings.oTexte.NomNiveau, oSettings)
     End If
@@ -124,56 +126,141 @@ Private Sub ClonerCellule(oProj As Point3d, sAlt As String, oCalc As CInterpolat
 End Sub
 
 '------------------------------------------------------------------------------
-Private Sub ClonerTag(oProj As Point3d, sAlt As String)
-    ' Chercher l'element parent du tag (cellule ou element complexe)
-    Dim oParent As Element
+Private Sub ClonerTag(oProj As Point3d, sAlt As String, _
+                      oSettings As CMstSettings, oCalc As CInterpolation)
+    ' Un tag MicroStation est toujours attache a un element hote via son
+    ' BaseElement. Cloner le tag seul produit un orphelin (affiche en pointille).
+    ' On copie donc l'hote, on le deplace, puis on reassocie un tag a la copie.
+    ' Si le tag est reellement orphelin (pas d'hote), on cree un texte + cercle.
+
+    ' 1) Recuperer l'hote via BaseElement (protege : peut lever ou etre Nothing)
+    Dim oHost As Element
+    Set oHost = Nothing
     On Error Resume Next
-    Dim lID As DLong
-    lID = g_oTagTrouve.ParentID
-    Set oParent = ActiveModelReference.GetElementByID(lID)
+    Set oHost = g_oTagTrouve.BaseElement
     On Error GoTo 0
 
-    If Not oParent Is Nothing Then
-        ' Copier l'element parent entier (cellule + tag)
-        Dim oCopyParent As Element
-        Set oCopyParent = ActiveModelReference.CopyElement(oParent)
-
-        ' Deplacer vers le point projete (depuis l'origine du tag source)
-        Dim oVec As Point3d
-        oVec.X = oProj.X - g_oTagTrouve.Origin.X
-        oVec.Y = oProj.Y - g_oTagTrouve.Origin.Y
-        oVec.Z = 0
-        oCopyParent.Move oVec
-        oCopyParent.Rewrite
-
-        ' Trouver le tag a l'interieur et modifier sa valeur
-        If oCopyParent.IsComplexElement Then
-            Dim oSub As ElementEnumerator
-            Set oSub = oCopyParent.AsComplexElement.GetSubElements
-            Do While oSub.MoveNext
-                If oSub.Current.Type = msdElementTypeTag Then
-                    Dim oTagSub As TagElement
-                    Set oTagSub = oSub.Current
-                    If oTagSub.TagDefinitionName = g_oTagTrouve.TagDefinitionName Then
-                        oTagSub.Value = sAlt
-                        oTagSub.Rewrite
-                        Exit Do
-                    End If
-                End If
-            Loop
-        End If
-    Else
-        ' Pas de parent trouve : copier le tag seul (fallback)
-        Dim oCopy As TagElement
-        Set oCopy = ActiveModelReference.CopyElement(g_oTagTrouve)
-        Dim oV As Point3d
-        oV.X = oProj.X - g_oTagTrouve.Origin.X
-        oV.Y = oProj.Y - g_oTagTrouve.Origin.Y
-        oV.Z = 0
-        oCopy.Move oV
-        oCopy.Value = sAlt
-        oCopy.Rewrite
+    If oHost Is Nothing Then
+        ' 3) Aucun hote : ne pas cloner un orphelin, fallback texte + cercle
+        CreerTexteEtCercle oProj, sAlt, oSettings, oCalc
+        Exit Sub
     End If
+
+    ' Vecteur de deplacement (origine du tag source -> point projete)
+    Dim oVec As Point3d
+    oVec.X = oProj.X - g_oTagTrouve.Origin.X
+    oVec.Y = oProj.Y - g_oTagTrouve.Origin.Y
+    oVec.Z = 0
+
+    ' 2) Copier l'hote et le deplacer
+    Dim oCopyHost As Element
+    Set oCopyHost = ActiveModelReference.CopyElement(oHost)
+    oCopyHost.Move oVec
+    oCopyHost.Rewrite
+
+    ' 2a) Approche A : copier le tag source, le deplacer, le reassocier a la copie
+    Dim bOK As Boolean
+    bOK = False
+    On Error Resume Next
+    Dim oCopyTag As TagElement
+    Set oCopyTag = ActiveModelReference.CopyElement(g_oTagTrouve)
+    oCopyTag.Move oVec
+    Set oCopyTag.BaseElement = oCopyHost
+    oCopyTag.Value = sAlt
+    oCopyTag.Rewrite
+    If Err.Number = 0 And Not oCopyTag Is Nothing Then bOK = True
+    On Error GoTo 0
+    If bOK Then Exit Sub
+
+    ' Approche A partielle : supprimer le tag copie (potentiellement orphelin)
+    ' avant d'essayer l'approche B, pour ne pas laisser d'element parasite.
+    On Error Resume Next
+    If Not oCopyTag Is Nothing Then ActiveModelReference.RemoveElement oCopyTag
+    On Error GoTo 0
+
+    ' 2b) Approche B : recreer le tag via AddTag sur l'hote copie
+    On Error Resume Next
+    Dim oTagDef As TagDefinition
+    Set oTagDef = TrouverTagDefinition(g_oTagTrouve.TagDefinitionName)
+    Dim oNewTag As TagElement
+    If Not oTagDef Is Nothing Then
+        Set oNewTag = oCopyHost.AddTag(oTagDef)
+    End If
+    If Not oNewTag Is Nothing Then
+        ' Positionner le tag a l'emplacement du tag source deplace
+        Dim oOrig As Point3d
+        oOrig = g_oTagTrouve.Origin
+        Dim oVecTag As Point3d
+        oVecTag.X = (oOrig.X + oVec.X) - oNewTag.Origin.X
+        oVecTag.Y = (oOrig.Y + oVec.Y) - oNewTag.Origin.Y
+        oVecTag.Z = 0
+        oNewTag.Move oVecTag
+
+        ' Reprendre la symbologie et les attributs texte du tag source
+        ' (AddTag cree le tag avec le style par defaut de la definition)
+        CopierAttributsTag g_oTagTrouve, oNewTag
+
+        ' Seules la valeur et l'ecriture conditionnent la reussite : un echec
+        ' de copie d'attribut ne doit pas declencher le fallback texte+cercle.
+        Err.Clear
+        oNewTag.Value = sAlt
+        oNewTag.Rewrite
+        bOK = (Err.Number = 0)
+        If Not bOK Then ActiveModelReference.RemoveElement oNewTag
+    End If
+    On Error GoTo 0
+    If bOK Then Exit Sub
+
+    ' Dernier recours : texte + cercle pour ne pas laisser l'utilisateur sans point
+    CreerTexteEtCercle oProj, sAlt, oSettings, oCalc
+End Sub
+
+'------------------------------------------------------------------------------
+' Cherche une TagDefinition par nom en parcourant les TagSets du fichier actif.
+' Renvoie Nothing si introuvable.
+Private Function TrouverTagDefinition(sDefName As String) As TagDefinition
+    Set TrouverTagDefinition = Nothing
+    On Error Resume Next
+    Dim oSet As TagSet
+    Dim oDef As TagDefinition
+    For Each oSet In ActiveDesignFile.TagSets
+        For Each oDef In oSet.TagDefinitions
+            If oDef.Name = sDefName Then
+                Set TrouverTagDefinition = oDef
+                Exit Function
+            End If
+        Next
+    Next
+    On Error GoTo 0
+End Function
+
+'------------------------------------------------------------------------------
+' Copie la symbologie et les attributs texte (police, taille, justification)
+' d'un tag source vers un tag cible. Les proprietes texte sont copiees en
+' liaison tardive (Object) : selon la version de l'API certaines ne sont pas
+' exposees par TagElement, et un acces en dur ne compilerait pas. L'echec
+' d'une copie n'empeche pas les suivantes (Err.Clear apres chaque tentative).
+Private Sub CopierAttributsTag(oSrc As TagElement, oDst As TagElement)
+    On Error Resume Next
+
+    ' Proprietes sures (exposees par TagElement)
+    oDst.Color = oSrc.Color: Err.Clear
+    Set oDst.Level = oSrc.Level: Err.Clear
+    oDst.LineWeight = oSrc.LineWeight: Err.Clear
+    oDst.Rotation = oSrc.Rotation: Err.Clear
+
+    ' Proprietes texte incertaines : liaison tardive
+    Dim oS As Object, oD As Object
+    Set oS = oSrc
+    Set oD = oDst
+    Set oD.TextStyle = oS.TextStyle: Err.Clear
+    Set oD.Font = oS.Font: Err.Clear
+    oD.Height = oS.Height: Err.Clear
+    oD.Width = oS.Width: Err.Clear
+    oD.TextSize = oS.TextSize: Err.Clear
+    oD.Justification = oS.Justification: Err.Clear
+
+    On Error GoTo 0
 End Sub
 
 '==============================================================================
@@ -316,7 +403,13 @@ End Sub
 ' Resout un niveau par nom ou numero ; chaine vide ou niveau introuvable =
 ' niveau du texte-modele P1. Sert au cercle comme au texte personnalise.
 Private Function ResolverNiveau(sNiveau As String, oSettings As CMstSettings) As Level
-    Set ResolverNiveau = oSettings.oTextModele.Level
+    ' Defaut : niveau du texte-modele P1, sinon niveau actif
+    ' (oTextModele peut etre Nothing quand P1 etait un tag)
+    If oSettings.oTextModele Is Nothing Then
+        Set ResolverNiveau = ActiveSettings.Level
+    Else
+        Set ResolverNiveau = oSettings.oTextModele.Level
+    End If
     If sNiveau = "" Then Exit Function
 
     Dim oLvl As Level
