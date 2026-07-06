@@ -31,7 +31,23 @@ Sub CreerPointTopo(oProj As Point3d, dZInterp As Double, oSettings As CMstSettin
     sAlt = oCalc.FormatAltitude(dZInterp, oSettings.oTexte.Decimales, _
                                 oSettings.oTexte.SepDecimal)
 
-    ' Texte : meme origin que le cercle, rotation du texte-modele
+    If Not g_oCellTrouvee Is Nothing Then
+        ' --- Cas cellule : cloner, deplacer, modifier le texte interne ---
+        ClonerCellule oProj, sAlt, oCalc
+
+    ElseIf Not g_oTagTrouve Is Nothing Then
+        ' --- Cas tag : cloner, deplacer, modifier la valeur ---
+        ClonerTag oProj, sAlt
+
+    Else
+        ' --- Cas texte classique : texte + cercle ---
+        CreerTexteEtCercle oProj, sAlt, oSettings, oCalc
+    End If
+End Sub
+
+'------------------------------------------------------------------------------
+Private Sub CreerTexteEtCercle(oProj As Point3d, sAlt As String, _
+                                oSettings As CMstSettings, oCalc As CInterpolation)
     Dim oRot As Matrix3d
     oRot = Matrix3dIdentity()
     On Error Resume Next
@@ -40,20 +56,124 @@ Sub CreerPointTopo(oProj As Point3d, dZInterp As Double, oSettings As CMstSettin
 
     Dim oTxt As TextElement
     Set oTxt = CreateTextElement1(oSettings.oTextModele, sAlt, oProj, oRot)
-    ' Attributs personnalises du texte (case decochee dans le formulaire)
     If Not oSettings.oTexte.CommeModele Then
         oTxt.Color = oSettings.oTexte.Couleur
         Set oTxt.Level = ResolverNiveau(oSettings.oTexte.NomNiveau, oSettings)
     End If
     ActiveModelReference.AddElement oTxt
 
-    ' Cercle centre sur oProj
     Dim oCercle As EllipseElement
     Set oCercle = CreateEllipseElement2(Nothing, oProj, _
                       oSettings.oCercle.Rayon, oSettings.oCercle.Rayon, Matrix3dIdentity())
     oCercle.Color = oSettings.oCercle.Couleur
     Set oCercle.Level = ResolverNiveau(oSettings.oCercle.NomNiveau, oSettings)
     ActiveModelReference.AddElement oCercle
+End Sub
+
+'------------------------------------------------------------------------------
+Private Sub ClonerCellule(oProj As Point3d, sAlt As String, oCalc As CInterpolation)
+    ' Copier la cellule source dans le modele
+    Dim oCopy As CellElement
+    Set oCopy = ActiveModelReference.CopyElement(g_oCellTrouvee)
+
+    ' Deplacer vers le point projete
+    Dim oVec As Point3d
+    oVec.X = oProj.X - g_oCellTrouvee.Origin.X
+    oVec.Y = oProj.Y - g_oCellTrouvee.Origin.Y
+    oVec.Z = 0
+    oCopy.Move oVec
+    oCopy.Rewrite
+
+    Dim bModifie As Boolean
+    bModifie = False
+
+    ' D'abord chercher un tag altitude (cas tag dans cellule)
+    If Len(g_sTagDefName) > 0 Then
+        Dim oSub1 As ElementEnumerator
+        Set oSub1 = oCopy.GetSubElements
+        Do While oSub1.MoveNext
+            If oSub1.Current.Type = msdElementTypeTag Then
+                Dim oTag As TagElement
+                Set oTag = oSub1.Current
+                If oTag.TagDefinitionName = g_sTagDefName Then
+                    oTag.Value = sAlt
+                    oTag.Rewrite
+                    bModifie = True
+                    Exit Do
+                End If
+            End If
+        Loop
+    End If
+
+    ' Sinon chercher un texte altitude (cas cellule simple)
+    If Not bModifie Then
+        Dim oSub2 As ElementEnumerator
+        Set oSub2 = oCopy.GetSubElements
+        Do While oSub2.MoveNext
+            If oSub2.Current.IsTextElement Then
+                Dim oT As TextElement
+                Set oT = oSub2.Current
+                If oCalc.EstNombre(Replace(Trim$(oT.Text), ",", ".")) Then
+                    oT.Text = sAlt
+                    oT.Rewrite
+                    Exit Do
+                End If
+            End If
+        Loop
+    End If
+End Sub
+
+'------------------------------------------------------------------------------
+Private Sub ClonerTag(oProj As Point3d, sAlt As String)
+    ' Chercher l'element parent du tag (cellule ou element complexe)
+    Dim oParent As Element
+    On Error Resume Next
+    Dim lID As DLong
+    lID = g_oTagTrouve.ParentID
+    Set oParent = ActiveModelReference.GetElementByID(lID)
+    On Error GoTo 0
+
+    If Not oParent Is Nothing Then
+        ' Copier l'element parent entier (cellule + tag)
+        Dim oCopyParent As Element
+        Set oCopyParent = ActiveModelReference.CopyElement(oParent)
+
+        ' Deplacer vers le point projete (depuis l'origine du tag source)
+        Dim oVec As Point3d
+        oVec.X = oProj.X - g_oTagTrouve.Origin.X
+        oVec.Y = oProj.Y - g_oTagTrouve.Origin.Y
+        oVec.Z = 0
+        oCopyParent.Move oVec
+        oCopyParent.Rewrite
+
+        ' Trouver le tag a l'interieur et modifier sa valeur
+        If oCopyParent.IsComplexElement Then
+            Dim oSub As ElementEnumerator
+            Set oSub = oCopyParent.AsComplexElement.GetSubElements
+            Do While oSub.MoveNext
+                If oSub.Current.Type = msdElementTypeTag Then
+                    Dim oTagSub As TagElement
+                    Set oTagSub = oSub.Current
+                    If oTagSub.TagDefinitionName = g_oTagTrouve.TagDefinitionName Then
+                        oTagSub.Value = sAlt
+                        oTagSub.Rewrite
+                        Exit Do
+                    End If
+                End If
+            Loop
+        End If
+    Else
+        ' Pas de parent trouve : copier le tag seul (fallback)
+        Dim oCopy As TagElement
+        Set oCopy = ActiveModelReference.CopyElement(g_oTagTrouve)
+        Dim oV As Point3d
+        oV.X = oProj.X - g_oTagTrouve.Origin.X
+        oV.Y = oProj.Y - g_oTagTrouve.Origin.Y
+        oV.Z = 0
+        oCopy.Move oV
+        oCopy.Value = sAlt
+        oCopy.Rewrite
+    End If
 End Sub
 
 '==============================================================================
@@ -111,6 +231,65 @@ Sub DessinDynamique(ByVal DrawMode As MsdDrawingMode, _
     On Error GoTo 0
     Dim oTxt As TextElement
     Set oTxt = CreateTextElement1(oSettings.oTextModele, sAlt, oProj, oRot)
+    If Not oSettings.oTexte.CommeModele Then oTxt.Color = oSettings.oTexte.Couleur
+    oTxt.Redraw DrawMode
+End Sub
+
+'------------------------------------------------------------------------------
+' Dessine l'apercu pour l'etape 2 : ligne P1-P2, croix, point projete fixe,
+' ligne perpendiculaire et cercle+texte a la position decalee.
+Sub DessinDecalage(ByVal DrawMode As MsdDrawingMode, _
+                   oP1 As CPointRef, oP2 As CPointRef, _
+                   oProj As Point3d, oPtDecale As Point3d, _
+                   dZInterp As Double, _
+                   oSettings As CMstSettings, oCalc As CInterpolation)
+
+    Dim oPt1 As Point3d, oPt2 As Point3d
+    oP1.CopierPosition oPt1
+    oP2.CopierPosition oPt2
+
+    ' Ligne support P1-P2
+    Dim dx As Double, dy As Double
+    dx = oPt2.X - oPt1.X: dy = oPt2.Y - oPt1.Y
+    Dim oA As Point3d, oB As Point3d
+    oA.X = oPt1.X - dx * 0.2: oA.Y = oPt1.Y - dy * 0.2: oA.Z = oPt1.Z
+    oB.X = oPt2.X + dx * 0.2: oB.Y = oPt2.Y + dy * 0.2: oB.Z = oPt2.Z
+    Dim oLigne As LineElement
+    Set oLigne = CreateLineElement2(Nothing, oA, oB)
+    oLigne.Color = 3
+    oLigne.Redraw DrawMode
+
+    ' Croix sur P1, P2 et point projete
+    Dim dTailleCroix As Double
+    dTailleCroix = oSettings.oCercle.Rayon * 0.8
+    DessinCroix DrawMode, oPt1, dTailleCroix
+    DessinCroix DrawMode, oPt2, dTailleCroix
+    DessinCroix DrawMode, oProj, dTailleCroix
+
+    ' Ligne perpendiculaire depuis le point projete vers le point decale
+    Dim oLPerp As LineElement
+    Set oLPerp = CreateLineElement2(Nothing, oProj, oPtDecale)
+    oLPerp.Color = 2
+    oLPerp.Redraw DrawMode
+
+    ' Cercle provisoire au point decale
+    Dim oCercle As EllipseElement
+    Set oCercle = CreateEllipseElement2(Nothing, oPtDecale, _
+                      oSettings.oCercle.Rayon, oSettings.oCercle.Rayon, Matrix3dIdentity())
+    oCercle.Color = oSettings.oCercle.Couleur
+    oCercle.Redraw DrawMode
+
+    ' Texte altitude provisoire au point decale
+    Dim sAlt As String
+    sAlt = oCalc.FormatAltitude(dZInterp, oSettings.oTexte.Decimales, _
+                                oSettings.oTexte.SepDecimal)
+    Dim oRot As Matrix3d
+    oRot = Matrix3dIdentity()
+    On Error Resume Next
+    oRot = oSettings.oTextModele.Rotation
+    On Error GoTo 0
+    Dim oTxt As TextElement
+    Set oTxt = CreateTextElement1(oSettings.oTextModele, sAlt, oPtDecale, oRot)
     If Not oSettings.oTexte.CommeModele Then oTxt.Color = oSettings.oTexte.Couleur
     oTxt.Redraw DrawMode
 End Sub

@@ -53,13 +53,13 @@ End Function
 ' Lit l'altitude d'un TextElement et charge le CPointRef.
 ' Renseigne aussi sSep ("." ou ",") et nDec (nb de decimales).
 ' Retourne False si le texte n'est pas numerique.
-Function LireAltitudeTexte(oText As TextElement, oPoint As CPointRef, _
+Function LireAltitudeTexte(oPoint As CPointRef, _
                             sSep As String, nDec As Integer) As Boolean
     LireAltitudeTexte = False
     oPoint.Invalider
 
     Dim sBrut As String
-    sBrut = Trim$(oText.Text)
+    sBrut = g_sValeurTexte
     If InStr(sBrut, ",") > 0 Then
         sSep = ","
         sBrut = Replace(sBrut, ",", ".")
@@ -69,9 +69,8 @@ Function LireAltitudeTexte(oText As TextElement, oPoint As CPointRef, _
 
     If Not EstNombre(sBrut) Then Exit Function
 
-    ' Val() est independant de la locale Windows (attend toujours ".")
     oPoint.Altitude = Val(sBrut)
-    oPoint.DefinirPosition oText.Origin
+    oPoint.DefinirPosition g_ptOrigineTexte
     oPoint.Valide = True
 
     Dim nDot As Integer

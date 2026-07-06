@@ -29,6 +29,11 @@ Public g_oP1        As CPointRef         ' point de reference 1
 Public g_oP2        As CPointRef         ' point de reference 2
 Public g_oCalc      As CInterpolation    ' moteur de calcul pur
 Public g_oMoteur    As CMoteurGraphique  ' moteur de creation graphique
+Public g_ptOrigineTexte As Point3d       ' origine reelle du point (tag/cellule/texte)
+Public g_sValeurTexte   As String        ' valeur texte brute (pour tags ou textes)
+Public g_oTagTrouve     As TagElement    ' tag source (Nothing si texte ou cellule)
+Public g_oCellTrouvee   As CellElement   ' cellule source (Nothing si texte ou tag)
+Public g_sTagDefName    As String        ' nom definition du tag dans la cellule (vide si texte)
 
 '------------------------------------------------------------------------------
 Sub InterpolerPoint()
@@ -74,12 +79,18 @@ Function TrouverTexteProche(oPt As Point3d, dRayon As Double) As TextElement
     oScan.ExcludeAllTypes
     oScan.IncludeType msdElementTypeText
     oScan.IncludeType msdElementTypeCellHeader
+    oScan.IncludeType msdElementTypeTag
 
     Dim oEnum As ElementEnumerator
     Set oEnum = ActiveModelReference.Scan(oScan)
 
     Dim dMinDist As Double: dMinDist = dRayon
     Dim oNearest As TextElement
+    Dim oTagNearest As TagElement
+    Dim oCellNearest As CellElement
+    Dim ptOrigine As Point3d
+    Dim sValeur As String
+    Dim sTagDef As String
 
     Do While oEnum.MoveNext
         Dim oElem As Element
@@ -88,7 +99,25 @@ Function TrouverTexteProche(oPt As Point3d, dRayon As Double) As TextElement
         ' Ignorer les elements sur un niveau gele (non affiche)
         If EstSurNiveauGele(oElem) Then GoTo SuivantElem
 
-        If oElem.IsTextElement Then
+        If oElem.Type = msdElementTypeTag Then
+            Dim oTag As TagElement
+            Set oTag = oElem
+            Dim sTagVal As String
+            sTagVal = Trim$(CStr(oTag.Value))
+            If g_oCalc.EstNombre(Replace(sTagVal, ",", ".")) Then
+                Dim dDT As Double
+                dDT = g_oCalc.Dist2D(oPt, oTag.Origin)
+                If dDT < dMinDist Then
+                    dMinDist = dDT
+                    Set oNearest = Nothing
+                    Set oTagNearest = oTag
+                    Set oCellNearest = Nothing
+                    ptOrigine = oTag.Origin
+                    sValeur = sTagVal
+                End If
+            End If
+
+        ElseIf oElem.IsTextElement Then
             Dim oTxt As TextElement
             Set oTxt = oElem
             If g_oCalc.EstNombre(Replace(Trim$(oTxt.Text), ",", ".")) Then
@@ -97,27 +126,52 @@ Function TrouverTexteProche(oPt As Point3d, dRayon As Double) As TextElement
                 If dD < dMinDist Then
                     dMinDist = dD
                     Set oNearest = oTxt
+                    Set oTagNearest = Nothing
+                    Set oCellNearest = Nothing
+                    ptOrigine = oTxt.Origin
+                    sValeur = Trim$(oTxt.Text)
                 End If
             End If
 
         ElseIf oElem.Type = msdElementTypeCellHeader Then
             Dim oCell As CellElement
             Set oCell = oElem
+            Dim sCellVal As String
+            Dim sCellTagDef As String
             Dim oTxtCell As TextElement
-            Set oTxtCell = ExtraireTexteDeCellule(oCell)
-            If Not oTxtCell Is Nothing Then
+            If ExtraireAltitudeDeCellule(oCell, sCellVal, sCellTagDef, oTxtCell) Then
                 Dim dDC As Double
                 dDC = g_oCalc.Dist2D(oPt, oCell.Origin)
                 If dDC < dMinDist Then
                     dMinDist = dDC
                     Set oNearest = oTxtCell
+                    Set oTagNearest = Nothing
+                    Set oCellNearest = oCell
+                    ptOrigine = oCell.Origin
+                    sValeur = sCellVal
+                    sTagDef = sCellTagDef
                 End If
             End If
         End If
 SuivantElem:
     Loop
 
-    If Not oNearest Is Nothing Then Set TrouverTexteProche = oNearest
+    g_ptOrigineTexte = ptOrigine
+    g_sValeurTexte = sValeur
+    Set g_oTagTrouve = oTagNearest
+    Set g_oCellTrouvee = oCellNearest
+    g_sTagDefName = sTagDef
+    Set TrouverTexteProche = oNearest
+End Function
+
+'------------------------------------------------------------------------------
+' Cherche l'altitude la plus proche (texte, cellule ou tag).
+' Renvoie True si trouvee. Les resultats sont dans g_ptOrigineTexte,
+' g_sValeurTexte, et oTextOut (Nothing si c'est un tag).
+Function TrouverAltitudeProche(oPt As Point3d, dRayon As Double, _
+                                oTextOut As TextElement) As Boolean
+    Set oTextOut = TrouverTexteProche(oPt, dRayon)
+    TrouverAltitudeProche = (Len(g_sValeurTexte) > 0)
 End Function
 
 '------------------------------------------------------------------------------
@@ -134,19 +188,43 @@ Securite:
 End Function
 
 '------------------------------------------------------------------------------
-' Parcourt les sous-elements d'une cellule et renvoie le premier TextElement
-' dont le contenu est un nombre (altitude). Renvoie Nothing si aucun trouve.
-Private Function ExtraireTexteDeCellule(oCell As CellElement) As TextElement
-    Set ExtraireTexteDeCellule = Nothing
+' Parcourt les sous-elements d'une cellule et cherche une altitude numerique.
+' Cherche d'abord un tag, puis un texte. Renvoie la valeur trouvee dans sVal,
+' le nom de definition du tag dans sDefName (vide si c'est un texte),
+' et le TextElement si c'est un texte (Nothing si c'est un tag).
+Private Function ExtraireAltitudeDeCellule(oCell As CellElement, _
+        sVal As String, sDefName As String, oTxtOut As TextElement) As Boolean
+    ExtraireAltitudeDeCellule = False
+    sDefName = ""
+    Set oTxtOut = Nothing
+
     Dim oSubEnum As ElementEnumerator
     Set oSubEnum = oCell.GetSubElements
     Do While oSubEnum.MoveNext
         If EstSurNiveauGele(oSubEnum.Current) Then GoTo SuivantSub
+
+        ' Chercher un tag numerique
+        If oSubEnum.Current.Type = msdElementTypeTag Then
+            Dim oTag As TagElement
+            Set oTag = oSubEnum.Current
+            Dim sTV As String
+            sTV = Trim$(CStr(oTag.Value))
+            If g_oCalc.EstNombre(Replace(sTV, ",", ".")) Then
+                sVal = sTV
+                sDefName = oTag.TagDefinitionName
+                ExtraireAltitudeDeCellule = True
+                Exit Function
+            End If
+        End If
+
+        ' Chercher un texte numerique
         If oSubEnum.Current.IsTextElement Then
             Dim oT As TextElement
             Set oT = oSubEnum.Current
             If g_oCalc.EstNombre(Replace(Trim$(oT.Text), ",", ".")) Then
-                Set ExtraireTexteDeCellule = oT
+                sVal = Trim$(oT.Text)
+                Set oTxtOut = oT
+                ExtraireAltitudeDeCellule = True
                 Exit Function
             End If
         End If

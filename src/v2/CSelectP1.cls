@@ -20,10 +20,9 @@ Private Sub IPrimitiveCommandEvents_Start()
 End Sub
 
 Private Sub IPrimitiveCommandEvents_DataPoint(Point As Point3d, ByVal View As View)
-    ' Cherche le texte numerique le plus proche du clic
+    ' Cherche le texte/tag/cellule numerique le plus proche du clic
     Dim oText As TextElement
-    Set oText = TrouverTexteProche(Point, g_oSettings.dTolTexte)
-    If oText Is Nothing Then
+    If Not TrouverAltitudeProche(Point, g_oSettings.dTolTexte, oText) Then
         ShowPrompt "Aucun texte altitude a moins de " & g_oSettings.dTolTexte & _
                    " u.m. - recliquez (P1)"
         Exit Sub
@@ -31,19 +30,23 @@ Private Sub IPrimitiveCommandEvents_DataPoint(Point As Point3d, ByVal View As Vi
 
     ' Parsing de l'altitude
     Dim sSep As String, nDec As Integer
-    If Not g_oCalc.LireAltitudeTexte(oText, g_oP1, sSep, nDec) Then
-        ShowPrompt "Texte '" & oText.Text & "' non numerique - recliquez (P1)"
+    If Not g_oCalc.LireAltitudeTexte(g_oP1, sSep, nDec) Then
+        ShowPrompt "Texte '" & g_sValeurTexte & "' non numerique - recliquez (P1)"
         Exit Sub
     End If
 
     ' Mise a jour des parametres : texte-modele et format
-    g_oSettings.ChargerModeleTexte oText, sSep, nDec
+    If Not oText Is Nothing Then
+        g_oSettings.ChargerModeleTexte oText, sSep, nDec
+    Else
+        g_oSettings.ChargerModeleDepuisTag sSep, nDec
+    End If
 
     ' Mise a jour du formulaire (etat P1 + attributs herites du texte modele)
     frmInterpolation.AfficherP1 g_oP1
     frmInterpolation.RafraichirTexte
 
-    ShowPrompt "P1 = " & oText.Text & "  ->  cliquez pres du texte altitude du POINT 2"
+    ShowPrompt "P1 = " & g_sValeurTexte & "  ->  cliquez pres du texte altitude du POINT 2"
     CommandState.StartPrimitive New CSelectP2
 End Sub
 

@@ -67,6 +67,10 @@ Private WithEvents txtCouleurTexte As MSForms.TextBox
 Attribute txtCouleurTexte.VB_VarHelpID = -1
 Private WithEvents cmbNiveauTexte As MSForms.ComboBox
 Attribute cmbNiveauTexte.VB_VarHelpID = -1
+Private WithEvents chkPente As MSForms.CheckBox
+Attribute chkPente.VB_VarHelpID = -1
+Private WithEvents txtPente As MSForms.TextBox
+Attribute txtPente.VB_VarHelpID = -1
 Private lblP1       As MSForms.Label
 Private lblP2       As MSForms.Label
 Private lblSegment  As MSForms.Label
@@ -87,7 +91,7 @@ Private Sub ConstruireControles()
 
     Me.Caption = "Interpolation Topo"
     Me.Width = 212
-    Me.Height = 346
+    Me.Height = 410
 
     ' --- Cadre Cercle -------------------------------------------------------
     Dim fraCercle As MSForms.Frame
@@ -139,11 +143,31 @@ Private Sub ConstruireControles()
     cmbNiveauTexte.Left = 6: cmbNiveauTexte.Top = 78
     cmbNiveauTexte.Width = 180: cmbNiveauTexte.Height = 16
 
+    ' --- Cadre Pente decalage -----------------------------------------------
+    Dim fraPente As MSForms.Frame
+    Set fraPente = Me.Controls.Add("Forms.Frame.1", "fraPente")
+    fraPente.Caption = "Pente decalage"
+    fraPente.Left = 6: fraPente.Top = 248
+    fraPente.Width = 192: fraPente.Height = 56
+
+    Set chkPente = fraPente.Controls.Add("Forms.CheckBox.1", "chkPente")
+    chkPente.Caption = "Appliquer pente transversale"
+    chkPente.Left = 6: chkPente.Top = 10
+    chkPente.Width = 180: chkPente.Height = 14
+    chkPente.Value = False
+
+    CreerLabel fraPente, "lblPente", "Pente (%) :", 6, 30, 60
+    Set txtPente = fraPente.Controls.Add("Forms.TextBox.1", "txtPente")
+    txtPente.Left = 68: txtPente.Top = 28
+    txtPente.Width = 48: txtPente.Height = 16
+    txtPente.Text = "0"
+    txtPente.Enabled = False
+
     ' --- Cadre Etat ---------------------------------------------------------
     Dim fraEtat As MSForms.Frame
     Set fraEtat = Me.Controls.Add("Forms.Frame.1", "fraEtat")
     fraEtat.Caption = "Etat"
-    fraEtat.Left = 6: fraEtat.Top = 248
+    fraEtat.Left = 6: fraEtat.Top = 310
     fraEtat.Width = 192: fraEtat.Height = 64
 
     Set lblP1 = CreerLabel(fraEtat, "lblP1", "P1 : -", 6, 12, 180)
@@ -184,6 +208,11 @@ Sub Initialiser(oSettings As CMstSettings)
     chkTexteModele.Value = m_oSettings.oTexte.CommeModele
     txtCouleurTexte.Text = CStr(m_oSettings.oTexte.Couleur)
     ActiverChampsTexte
+
+    ' Pente decalage
+    chkPente.Value = m_oSettings.bAppliquerPente
+    txtPente.Text = Format$(m_oSettings.dPenteDecalage, "0.00")
+    txtPente.Enabled = m_oSettings.bAppliquerPente
 
     ' Etat : reinitialiser
     ReinitialiserEtat
@@ -340,6 +369,31 @@ Private Function ExtraireNiveau(ByVal sItem As String) As String
 End Function
 
 '==============================================================================
+' Evenements Pente decalage
+'==============================================================================
+
+Private Sub chkPente_Change()
+    If m_bInit Then Exit Sub
+    If m_oSettings Is Nothing Then Exit Sub
+    m_oSettings.bAppliquerPente = (chkPente.Value = True)
+    txtPente.Enabled = m_oSettings.bAppliquerPente
+End Sub
+
+Private Sub txtPente_Change()
+    If m_bInit Then Exit Sub
+    If m_oSettings Is Nothing Then Exit Sub
+    Dim dP As Double
+    dP = Val(Replace(Trim$(txtPente.Text), ",", "."))
+    m_oSettings.dPenteDecalage = dP
+End Sub
+
+Private Sub txtPente_KeyDown(ByVal KeyCode As MSForms.ReturnInteger, _
+                              ByVal Shift As Integer)
+    If KeyCode = vbKeyReturn And Not m_oSettings Is Nothing Then _
+        txtPente.Text = Format$(m_oSettings.dPenteDecalage, "0.00")
+End Sub
+
+'==============================================================================
 ' Fermeture
 '==============================================================================
 
@@ -354,4 +408,5 @@ Private Sub UserForm_QueryClose(Cancel As Integer, CloseMode As Integer)
         CommandState.StartDefaultCommand
     End If
 End Sub
+
 

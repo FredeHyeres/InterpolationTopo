@@ -21,16 +21,15 @@ End Sub
 
 Private Sub IPrimitiveCommandEvents_DataPoint(Point As Point3d, ByVal View As View)
     Dim oText As TextElement
-    Set oText = TrouverTexteProche(Point, g_oSettings.dTolTexte)
-    If oText Is Nothing Then
+    If Not TrouverAltitudeProche(Point, g_oSettings.dTolTexte, oText) Then
         ShowPrompt "Aucun texte altitude a moins de " & g_oSettings.dTolTexte & _
                    " u.m. - recliquez (P2)"
         Exit Sub
     End If
 
     Dim sSep As String, nDec As Integer
-    If Not g_oCalc.LireAltitudeTexte(oText, g_oP2, sSep, nDec) Then
-        ShowPrompt "Texte '" & oText.Text & "' non numerique - recliquez (P2)"
+    If Not g_oCalc.LireAltitudeTexte(g_oP2, sSep, nDec) Then
+        ShowPrompt "Texte '" & g_sValeurTexte & "' non numerique - recliquez (P2)"
         Exit Sub
     End If
 
@@ -46,7 +45,7 @@ Private Sub IPrimitiveCommandEvents_DataPoint(Point As Point3d, ByVal View As Vi
     frmInterpolation.AfficherP2 g_oP2
     frmInterpolation.AfficherSegment g_oCalc.InfoSegment(g_oP1, g_oP2)
 
-    ShowPrompt "P2 = " & oText.Text & "  |  " & g_oCalc.InfoSegment(g_oP1, g_oP2) & _
+    ShowPrompt "P2 = " & g_sValeurTexte & "  |  " & g_oCalc.InfoSegment(g_oP1, g_oP2) & _
                "  ->  deplacez le curseur. Data=creer  Reset=nouv. selection"
     CommandState.StartPrimitive New CPlacerPoint
 End Sub

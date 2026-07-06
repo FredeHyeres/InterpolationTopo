@@ -20,6 +20,8 @@ Public oTexte           As CSymboTexte      ' symbologie et format du texte
 Public oCercle          As CSymboCercle     ' symbologie du cercle
 Public dTolTexte        As Double           ' rayon de recherche autour du clic (u.m.)
 Public oTextModele      As TextElement      ' element P1 : modele pour CreateTextElement1
+Public dPenteDecalage   As Double           ' pente transversale en % (appliquee au decalage)
+Public bAppliquerPente  As Boolean          ' True = appliquer la pente au decalage
 
 '------------------------------------------------------------------------------
 Sub Init()
@@ -28,6 +30,8 @@ Sub Init()
     oCercle.InitDefauts
     dTolTexte = 1#
     Set oTextModele = Nothing
+    dPenteDecalage = 0#
+    bAppliquerPente = False
 End Sub
 
 '------------------------------------------------------------------------------
@@ -42,6 +46,12 @@ End Sub
 
 '------------------------------------------------------------------------------
 ' Appele apres la selection de P2 : ajuste les decimales si besoin.
+Sub ChargerModeleDepuisTag(sSep As String, nDec As Integer)
+    oTexte.SepDecimal = sSep
+    oTexte.Decimales = nDec
+End Sub
+
+'------------------------------------------------------------------------------
 Sub AjusterDecimales(nDecP2 As Integer)
     If nDecP2 > oTexte.Decimales Then oTexte.Decimales = nDecP2
 End Sub
