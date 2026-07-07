@@ -46,6 +46,26 @@ if (Test-Path $Mvba) {
     Write-Host "    importez les fichiers de src\v2\ dans un projet VBA (voir README)."
 }
 
+# --- 1b. Neutraliser les copies masquantes dans les projets MicroStation -----
+# MicroStation cherche le .mvba d'abord dans le dossier vba du projet actif
+# (WorkSpace\Projects\<projet>\vba) : une vieille copie y masquerait la version
+# installee dans Standards\vba. On les renomme en .bak (aucune suppression).
+if ($MvbaOk) {
+    $ProjetsDir = Join-Path $Workspace "Projects"
+    if (Test-Path $ProjetsDir) {
+        $Masquantes = @(Get-ChildItem $ProjetsDir -Recurse -Filter "Interpolation.mvba" -File -ErrorAction SilentlyContinue)
+        foreach ($M in $Masquantes) {
+            $Bak = "$($M.FullName).bak"
+            if (Test-Path $Bak) { Remove-Item $Bak -Force }
+            Rename-Item $M.FullName $Bak
+            Write-Host "[OK] Copie masquante neutralisee : $($M.FullName) -> .bak" -ForegroundColor Yellow
+        }
+        if ($Masquantes.Count -eq 0) {
+            Write-Host "[OK] Aucune copie masquante dans $ProjetsDir" -ForegroundColor Green
+        }
+    }
+}
+
 # --- 2. Copier la boite a outils (.dgnlib) -----------------------------------
 $Dgnlib = Join-Path $Source "MesMacros.dgnlib"
 $GuiDir = Join-Path $Workspace "System\GUI"
