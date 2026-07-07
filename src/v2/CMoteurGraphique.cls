@@ -247,7 +247,7 @@ Private Sub CopierAttributsTag(oSrc As TagElement, oDst As TagElement)
     oDst.Color = oSrc.Color: Err.Clear
     Set oDst.Level = oSrc.Level: Err.Clear
     oDst.LineWeight = oSrc.LineWeight: Err.Clear
-    oDst.Rotation = oSrc.Rotation: Err.Clear
+    ' oDst.Rotation = oSrc.Rotation: Err.Clear
 
     ' Proprietes texte incertaines : liaison tardive
     Dim oS As Object, oD As Object
