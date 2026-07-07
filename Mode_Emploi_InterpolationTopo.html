@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Interpolation Topo — Mode d'emploi</title>
+<title>Interpolation Topo V2 — Mode d'emploi</title>
 <style>
   :root {
     --bleu: #1a5276;
@@ -148,45 +148,51 @@
 <body>
 
 <header>
-  <h1>&#128207; Interpolation Topo</h1>
+  <h1>&#128207; Interpolation Topo V2</h1>
   <p>Macro VBA pour MicroStation V8i SS3 — interpolation d'altitude entre deux points topo</p>
 </header>
 
 <nav>
-  <a href="#presentation">Présentation</a>
+  <a href="#presentation">Pr&eacute;sentation</a>
   <a href="#installation">Installation</a>
+  <a href="#formulaire">Formulaire</a>
   <a href="#utilisation">Utilisation</a>
   <a href="#keyin">Key-in</a>
   <a href="#fonction">Touche de fonction</a>
-  <a href="#boite">Boîte à outils</a>
+  <a href="#boite">Bo&icirc;te &agrave; outils</a>
 </nav>
 
 <main>
 
 <!-- ==================== PRESENTATION ==================== -->
 <section id="presentation">
-  <h2>1. Présentation</h2>
+  <h2>1. Pr&eacute;sentation</h2>
   <p>
-    <strong>Interpolation Topo</strong> calcule et place l'altitude d'un point situé sur la droite
-    reliant deux textes d'altitude existants (points topo). La macro crée :
+    <strong>Interpolation Topo V2</strong> calcule et place l'altitude d'un point situ&eacute; sur la droite
+    reliant deux points d'altitude existants. La macro accepte comme sources d'altitude :
   </p>
   <ul>
+    <li>des <strong>textes simples</strong> contenant une valeur num&eacute;rique ;</li>
+    <li>des <strong>tags</strong> et <strong>cellules contenant des tags</strong> d'altitude.</li>
+  </ul>
+  <p>Elle cr&eacute;e :</p>
+  <ul>
     <li>un <strong>texte altitude</strong> reprenant automatiquement la mise en forme
-        (police, taille, niveau, couleur) du texte du point&nbsp;1 pris comme modèle ;</li>
-    <li>un <strong>cercle</strong> centré sur le point projeté, avec diamètre, couleur
+        (police, taille, niveau, couleur) du texte du point&nbsp;1 pris comme mod&egrave;le ;</li>
+    <li>un <strong>cercle</strong> centr&eacute; sur le point projet&eacute;, avec diam&egrave;tre, couleur
         et niveau au choix.</li>
   </ul>
-  <p>Pendant le placement, un <strong>aperçu dynamique</strong> affiche :</p>
+  <p>Pendant le placement, un <strong>aper&ccedil;u dynamique</strong> affiche :</p>
   <ul>
-    <li>la ligne support P1–P2 (verte, étendue de 20&nbsp;% de part et d'autre) ;</li>
+    <li>la ligne support P1–P2 (verte, &eacute;tendue de 20&nbsp;% de part et d'autre) ;</li>
     <li>des croix sur P1 et P2 ;</li>
     <li>le cercle et le texte altitude provisoires qui suivent le curseur ;</li>
-    <li>dans la barre d'état : l'altitude interpolée <code>Z</code>, l'abscisse <code>t</code>
+    <li>dans la barre d'&eacute;tat : l'altitude interpol&eacute;e <code>Z</code>, l'abscisse <code>t</code>
         (0&nbsp;=&nbsp;P1, 1&nbsp;=&nbsp;P2), la <strong>pente en&nbsp;%</strong> et le
         <strong>gisement en gon</strong> (0&nbsp;=&nbsp;nord, sens horaire).</li>
   </ul>
   <div class="astuce">
-    &#9989; Le séparateur décimal (point ou virgule) et le nombre de décimales du texte créé
+    &#9989; Le s&eacute;parateur d&eacute;cimal (point ou virgule) et le nombre de d&eacute;cimales du texte cr&eacute;&eacute;
     sont repris automatiquement des textes source.
   </div>
 </section>
@@ -195,95 +201,139 @@
 <section id="installation">
   <h2>2. Installation</h2>
 
-  <h3>2.0 Installation automatique (recommandée)</h3>
-  <p>Télécharger le dépôt GitHub :
-     <a href="https://github.com/FredeHyeres/InterpolationTopo/archive/refs/heads/main.zip">
-     <strong>téléchargement direct du ZIP</strong></a>
+  <h3>2.0 Installation automatique (recommand&eacute;e)</h3>
+  <p>T&eacute;l&eacute;charger le d&eacute;p&ocirc;t GitHub :
+     <a href="https://github.com/FredeHyeres/InterpolationTopo/archive/refs/heads/V2.zip">
+     <strong>t&eacute;l&eacute;chargement direct du ZIP</strong></a>
      (ou <em>Code &gt; Download ZIP</em> sur
-     <a href="https://github.com/FredeHyeres/InterpolationTopo">la page du dépôt</a>),
-     décompresser,
+     <a href="https://github.com/FredeHyeres/InterpolationTopo">la page du d&eacute;p&ocirc;t</a>),
+     d&eacute;compresser,
      puis double-cliquer sur <code>install.cmd</code> : le projet
-     <code>Interpolation.mvba</code> est copié dans le workspace avec chargement
-     automatique au démarrage, et la ToolBox <code>MesMacros.dgnlib</code> est
-     installée. Le <code>Default.mvba</code> personnel n'est jamais touché.
-     Redémarrer MicroStation et c'est prêt. Les étapes 2.1 et 2.2 ci-dessous
+     <code>Interpolation.mvba</code> est copi&eacute; dans le workspace avec chargement
+     automatique au d&eacute;marrage, et la ToolBox <code>MesMacros.dgnlib</code> est
+     install&eacute;e. Le <code>Default.mvba</code> personnel n'est jamais touch&eacute;.
+     Red&eacute;marrer MicroStation et c'est pr&ecirc;t. Les &eacute;tapes 2.1 et 2.2 ci-dessous
      ne servent que pour une installation manuelle.</p>
 
   <h3>2.1 Ouvrir le projet VBA (installation manuelle)</h3>
   <ol>
     <li>Dans MicroStation : <strong>Utilitaires &gt; Macros &gt; Gestionnaire de projets VBA</strong></li>
-    <li>Utilisez le projet <strong>Default</strong> (chargé automatiquement au démarrage,
-        key-in sans crochets) — ou créez un projet dédié si vous préférez</li>
-    <li>Ouvrez l'éditeur VBA : <kbd>Alt</kbd>+<kbd>F11</kbd></li>
+    <li>Utilisez le projet <strong>Default</strong> (charg&eacute; automatiquement au d&eacute;marrage)
+        — ou cr&eacute;ez un projet d&eacute;di&eacute; si vous pr&eacute;f&eacute;rez</li>
+    <li>Ouvrez l'&eacute;diteur VBA : <kbd>Alt</kbd>+<kbd>F11</kbd></li>
   </ol>
 
-  <h3>2.2 Importer les 4 fichiers sources</h3>
+  <h3>2.2 Importer les fichiers sources</h3>
   <ol>
-    <li>Dans l'éditeur VBA : <strong>Fichier &gt; Importer un fichier</strong> (<kbd>Ctrl</kbd>+<kbd>M</kbd>)</li>
-    <li>Importez, un par un, depuis le dossier <code>src\</code> :
+    <li>Dans l'&eacute;diteur VBA : <strong>Fichier &gt; Importer un fichier</strong> (<kbd>Ctrl</kbd>+<kbd>M</kbd>)</li>
+    <li>Importez, un par un, depuis le dossier <code>src\v2\</code> :
       <table>
-        <tr><th>Fichier</th><th>Type attendu après import</th></tr>
-        <tr><td><code>InterpolationTopo.bas</code></td><td>Modules</td></tr>
+        <tr><th>Fichier</th><th>Type attendu apr&egrave;s import</th></tr>
+        <tr><td><code>InterpolationTopoV2.bas</code></td><td>Modules</td></tr>
+        <tr><td><code>CMstSettings.cls</code></td><td>Modules de classe</td></tr>
+        <tr><td><code>CSymboTexte.cls</code></td><td>Modules de classe</td></tr>
+        <tr><td><code>CSymboCercle.cls</code></td><td>Modules de classe</td></tr>
+        <tr><td><code>CPointRef.cls</code></td><td>Modules de classe</td></tr>
+        <tr><td><code>CInterpolation.cls</code></td><td>Modules de classe</td></tr>
+        <tr><td><code>CMoteurGraphique.cls</code></td><td>Modules de classe</td></tr>
         <tr><td><code>CSelectP1.cls</code></td><td>Modules de classe</td></tr>
         <tr><td><code>CSelectP2.cls</code></td><td>Modules de classe</td></tr>
         <tr><td><code>CPlacerPoint.cls</code></td><td>Modules de classe</td></tr>
+        <tr><td><code>frmInterpolation.frm</code> + <code>.frx</code></td><td>UserForm</td></tr>
       </table>
     </li>
-    <li><strong>Débogage &gt; Compiler InterpolationTopo</strong> : aucune erreur ne doit apparaître</li>
+    <li><strong>D&eacute;bogage &gt; Compiler</strong> : aucune erreur ne doit appara&icirc;tre</li>
     <li>Enregistrez (<kbd>Ctrl</kbd>+<kbd>S</kbd>)</li>
   </ol>
 
   <div class="attention">
-    &#9888;&#65039; Les fichiers <code>.cls</code> doivent arriver dans <strong>« Modules de classe »</strong>.
-    S'ils arrivent dans « Modules » avec des lignes <code>VERSION 1.0 CLASS</code> ou
+    &#9888;&#65039; Les fichiers <code>.cls</code> doivent arriver dans <strong>&laquo; Modules de classe &raquo;</strong>.
+    S'ils arrivent dans &laquo; Modules &raquo; avec des lignes <code>VERSION 1.0 CLASS</code> ou
     <code>Attribute VB_Name</code> visibles, les fichiers sources ont des fins de ligne Unix (LF) :
-    convertissez-les en fins de ligne Windows (CRLF) puis réimportez.
+    convertissez-les en fins de ligne Windows (CRLF) puis r&eacute;importez.
+  </div>
+  <div class="attention">
+    &#9888;&#65039; Le fichier <code>frmInterpolation.frx</code> doit &ecirc;tre dans le <strong>m&ecirc;me dossier</strong>
+    que le <code>.frm</code> lors de l'import. Sans lui, l'import &eacute;choue avec
+    &laquo; Impossible de charger... &raquo;.
   </div>
 
   <h3>2.3 Chargement automatique</h3>
-  <p>Avec le <strong>Default MVBA</strong> : rien à faire, il est chargé d'office par
-     MicroStation à chaque démarrage.</p>
-  <p>Avec un <code>.mvba</code> dédié seulement : <em>Utilities &gt; Macros &gt;
+  <p>Avec le <strong>Default MVBA</strong> : rien &agrave; faire, il est charg&eacute; d'office par
+     MicroStation &agrave; chaque d&eacute;marrage.</p>
+  <p>Avec un <code>.mvba</code> d&eacute;di&eacute; seulement : <em>Utilities &gt; Macros &gt;
      Project Manager</em>, clic droit sur le projet &gt; <strong>Autoload</strong>.</p>
+</section>
+
+<!-- ==================== FORMULAIRE ==================== -->
+<section id="formulaire">
+  <h2>3. Formulaire (Tool Settings)</h2>
+  <p>
+    Au lancement de la commande, le formulaire <strong>Interpolation Topo</strong> s'ouvre
+    et reste visible pendant toute la dur&eacute;e de la commande. Les param&egrave;tres sont
+    modifiables &agrave; tout moment, m&ecirc;me entre deux placements.
+  </p>
+
+  <h3>Cercle (si l'altitude est un texte)</h3>
+  <ul>
+    <li><strong>Diam&egrave;tre</strong> en unit&eacute;s ma&icirc;tre (ex. <code>0.50</code>)</li>
+    <li><strong>Couleur</strong> : index MicroStation 0–255 (0=blanc, 1=bleu, 2=vert, 3=rouge, 4=jaune, 6=orange)</li>
+    <li><strong>Niveau</strong> : liste des niveaux existants du fichier DGN.
+        Laisser vide pour reprendre le niveau du texte P1</li>
+  </ul>
+
+  <h3>Texte altitude (si l'altitude est un texte)</h3>
+  <ul>
+    <li><strong>M&ecirc;mes attributs que le texte P1</strong> (case coch&eacute;e par d&eacute;faut) :
+        couleur, niveau, police, taille, style et justification sont h&eacute;rit&eacute;s du texte P1</li>
+    <li>Case d&eacute;coch&eacute;e : la <strong>couleur</strong> et le <strong>niveau</strong> du texte
+        cr&eacute;&eacute; deviennent choisissables (les autres propri&eacute;t&eacute;s restent h&eacute;rit&eacute;es)</li>
+  </ul>
+
+  <h3>Pente d&eacute;calage (pente transversale)</h3>
+  <ul>
+    <li><strong>Appliquer pente transversale</strong> : cocher la case pour activer</li>
+    <li><strong>Pente (%)</strong> : valeur de la pente. Positive = mont&eacute;e, n&eacute;gative = descente.
+        La pente s'applique <strong>identiquement des deux c&ocirc;t&eacute;s</strong> de la ligne P1–P2</li>
+    <li>Bouton <strong>+/-</strong> : inverse le signe de la pente en un clic</li>
+  </ul>
+
+  <h3>&Eacute;tat (lecture seule)</h3>
+  <ul>
+    <li><strong>P1</strong> : altitude du premier point s&eacute;lectionn&eacute;</li>
+    <li><strong>P2</strong> : altitude du second point s&eacute;lectionn&eacute;</li>
+    <li>Pente (%) et gisement (gon) du segment</li>
+  </ul>
 </section>
 
 <!-- ==================== UTILISATION ==================== -->
 <section id="utilisation">
-  <h2>3. Utilisation</h2>
+  <h2>4. Utilisation</h2>
 
   <div class="etapes">
     <div class="etape"><span class="num">1</span><br>Lancer la commande<br><small>(key-in, touche F ou bouton)</small></div>
-    <div class="etape"><span class="num">2</span><br>Paramètres<br><small>diamètre, couleur, niveau du cercle</small></div>
-    <div class="etape"><span class="num">3</span><br>Clic près du texte<br>altitude <strong>P1</strong></div>
-    <div class="etape"><span class="num">4</span><br>Clic près du texte<br>altitude <strong>P2</strong></div>
-    <div class="etape"><span class="num">5</span><br>Placement dynamique<br><small>Data = créer<br>Reset = nouvelle sélection<br>Reset ×2 = quitter</small></div>
+    <div class="etape"><span class="num">2</span><br>Formulaire<br><small>param&egrave;tres modifiables &agrave; tout moment</small></div>
+    <div class="etape"><span class="num">3</span><br>Clic pr&egrave;s du point<br>altitude <strong>P1</strong></div>
+    <div class="etape"><span class="num">4</span><br>Clic pr&egrave;s du point<br>altitude <strong>P2</strong></div>
+    <div class="etape"><span class="num">5</span><br>Placement dynamique<br><small>Data = cr&eacute;er<br>Reset = nouvelle s&eacute;lection<br>Reset &times;2 = quitter</small></div>
   </div>
 
   <ol>
-    <li><strong>Paramètres</strong> (3 petites boîtes de dialogue) :
-      <ul>
-        <li>Diamètre du cercle en unités maître (ex. <code>0.50</code>)</li>
-        <li>Couleur du cercle : index MicroStation 0–255 (0=blanc, 1=bleu, 2=vert, 3=rouge, 4=jaune, 6=orange)</li>
-        <li>Niveau du cercle : la <strong>liste des niveaux existants</strong> du fichier
-            s'affiche (« numéro : nom ») — tapez le numéro ou le nom voulu ;
-            <em>laisser vide</em> pour reprendre le niveau du texte P1.
-            Une saisie invalide fait réafficher la liste.
-            <br><small>Utile pour placer les cercles sur un niveau distinct des textes,
-            afin d'imprimer les altitudes sans les symboles de points.</small></li>
-      </ul>
-    </li>
-    <li><strong>Point 1</strong> : cliquez à moins de 1 unité maître du texte altitude.
-        Ce texte sert de <em>modèle de mise en forme</em> pour le texte créé.</li>
-    <li><strong>Point 2</strong> : idem. La barre d'état affiche alors la
+    <li><strong>Lancement</strong> : le formulaire <strong>Interpolation Topo</strong> s'ouvre.
+        Tous les param&egrave;tres sont modifiables &agrave; tout moment via le formulaire.</li>
+    <li><strong>Point 1</strong> : cliquez &agrave; proximit&eacute; d'un texte, tag ou cellule d'altitude.
+        Ce texte sert de <em>mod&egrave;le de mise en forme</em> pour le texte cr&eacute;&eacute;.
+        Les niveaux gel&eacute;s sont automatiquement ignor&eacute;s.</li>
+    <li><strong>Point 2</strong> : idem. Le formulaire affiche alors la
         <strong>pente</strong> et le <strong>gisement</strong> du segment.</li>
-    <li><strong>Placement</strong> : déplacez le curseur — sa position est projetée sur la
-        droite P1–P2 et l'altitude interpolée s'affiche en dynamique.
+    <li><strong>Placement</strong> : d&eacute;placez le curseur — sa position est projet&eacute;e sur la
+        droite P1–P2 et l'altitude interpol&eacute;e s'affiche en dynamique.
       <ul>
-        <li><strong>Data</strong> (clic gauche) : crée le point (texte + cercle).
-            Répétable : on peut créer plusieurs points sur la même droite.</li>
-        <li><strong>Reset</strong> (clic droit) : <strong>nouvelle sélection</strong> —
+        <li><strong>Data</strong> (clic gauche) : cr&eacute;e le point (texte + cercle).
+            R&eacute;p&eacute;table : on peut cr&eacute;er plusieurs points sur la m&ecirc;me droite.</li>
+        <li><strong>Reset</strong> (clic droit) : <strong>nouvelle s&eacute;lection</strong> —
             on revient au choix du point 1 pour travailler sur une autre paire de points
-            (les paramètres du cercle sont conservés).</li>
+            (les param&egrave;tres sont conserv&eacute;s).</li>
         <li><strong>Reset une seconde fois</strong> (pendant le choix du point 1) :
             quitte la commande.</li>
       </ul>
@@ -292,190 +342,182 @@
 
   <div class="attention">
     &#9888;&#65039; Si <code>t &lt; 0</code> ou <code>t &gt; 1</code>, le point est
-    <strong>hors du segment P1–P2</strong> : l'altitude est extrapolée, un avertissement
-    s'affiche dans la barre d'état.
+    <strong>hors du segment P1–P2</strong> : l'altitude est extrapol&eacute;e, un avertissement
+    s'affiche dans la barre d'&eacute;tat.
   </div>
   <div class="astuce">
-    &#9989; Seuls les textes <strong>numériques</strong> sont détectés : les matricules
-    contenant des lettres sont ignorés automatiquement lors de la recherche du texte le plus proche.
+    &#9989; Seuls les &eacute;l&eacute;ments contenant une valeur <strong>num&eacute;rique</strong> sont d&eacute;tect&eacute;s :
+    les matricules contenant des lettres sont ignor&eacute;s automatiquement.
+  </div>
+  <div class="astuce">
+    &#9989; La <strong>pente transversale</strong> s'applique de mani&egrave;re uniforme des deux c&ocirc;t&eacute;s
+    de la ligne P1–P2 : une valeur positive fait monter, une valeur n&eacute;gative fait descendre,
+    quel que soit le c&ocirc;t&eacute;. Utilisez le bouton <strong>+/-</strong> pour inverser rapidement.
   </div>
 </section>
 
 <!-- ==================== KEY-IN ==================== -->
 <section id="keyin">
-  <h2>4. Lancement par key-in</h2>
+  <h2>5. Lancement par key-in</h2>
   <ol>
-    <li>Ouvrez la fenêtre de saisie : <strong>Utilitaires &gt; Saisie au clavier</strong> (Key-in)</li>
-    <li>Tapez (le projet <code>Interpolation.mvba</code> étant chargé automatiquement) :
-      <pre>vba run InterpolerPoint</pre>
+    <li>Ouvrez la fen&ecirc;tre de saisie : <strong>Utilitaires &gt; Saisie au clavier</strong> (Key-in)</li>
+    <li>Tapez :
+      <pre>vba run [InterpolationTopoV2]InterpolerPoint</pre>
     </li>
-    <li>Validez par <kbd>Entrée</kbd></li>
+    <li>Validez par <kbd>Entr&eacute;e</kbd></li>
   </ol>
   <div class="astuce">
-    &#9989; La fenêtre Key-in garde l'historique : <kbd>&#8593;</kbd> puis <kbd>Entrée</kbd>
-    pour relancer la dernière commande. Le Default MVBA est chargé automatiquement
-    par MicroStation — aucune configuration nécessaire.
+    &#9989; La fen&ecirc;tre Key-in garde l'historique : <kbd>&#8593;</kbd> puis <kbd>Entr&eacute;e</kbd>
+    pour relancer la derni&egrave;re commande.
   </div>
 </section>
 
 <!-- ==================== TOUCHE DE FONCTION ==================== -->
 <section id="fonction">
-  <h2>5. Lancement par touche de fonction</h2>
+  <h2>6. Lancement par touche de fonction</h2>
   <ol>
     <li>Menu <strong>Utilitaires &gt; Touches de fonction</strong></li>
-    <li>Sélectionnez une touche libre, par exemple <kbd>F6</kbd>
+    <li>S&eacute;lectionnez une touche libre, par exemple <kbd>F6</kbd>
         (les combinaisons <kbd>Ctrl</kbd>/<kbd>Alt</kbd>/<kbd>Maj</kbd>+F sont aussi possibles)</li>
     <li>Dans le champ <strong>Action</strong>, saisissez :
-      <pre>vba run InterpolerPoint</pre>
+      <pre>vba run [InterpolationTopoV2]InterpolerPoint</pre>
     </li>
-    <li>Cliquez <strong>OK</strong> — le menu de touches de fonction est enregistré
+    <li>Cliquez <strong>OK</strong> — le menu de touches de fonction est enregistr&eacute;
         (fichier <code>.mnu</code> du workspace)</li>
   </ol>
-  <p>Un appui sur <kbd>F6</kbd> lance désormais directement la commande.</p>
+  <p>Un appui sur <kbd>F6</kbd> lance d&eacute;sormais directement la commande.</p>
 </section>
 
 <!-- ==================== BOITE A OUTILS ==================== -->
 <section id="boite">
-  <h2>6. Bouton dans une boîte à outils personnalisée</h2>
-  <p>La méthode la plus confortable pour un usage quotidien.
-     <em>Procédure testée et validée sur V8i SS3 (08.11.09.578).</em></p>
+  <h2>7. Bouton dans une bo&icirc;te &agrave; outils personnalis&eacute;e</h2>
+  <p>La m&eacute;thode la plus confortable pour un usage quotidien.
+     <em>Proc&eacute;dure test&eacute;e et valid&eacute;e sur V8i SS3 (08.11.09.578).</em></p>
 
   <div class="attention">
-    &#9888;&#65039; <strong>Piège n°1 :</strong> dans <em>Workspace &gt; Customize</em>,
-    si les menus sont grisés et qu'aucune création n'est possible, c'est qu'il manque un
+    &#9888;&#65039; <strong>Pi&egrave;ge n&deg;1 :</strong> dans <em>Workspace &gt; Customize</em>,
+    si les menus sont gris&eacute;s et qu'aucune cr&eacute;ation n'est possible, c'est qu'il manque un
     fichier <code>.dgnlib</code> valide comme cible des personnalisations.<br>
-    <strong>Piège n°2 :</strong> un <code>.dgnlib</code> créé via <em>File &gt; New</em>
+    <strong>Pi&egrave;ge n&deg;2 :</strong> un <code>.dgnlib</code> cr&eacute;&eacute; via <em>File &gt; New</em>
     (ou en renommant l'extension d'un <code>.dgn</code>) n'est <u>pas reconnu</u> —
     sa structure interne est incorrecte. Il faut <strong>copier un .dgnlib existant</strong>.
   </div>
 
-  <h3>Étape 1 — Créer un vrai fichier .dgnlib</h3>
+  <h3>&Eacute;tape 1 — Cr&eacute;er un vrai fichier .dgnlib</h3>
   <ol>
-    <li>Aller dans le dossier scanné automatiquement par MicroStation :<br>
+    <li>Aller dans le dossier scann&eacute; automatiquement par MicroStation :<br>
         <code>C:\Users\[VotreNom]\Documents\MicroStV8i\WorkSpace\System\GUI</code></li>
     <li>Copier le fichier <code>VectorIcon.dgnlib</code> (structure interne valide)</li>
     <li>Renommer la copie en <code>MesMacros.dgnlib</code></li>
-    <li>Redémarrer MicroStation</li>
+    <li>Red&eacute;marrer MicroStation</li>
   </ol>
 
-  <h3>Étape 2 — Vérifier que le fichier est reconnu</h3>
+  <h3>&Eacute;tape 2 — V&eacute;rifier que le fichier est reconnu</h3>
   <ol>
     <li><strong>Workspace &gt; Customize</strong> : <code>MesMacros.dgnlib</code> doit
-        apparaître dans la liste des librairies</li>
-    <li>Sinon, vérifier qu'il est bien dans <code>System\GUI</code></li>
+        appara&icirc;tre dans la liste des librairies</li>
+    <li>Sinon, v&eacute;rifier qu'il est bien dans <code>System\GUI</code></li>
   </ol>
 
-  <h3>Étape 3 — Ouvrir le .dgnlib pour le rendre éditable</h3>
+  <h3>&Eacute;tape 3 — Ouvrir le .dgnlib pour le rendre &eacute;ditable</h3>
   <ol>
     <li><strong>File &gt; Open</strong>, changer le filtre de type pour afficher les
         <code>.dgnlib</code></li>
     <li>Ouvrir <code>MesMacros.dgnlib</code> comme fichier actif</li>
     <li>Retourner dans <strong>Workspace &gt; Customize</strong> :
-        les menus sont maintenant déverrouillés</li>
+        les menus sont maintenant d&eacute;verrouill&eacute;s</li>
   </ol>
 
-  <h3>Étape 4 — Créer la ToolBox</h3>
+  <h3>&Eacute;tape 4 — Cr&eacute;er la ToolBox</h3>
   <ol>
-    <li>Sélectionner <code>MesMacros.dgnlib</code> comme fichier cible
-        (menu déroulant en haut)</li>
+    <li>S&eacute;lectionner <code>MesMacros.dgnlib</code> comme fichier cible
+        (menu d&eacute;roulant en haut)</li>
     <li>Onglet <strong>Tool Boxes</strong> &gt; clic droit dans la liste &gt;
         <strong>New Tool Box</strong>, nommer (ex. <code>MesMacros</code>)</li>
   </ol>
 
-  <h3>Étape 5 — Créer le bouton</h3>
+  <h3>&Eacute;tape 5 — Cr&eacute;er le bouton</h3>
   <ol>
-    <li>Sélectionner la ToolBox, panneau de droite &gt; clic droit &gt;
+    <li>S&eacute;lectionner la ToolBox, panneau de droite &gt; clic droit &gt;
         <strong>New Tool</strong></li>
     <li>Remplir :
       <table>
-        <tr><th>Propriété</th><th>Valeur</th></tr>
-        <tr><td>Key-in</td><td><code>vba run InterpolerPoint</code> <small>(macro dans le Default MVBA)</small></td></tr>
-        <tr><td>Balloon text</td><td>Interpoler un point</td></tr>
-        <tr><td>Icon</td><td>laisser vide ou choisir une icône</td></tr>
+        <tr><th>Propri&eacute;t&eacute;</th><th>Valeur</th></tr>
+        <tr><td>Key-in</td><td><code>vba run [InterpolationTopoV2]InterpolerPoint</code></td></tr>
+        <tr><td>Balloon text</td><td>Interpoler un point (V2)</td></tr>
+        <tr><td>Icon</td><td>laisser vide ou choisir une ic&ocirc;ne</td></tr>
       </table>
     </li>
   </ol>
-  <div class="attention">
-    &#9888;&#65039; <strong>Syntaxe du key-in selon l'emplacement de la macro :</strong>
-    <ul>
-      <li>Macro dans le <strong>Default MVBA</strong> :
-          <code>vba run InterpolerPoint</code> (sans crochets, sans nom de module)</li>
-      <li>Macro dans un <strong>.mvba dédié</strong> (ex. InterpolationTopo.mvba) :
-          <code>vba run [InterpolationTopo.InterpolerPoint]</code></li>
-    </ul>
-    En cas de doute, tester d'abord la commande via <strong>Utilities &gt; Key-in</strong> (F9)
-    avant de l'assigner au bouton.
-  </div>
 
-  <h3>Étape 6 — Afficher la ToolBox</h3>
+  <h3>&Eacute;tape 6 — Afficher la ToolBox</h3>
   <ol>
     <li>Clic droit sur la ToolBox dans la liste &gt; <strong>Open</strong> :
-        elle apparaît flottante</li>
-    <li>La docker contre une barre d'outils existante par glisser-déposer</li>
+        elle appara&icirc;t flottante</li>
+    <li>La docker contre une barre d'outils existante par glisser-d&eacute;poser</li>
   </ol>
 
-  <h3>Étape 7 — Autoload de la macro (indispensable)</h3>
+  <h3>&Eacute;tape 7 — Autoload de la macro (indispensable)</h3>
   <ol>
     <li><strong>Utilities &gt; Macros &gt; Project Manager</strong></li>
-    <li>Charger le projet VBA s'il ne l'est pas déjà</li>
-    <li>Clic droit sur le projet &gt; <strong>Autoload</strong> : la macro sera chargée
-        à chaque ouverture de MicroStation et le bouton fonctionnera sans manipulation</li>
+    <li>Charger le projet VBA s'il ne l'est pas d&eacute;j&agrave;</li>
+    <li>Clic droit sur le projet &gt; <strong>Autoload</strong> : la macro sera charg&eacute;e
+        &agrave; chaque ouverture de MicroStation et le bouton fonctionnera sans manipulation</li>
   </ol>
 </section>
 
 <!-- ==================== DEPANNAGE ==================== -->
 <section id="depannage">
-  <h2>7. Dépannage rapide</h2>
+  <h2>8. D&eacute;pannage rapide</h2>
   <table>
-    <tr><th>Symptôme</th><th>Cause / remède</th></tr>
+    <tr><th>Sympt&ocirc;me</th><th>Cause / rem&egrave;de</th></tr>
     <tr>
-      <td>« Ouvrez d'abord un fichier DGN »</td>
+      <td>&laquo; Ouvrez d'abord un fichier DGN &raquo;</td>
       <td>Aucun dessin actif : ouvrez un DGN avant de lancer la commande.</td>
     </tr>
     <tr>
-      <td>« Aucun texte altitude à moins de 1 u.m. »</td>
-      <td>Cliquez plus près de l'origine du texte, ou le texte n'est pas numérique
-          (lettres, symboles).</td>
+      <td>&laquo; Aucun texte altitude &agrave; proximit&eacute; &raquo;</td>
+      <td>Cliquez plus pr&egrave;s de l'origine du texte/tag, ou l'&eacute;l&eacute;ment n'est pas num&eacute;rique.
+          V&eacute;rifiez aussi que le niveau n'est pas gel&eacute;.</td>
     </tr>
     <tr>
-      <td>Pas d'aperçu dynamique</td>
-      <td>Vérifiez que la version chargée de <code>CPlacerPoint</code> contient bien
+      <td>Pas d'aper&ccedil;u dynamique</td>
+      <td>V&eacute;rifiez que la version charg&eacute;e de <code>CPlacerPoint</code> contient bien
           <code>CommandState.StartDynamics</code> dans <code>Start</code>
-          (supprimer le module puis réimporter le fichier).</td>
+          (supprimer le module puis r&eacute;importer le fichier).</td>
     </tr>
     <tr>
-      <td>Erreurs de compilation « membre introuvable »</td>
-      <td>Vérifiez <strong>Outils &gt; Références</strong> : la
-          « Bentley MicroStation DGN 8.9 Object Library » doit être cochée et pointer
+      <td>Erreurs de compilation &laquo; membre introuvable &raquo;</td>
+      <td>V&eacute;rifiez <strong>Outils &gt; R&eacute;f&eacute;rences</strong> : la
+          &laquo; Bentley MicroStation DGN 8.9 Object Library &raquo; doit &ecirc;tre coch&eacute;e et pointer
           vers l'installation V8i active.</td>
     </tr>
     <tr>
       <td>Les <code>.cls</code> s'importent comme modules standard</td>
-      <td>Fins de ligne Unix (LF) dans les fichiers : convertir en CRLF puis réimporter.</td>
+      <td>Fins de ligne Unix (LF) dans les fichiers : convertir en CRLF puis r&eacute;importer.</td>
     </tr>
     <tr>
-      <td>« P1 et P2 confondus »</td>
-      <td>Les deux clics ont attrapé le même texte : cliquez plus près du second point.</td>
+      <td>&laquo; P1 et P2 confondus &raquo;</td>
+      <td>Les deux clics ont attrap&eacute; le m&ecirc;me texte : cliquez plus pr&egrave;s du second point.</td>
     </tr>
     <tr>
-      <td>Menus grisés dans Workspace &gt; Customize</td>
+      <td>Import du <code>.frm</code> &eacute;choue</td>
+      <td>Le fichier <code>frmInterpolation.frx</code> doit &ecirc;tre dans le m&ecirc;me dossier
+          que le <code>.frm</code>. En dernier recours : Insertion &gt; UserForm, nommer
+          <code>frmInterpolation</code>, puis coller le code &agrave; partir de
+          <code>Option Explicit</code> — les contr&ocirc;les sont cr&eacute;&eacute;s au runtime.</td>
+    </tr>
+    <tr>
+      <td>Menus gris&eacute;s dans Workspace &gt; Customize</td>
       <td>Aucun <code>.dgnlib</code> cible valide. Copier <code>VectorIcon.dgnlib</code>
           (dossier <code>WorkSpace\System\GUI</code>), renommer la copie
-          (ex. <code>MesMacros.dgnlib</code>), redémarrer, puis l'ouvrir comme fichier
-          actif pour déverrouiller Customize (voir §&nbsp;6).</td>
+          (ex. <code>MesMacros.dgnlib</code>), red&eacute;marrer, puis l'ouvrir comme fichier
+          actif pour d&eacute;verrouiller Customize (voir &sect;&nbsp;7).</td>
     </tr>
     <tr>
-      <td>Le <code>.dgnlib</code> n'apparaît pas dans Customize</td>
-      <td>Un <code>.dgnlib</code> créé via File &gt; New (ou un <code>.dgn</code> renommé)
-          n'est pas reconnu : il faut copier un <code>.dgnlib</code> existant valide.
-          Vérifier aussi qu'il est bien dans <code>WorkSpace\System\GUI</code>.</td>
-    </tr>
-    <tr>
-      <td>Le bouton de la ToolBox ne fait rien au démarrage</td>
-      <td>Le projet VBA n'est pas chargé : Utilities &gt; Macros &gt; Project Manager,
-          clic droit sur le projet &gt; <strong>Autoload</strong>. Vérifier aussi la
-          syntaxe du key-in (avec ou sans crochets selon l'emplacement de la macro,
-          voir §&nbsp;6 étape&nbsp;5) en la testant via Utilities &gt; Key-in.</td>
+      <td>Le bouton de la ToolBox ne fait rien au d&eacute;marrage</td>
+      <td>Le projet VBA n'est pas charg&eacute; : Utilities &gt; Macros &gt; Project Manager,
+          clic droit sur le projet &gt; <strong>Autoload</strong>.</td>
     </tr>
   </table>
 </section>
@@ -483,7 +525,7 @@
 </main>
 
 <footer>
-  Interpolation Topo — MicroStation V8i SS3 (08.11.09.578) &middot; Mode d'emploi &middot; Juillet 2026
+  Interpolation Topo V2 — MicroStation V8i SS3 (08.11.09.578) &middot; Mode d'emploi &middot; Juillet 2026
 </footer>
 
 </body>
