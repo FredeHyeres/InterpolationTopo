@@ -43,7 +43,7 @@ if (Test-Path $Mvba) {
     Write-Host "[OK] Interpolation.mvba copie vers $VbaDir" -ForegroundColor Green
 } else {
     Write-Host "[!] Interpolation.mvba absent du dossier d'installation :" -ForegroundColor Yellow
-    Write-Host "    importez les 4 fichiers de src\ dans un projet VBA (voir README)."
+    Write-Host "    importez les fichiers de src\v2\ dans un projet VBA (voir README)."
 }
 
 # --- 2. Copier la boite a outils (.dgnlib) -----------------------------------

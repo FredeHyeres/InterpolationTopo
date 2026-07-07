@@ -33,7 +33,7 @@ textes source, cercles plaçables sur un niveau distinct des textes.
 ## Installation automatique (recommandée)
 
 1. Télécharger le dépôt :
-   [**⬇ télécharger le ZIP**](https://github.com/FredeHyeres/InterpolationTopo/archive/refs/heads/V2.zip)
+   [**⬇ télécharger le ZIP**](https://github.com/FredeHyeres/InterpolationTopo/archive/refs/heads/main.zip)
    (ou **Code > Download ZIP**) et le décompresser
 2. Double-cliquer sur **`install.cmd`**
 
