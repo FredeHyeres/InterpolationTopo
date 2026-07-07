@@ -8,96 +8,139 @@ Attribute VB_Creatable = False
 Attribute VB_PredeclaredId = False
 Attribute VB_Exposed = False
 '==============================================================================
-' CPlacerPoint - etape 3 : placement dynamique du point interpole sur P1-P2
-' Data = creer le point (repetable), Reset = terminer
+' CPlacerPoint V2 - Etat commande : placement dynamique du point interpole
+'
+' Etape 1 : projection sur la droite P1-P2 => Data = figer l'altitude
+' Etape 2 : decalage perpendiculaire => Data = creer le point
+' Reset = revenir a la selection de P1
 '==============================================================================
 Option Explicit
 
 Implements IPrimitiveCommandEvents
 
+Private m_bEtape2       As Boolean      ' True = decalage perpendiculaire en cours
+Private m_oProj         As Point3d      ' point projete fige (etape 1)
+Private m_dZInterp      As Double       ' altitude interpolee figee
+Private m_dPerpX        As Double       ' vecteur unitaire perpendiculaire X
+Private m_dPerpY        As Double       ' vecteur unitaire perpendiculaire Y
+
 Private Sub IPrimitiveCommandEvents_Start()
     ShowCommand "Interpolation Topo"
-    ShowPrompt InfoSegment() & "  |  Deplacez le curseur : Data=creer  Reset=nouv. selection"
-    ' Indispensable : active l'evenement Dynamics (apercu provisoire)
+    ShowPrompt g_oCalc.InfoSegment(g_oP1, g_oP2) & _
+               "  |  Deplacez le curseur : Data=figer altitude  Reset=nouv. selection"
+    m_bEtape2 = False
     CommandState.StartDynamics
 End Sub
 
 Private Sub IPrimitiveCommandEvents_Dynamics(Point As Point3d, ByVal View As View, _
                                              ByVal DrawMode As MsdDrawingMode)
-    Dim dT As Double, oProj As Point3d
-    ProjectSurDroite g_oP1, g_oP2, Point, dT, oProj
+    If Not m_bEtape2 Then
+        ' --- Etape 1 : projection sur la droite P1-P2 ---
+        Dim dT As Double, oProj As Point3d
+        g_oCalc.ProjecterSurSegment g_oP1, g_oP2, Point, dT, oProj
 
-    Dim sAlt As String
-    sAlt = FormatAltitude(InterpolerZ(g_dZ1, g_dZ2, dT), g_nDecimals, g_sDecSep)
+        g_oMoteur.DessinDynamique DrawMode, g_oP1, g_oP2, oProj, dT, g_oSettings, g_oCalc
 
-    ' Ligne support P1-P2, etendue de 20 % de part et d'autre
-    Dim dx As Double, dy As Double
-    dx = g_oP2.X - g_oP1.X: dy = g_oP2.Y - g_oP1.Y
-    Dim oA As Point3d, oB As Point3d
-    oA.X = g_oP1.X - dx * 0.2: oA.Y = g_oP1.Y - dy * 0.2: oA.Z = g_oP1.Z
-    oB.X = g_oP2.X + dx * 0.2: oB.Y = g_oP2.Y + dy * 0.2: oB.Z = g_oP2.Z
-    Dim oLigne As LineElement
-    Set oLigne = CreateLineElement2(Nothing, oA, oB)
-    oLigne.Color = 3
-    oLigne.Redraw DrawMode
-
-    ' Croix sur P1 et P2
-    DrawCroix DrawMode, g_oP1, g_dCircRayon * 0.8
-    DrawCroix DrawMode, g_oP2, g_dCircRayon * 0.8
-
-    ' Cercle au point projete
-    Dim oCercle As EllipseElement
-    Set oCercle = CreateEllipseElement2(Nothing, oProj, _
-                       g_dCircRayon, g_dCircRayon, Matrix3dIdentity())
-    oCercle.Color = g_nCircColor
-    oCercle.Redraw DrawMode
-
-    ' Texte altitude (meme position que le texte qui sera cree)
-    Dim oPosTxt As Point3d, oRotTxt As Matrix3d
-    PositionTexteAltitude oProj, oPosTxt
-    RotationTexteModele oRotTxt
-    Dim oTxt As TextElement
-    Set oTxt = CreateTextElement1(g_oTextTemplate, sAlt, oPosTxt, oRotTxt)
-    oTxt.Redraw DrawMode
-
-    If dT < 0# Or dT > 1# Then
-        ShowPrompt "Z=" & sAlt & "  t=" & Format$(dT, "0.000") & "  " & InfoSegment() & _
-                   "  ATTENTION : hors segment P1-P2 (extrapolation)"
+        Dim sAlt As String
+        sAlt = g_oCalc.FormatAltitude(g_oCalc.InterpolerZ(g_oP1.Altitude, g_oP2.Altitude, dT), _
+                                       g_oSettings.oTexte.Decimales, g_oSettings.oTexte.SepDecimal)
+        If dT < 0# Or dT > 1# Then
+            ShowPrompt "Z=" & sAlt & "  t=" & Format$(dT, "0.000") & "  " & _
+                       g_oCalc.InfoSegment(g_oP1, g_oP2) & _
+                       "  ATTENTION : hors segment (extrapolation)"
+        Else
+            ShowPrompt "Z=" & sAlt & "  t=" & Format$(dT, "0.000") & "  " & _
+                       g_oCalc.InfoSegment(g_oP1, g_oP2) & _
+                       "  (Data=figer altitude)"
+        End If
     Else
-        ShowPrompt "Z=" & sAlt & "  t=" & Format$(dT, "0.000") & "  " & InfoSegment() & _
+        ' --- Etape 2 : decalage perpendiculaire ---
+        Dim dOffset As Double
+        Dim oPtDecale As Point3d
+        dOffset = (Point.X - m_oProj.X) * m_dPerpX + (Point.Y - m_oProj.Y) * m_dPerpY
+        oPtDecale.X = m_oProj.X + dOffset * m_dPerpX
+        oPtDecale.Y = m_oProj.Y + dOffset * m_dPerpY
+        oPtDecale.Z = m_oProj.Z
+
+        ' Altitude corrigee par la pente transversale
+        Dim dZAff As Double
+        dZAff = m_dZInterp
+        If g_oSettings.bAppliquerPente Then
+            dZAff = m_dZInterp + dOffset * g_oSettings.dPenteDecalage / 100#
+        End If
+
+        g_oMoteur.DessinDecalage DrawMode, g_oP1, g_oP2, m_oProj, oPtDecale, _
+                                  dZAff, g_oSettings, g_oCalc
+
+        Dim sAlt2 As String
+        sAlt2 = g_oCalc.FormatAltitude(dZAff, g_oSettings.oTexte.Decimales, _
+                                        g_oSettings.oTexte.SepDecimal)
+        ShowPrompt "Z=" & sAlt2 & "  decalage=" & Format$(dOffset, "0.000") & _
                    "  (Data=creer  Reset=nouv. selection)"
     End If
 End Sub
 
-Private Sub DrawCroix(ByVal DrawMode As MsdDrawingMode, oPt As Point3d, dTaille As Double)
-    Dim oA As Point3d, oB As Point3d, oL As LineElement
-
-    oA.X = oPt.X - dTaille: oA.Y = oPt.Y: oA.Z = oPt.Z
-    oB.X = oPt.X + dTaille: oB.Y = oPt.Y: oB.Z = oPt.Z
-    Set oL = CreateLineElement2(Nothing, oA, oB)
-    oL.Color = 3
-    oL.Redraw DrawMode
-
-    oA.X = oPt.X: oA.Y = oPt.Y - dTaille
-    oB.X = oPt.X: oB.Y = oPt.Y + dTaille
-    Set oL = CreateLineElement2(Nothing, oA, oB)
-    oL.Color = 3
-    oL.Redraw DrawMode
-End Sub
-
 Private Sub IPrimitiveCommandEvents_DataPoint(Point As Point3d, ByVal View As View)
-    Dim dT As Double, oProj As Point3d
-    ProjectSurDroite g_oP1, g_oP2, Point, dT, oProj
-    CreateTopoPoint oProj, InterpolerZ(g_dZ1, g_dZ2, dT)
-    ' La commande reste active : on peut creer d'autres points sur la meme droite
+    If Not m_bEtape2 Then
+        ' --- Etape 1 : figer l'altitude et passer au decalage ---
+        Dim dT As Double
+        g_oCalc.ProjecterSurSegment g_oP1, g_oP2, Point, dT, m_oProj
+        m_dZInterp = g_oCalc.InterpolerZ(g_oP1.Altitude, g_oP2.Altitude, dT)
+
+        ' Calculer le vecteur perpendiculaire unitaire a P1-P2
+        Dim dx As Double, dy As Double, dLen As Double
+        dx = g_oP2.X - g_oP1.X
+        dy = g_oP2.Y - g_oP1.Y
+        dLen = Sqr(dx * dx + dy * dy)
+        If dLen > 0.0000001 Then
+            m_dPerpX = -dy / dLen
+            m_dPerpY = dx / dLen
+        Else
+            m_dPerpX = 0: m_dPerpY = 1
+        End If
+
+        m_bEtape2 = True
+
+        Dim sAlt As String
+        sAlt = g_oCalc.FormatAltitude(m_dZInterp, g_oSettings.oTexte.Decimales, _
+                                       g_oSettings.oTexte.SepDecimal)
+        ShowPrompt "Altitude figee Z=" & sAlt & _
+                   "  |  Deplacez pour decaler. Data=creer  Reset=nouv. selection"
+    Else
+        ' --- Etape 2 : creer le point a la position decalee ---
+        Dim dOffset As Double
+        Dim oPtDecale As Point3d
+        dOffset = (Point.X - m_oProj.X) * m_dPerpX + (Point.Y - m_oProj.Y) * m_dPerpY
+        oPtDecale.X = m_oProj.X + dOffset * m_dPerpX
+        oPtDecale.Y = m_oProj.Y + dOffset * m_dPerpY
+        oPtDecale.Z = m_oProj.Z
+
+        ' Altitude corrigee par la pente transversale
+        Dim dZFinal As Double
+        dZFinal = m_dZInterp
+        If g_oSettings.bAppliquerPente Then
+            dZFinal = m_dZInterp + Abs(dOffset) * g_oSettings.dPenteDecalage / 100#
+        End If
+
+        g_oMoteur.CreerPointTopo oPtDecale, dZFinal, g_oSettings, g_oCalc
+
+        Dim sAlt2 As String
+        sAlt2 = g_oCalc.FormatAltitude(dZFinal, g_oSettings.oTexte.Decimales, _
+                                        g_oSettings.oTexte.SepDecimal)
+        ShowPrompt "Point cree Z=" & sAlt2 & _
+                   "  |  Data = autre point sur la meme droite, Reset = nouvelle selection"
+
+        ' Revenir a l'etape 1 pour un autre point sur la meme droite
+        m_bEtape2 = False
+    End If
 End Sub
 
 Private Sub IPrimitiveCommandEvents_Keyin(ByVal Keyin As String)
 End Sub
 
-' Reset = nouvelle selection de points (memes parametres de cercle).
-' Un second Reset, une fois revenu a la selection de P1, quitte la commande.
+' Reset = nouvelle selection de P1
 Private Sub IPrimitiveCommandEvents_Reset()
+    frmInterpolation.ReinitialiserEtat
     ShowPrompt "Nouvelle selection : cliquez pres du texte altitude du POINT 1  (Reset=quitter)"
     CommandState.StartPrimitive New CSelectP1
 End Sub

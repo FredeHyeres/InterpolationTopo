@@ -8,7 +8,7 @@ Attribute VB_Creatable = False
 Attribute VB_PredeclaredId = False
 Attribute VB_Exposed = False
 '==============================================================================
-' CSelectP2 - etape 2 : selection du texte altitude du point P2
+' CSelectP2 V2 - Etat commande : selection du point de reference P2
 '==============================================================================
 Option Explicit
 
@@ -21,28 +21,31 @@ End Sub
 
 Private Sub IPrimitiveCommandEvents_DataPoint(Point As Point3d, ByVal View As View)
     Dim oText As TextElement
-    Set oText = FindNearestText(Point, TOL_TEXTE)
-    If oText Is Nothing Then
-        ShowPrompt "Aucun texte altitude a moins de " & TOL_TEXTE & " u.m. - recliquez (P2)"
+    If Not TrouverAltitudeProche(Point, g_oSettings.dTolTexte, oText) Then
+        ShowPrompt "Aucun texte altitude a moins de " & g_oSettings.dTolTexte & _
+                   " u.m. - recliquez (P2)"
         Exit Sub
     End If
 
-    Dim oPt As Point3d, dZ As Double, sSep As String, nDec As Integer
-    If Not LireTexteAltitude(oText, oPt, dZ, sSep, nDec) Then
-        ShowPrompt "Texte '" & oText.Text & "' non numerique - recliquez (P2)"
+    Dim sSep As String, nDec As Integer
+    If Not g_oCalc.LireAltitudeTexte(g_oP2, sSep, nDec) Then
+        ShowPrompt "Texte '" & g_sValeurTexte & "' non numerique - recliquez (P2)"
         Exit Sub
     End If
 
-    If Dist2D(g_oP1, oPt) < 0.001 Then
+    If g_oCalc.Dist2DRef(g_oP1, g_oP2) < 0.001 Then
         ShowPrompt "P1 et P2 confondus - choisissez un autre point (P2)"
         Exit Sub
     End If
 
-    g_oP2 = oPt
-    g_dZ2 = dZ
-    If nDec > g_nDecimals Then g_nDecimals = nDec
+    ' Mise a jour decimales si P2 en a davantage
+    g_oSettings.AjusterDecimales nDec
 
-    ShowPrompt "P2 = " & oText.Text & "  |  " & InfoSegment() & _
+    ' Mise a jour du formulaire
+    frmInterpolation.AfficherP2 g_oP2
+    frmInterpolation.AfficherSegment g_oCalc.InfoSegment(g_oP1, g_oP2)
+
+    ShowPrompt "P2 = " & g_sValeurTexte & "  |  " & g_oCalc.InfoSegment(g_oP1, g_oP2) & _
                "  ->  deplacez le curseur. Data=creer  Reset=nouv. selection"
     CommandState.StartPrimitive New CPlacerPoint
 End Sub
@@ -54,9 +57,10 @@ End Sub
 Private Sub IPrimitiveCommandEvents_Keyin(ByVal Keyin As String)
 End Sub
 
-' Reset pendant le choix de P2 = revenir au choix de P1
+' Reset pendant P2 = revenir a P1
 Private Sub IPrimitiveCommandEvents_Reset()
-    ShowPrompt "Retour au POINT 1 : cliquez pres du texte altitude  (Reset=quitter)"
+    frmInterpolation.ReinitialiserEtat
+    ShowPrompt "Retour au POINT 1 : cliquez pres du texte altitude  (Reset = quitter)"
     CommandState.StartPrimitive New CSelectP1
 End Sub
 

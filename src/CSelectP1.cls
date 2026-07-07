@@ -8,7 +8,7 @@ Attribute VB_Creatable = False
 Attribute VB_PredeclaredId = False
 Attribute VB_Exposed = False
 '==============================================================================
-' CSelectP1 - etape 1 : selection du texte altitude du point P1
+' CSelectP1 V2 - Etat commande : selection du point de reference P1
 '==============================================================================
 Option Explicit
 
@@ -16,30 +16,37 @@ Implements IPrimitiveCommandEvents
 
 Private Sub IPrimitiveCommandEvents_Start()
     ShowCommand "Interpolation Topo"
-    ShowPrompt "Cliquez pres du texte altitude du POINT 1  (Reset=quitter)"
+    ShowPrompt "Cliquez pres du texte altitude du POINT 1  (Reset = quitter)"
 End Sub
 
 Private Sub IPrimitiveCommandEvents_DataPoint(Point As Point3d, ByVal View As View)
+    ' Cherche le texte/tag/cellule numerique le plus proche du clic
     Dim oText As TextElement
-    Set oText = FindNearestText(Point, TOL_TEXTE)
-    If oText Is Nothing Then
-        ShowPrompt "Aucun texte altitude a moins de " & TOL_TEXTE & " u.m. - recliquez (P1)"
+    If Not TrouverAltitudeProche(Point, g_oSettings.dTolTexte, oText) Then
+        ShowPrompt "Aucun texte altitude a moins de " & g_oSettings.dTolTexte & _
+                   " u.m. - recliquez (P1)"
         Exit Sub
     End If
 
-    Dim oPt As Point3d, dZ As Double, sSep As String, nDec As Integer
-    If Not LireTexteAltitude(oText, oPt, dZ, sSep, nDec) Then
-        ShowPrompt "Texte '" & oText.Text & "' non numerique - recliquez (P1)"
+    ' Parsing de l'altitude
+    Dim sSep As String, nDec As Integer
+    If Not g_oCalc.LireAltitudeTexte(g_oP1, sSep, nDec) Then
+        ShowPrompt "Texte '" & g_sValeurTexte & "' non numerique - recliquez (P1)"
         Exit Sub
     End If
 
-    g_oP1 = oPt
-    g_dZ1 = dZ
-    g_sDecSep = sSep
-    g_nDecimals = nDec
-    Set g_oTextTemplate = oText
+    ' Mise a jour des parametres : texte-modele et format
+    If Not oText Is Nothing Then
+        g_oSettings.ChargerModeleTexte oText, sSep, nDec
+    Else
+        g_oSettings.ChargerModeleDepuisTag sSep, nDec
+    End If
 
-    ShowPrompt "P1 = " & oText.Text & "  ->  cliquez pres du texte altitude du POINT 2"
+    ' Mise a jour du formulaire (etat P1 + attributs herites du texte modele)
+    frmInterpolation.AfficherP1 g_oP1
+    frmInterpolation.RafraichirTexte
+
+    ShowPrompt "P1 = " & g_sValeurTexte & "  ->  cliquez pres du texte altitude du POINT 2"
     CommandState.StartPrimitive New CSelectP2
 End Sub
 
@@ -50,8 +57,9 @@ End Sub
 Private Sub IPrimitiveCommandEvents_Keyin(ByVal Keyin As String)
 End Sub
 
-' Reset au choix de P1 = sortie de la commande
+' Reset au choix de P1 = quitter la commande
 Private Sub IPrimitiveCommandEvents_Reset()
+    frmInterpolation.Hide
     ShowPrompt "Interpolation Topo : termine."
     CommandState.StartDefaultCommand
 End Sub
