@@ -73,6 +73,10 @@ Private WithEvents txtPente As MSForms.TextBox
 Attribute txtPente.VB_VarHelpID = -1
 Private WithEvents btnInverserPente As MSForms.CommandButton
 Attribute btnInverserPente.VB_VarHelpID = -1
+Private WithEvents chkDecalageFixe As MSForms.CheckBox
+Attribute chkDecalageFixe.VB_VarHelpID = -1
+Private WithEvents txtDecalageDZ As MSForms.TextBox
+Attribute txtDecalageDZ.VB_VarHelpID = -1
 Private lblP1       As MSForms.Label
 Private lblP2       As MSForms.Label
 Private lblSegment  As MSForms.Label
@@ -93,7 +97,7 @@ Private Sub ConstruireControles()
 
     Me.Caption = "Interpolation Topo"
     Me.Width = 212
-    Me.Height = 410
+    Me.Height = 450
 
     ' --- Cadre Cercle -------------------------------------------------------
     Dim fraCercle As MSForms.Frame
@@ -150,7 +154,7 @@ Private Sub ConstruireControles()
     Set fraPente = Me.Controls.Add("Forms.Frame.1", "fraPente")
     fraPente.Caption = "Pente decalage"
     fraPente.Left = 6: fraPente.Top = 248
-    fraPente.Width = 192: fraPente.Height = 56
+    fraPente.Width = 192: fraPente.Height = 96
 
     Set chkPente = fraPente.Controls.Add("Forms.CheckBox.1", "chkPente")
     chkPente.Caption = "Appliquer pente transversale"
@@ -171,11 +175,24 @@ Private Sub ConstruireControles()
     btnInverserPente.Width = 28: btnInverserPente.Height = 16
     btnInverserPente.Enabled = False
 
+    Set chkDecalageFixe = fraPente.Controls.Add("Forms.CheckBox.1", "chkDecalageFixe")
+    chkDecalageFixe.Caption = "Decalage fixe DZ"
+    chkDecalageFixe.Left = 6: chkDecalageFixe.Top = 50
+    chkDecalageFixe.Width = 180: chkDecalageFixe.Height = 14
+    chkDecalageFixe.Value = False
+
+    CreerLabel fraPente, "lblDZ", "DZ :", 6, 70, 24
+    Set txtDecalageDZ = fraPente.Controls.Add("Forms.TextBox.1", "txtDecalageDZ")
+    txtDecalageDZ.Left = 32: txtDecalageDZ.Top = 68
+    txtDecalageDZ.Width = 48: txtDecalageDZ.Height = 16
+    txtDecalageDZ.Text = "0"
+    txtDecalageDZ.Enabled = False
+
     ' --- Cadre Etat ---------------------------------------------------------
     Dim fraEtat As MSForms.Frame
     Set fraEtat = Me.Controls.Add("Forms.Frame.1", "fraEtat")
     fraEtat.Caption = "Etat"
-    fraEtat.Left = 6: fraEtat.Top = 310
+    fraEtat.Left = 6: fraEtat.Top = 350
     fraEtat.Width = 192: fraEtat.Height = 64
 
     Set lblP1 = CreerLabel(fraEtat, "lblP1", "P1 : -", 6, 12, 180)
@@ -222,6 +239,11 @@ Sub Initialiser(oSettings As CMstSettings)
     txtPente.Text = Format$(m_oSettings.dPenteDecalage, "0.00")
     txtPente.Enabled = m_oSettings.bAppliquerPente
     btnInverserPente.Enabled = m_oSettings.bAppliquerPente
+
+    ' Decalage fixe DZ
+    chkDecalageFixe.Value = m_oSettings.bDecalageFixe
+    txtDecalageDZ.Text = Format$(m_oSettings.dDecalageDZ, "0.00")
+    txtDecalageDZ.Enabled = m_oSettings.bDecalageFixe
 
     ' Etat : reinitialiser
     ReinitialiserEtat
@@ -410,6 +432,31 @@ Private Sub txtPente_KeyDown(ByVal KeyCode As MSForms.ReturnInteger, _
 End Sub
 
 '==============================================================================
+' Evenements Decalage fixe DZ
+'==============================================================================
+
+Private Sub chkDecalageFixe_Change()
+    If m_bInit Then Exit Sub
+    If m_oSettings Is Nothing Then Exit Sub
+    m_oSettings.bDecalageFixe = (chkDecalageFixe.Value = True)
+    txtDecalageDZ.Enabled = m_oSettings.bDecalageFixe
+End Sub
+
+Private Sub txtDecalageDZ_Change()
+    If m_bInit Then Exit Sub
+    If m_oSettings Is Nothing Then Exit Sub
+    Dim dDZ As Double
+    dDZ = Val(Replace(Trim$(txtDecalageDZ.Text), ",", "."))
+    m_oSettings.dDecalageDZ = dDZ
+End Sub
+
+Private Sub txtDecalageDZ_KeyDown(ByVal KeyCode As MSForms.ReturnInteger, _
+                                   ByVal Shift As Integer)
+    If KeyCode = vbKeyReturn And Not m_oSettings Is Nothing Then _
+        txtDecalageDZ.Text = Format$(m_oSettings.dDecalageDZ, "0.00")
+End Sub
+
+'==============================================================================
 ' Fermeture
 '==============================================================================
 
@@ -424,6 +471,9 @@ Private Sub UserForm_QueryClose(Cancel As Integer, CloseMode As Integer)
         CommandState.StartDefaultCommand
     End If
 End Sub
+
+
+
 
 
 

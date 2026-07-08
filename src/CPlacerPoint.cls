@@ -11,30 +11,34 @@ Attribute VB_Exposed = False
 ' CPlacerPoint V2 - Etat commande : placement dynamique du point interpole
 '
 ' Etape 1 : projection sur la droite P1-P2 => Data = figer l'altitude
-' Etape 2 : decalage perpendiculaire => Data = creer le point
+' Etape 2 : decalage perpendiculaire => Data = creer le cercle
+' Etape 3 : placement libre du texte altitude => Data = creer le texte
+'   (cellule/tag : etape 3 sautee, tout est cree en etape 2)
 ' Reset = revenir a la selection de P1
 '==============================================================================
 Option Explicit
 
 Implements IPrimitiveCommandEvents
 
-Private m_bEtape2       As Boolean      ' True = decalage perpendiculaire en cours
+Private m_nEtape        As Integer      ' 1=projection, 2=perpendiculaire, 3=texte libre
 Private m_oProj         As Point3d      ' point projete fige (etape 1)
 Private m_dZInterp      As Double       ' altitude interpolee figee
 Private m_dPerpX        As Double       ' vecteur unitaire perpendiculaire X
 Private m_dPerpY        As Double       ' vecteur unitaire perpendiculaire Y
+Private m_dZFinal       As Double       ' altitude finale pour le texte (etape 3)
 
 Private Sub IPrimitiveCommandEvents_Start()
     ShowCommand "Interpolation Topo"
     ShowPrompt g_oCalc.InfoSegment(g_oP1, g_oP2) & _
                "  |  Deplacez le curseur : Data=figer altitude  Reset=nouv. selection"
-    m_bEtape2 = False
+    m_nEtape = 1
     CommandState.StartDynamics
 End Sub
 
 Private Sub IPrimitiveCommandEvents_Dynamics(Point As Point3d, ByVal View As View, _
                                              ByVal DrawMode As MsdDrawingMode)
-    If Not m_bEtape2 Then
+    Select Case m_nEtape
+    Case 1
         ' --- Etape 1 : projection sur la droite P1-P2 ---
         Dim dT As Double, oProj As Point3d
         g_oCalc.ProjecterSurSegment g_oP1, g_oP2, Point, dT, oProj
@@ -53,7 +57,8 @@ Private Sub IPrimitiveCommandEvents_Dynamics(Point As Point3d, ByVal View As Vie
                        g_oCalc.InfoSegment(g_oP1, g_oP2) & _
                        "  (Data=figer altitude)"
         End If
-    Else
+
+    Case 2
         ' --- Etape 2 : decalage perpendiculaire ---
         Dim dOffset As Double
         Dim oPtDecale As Point3d
@@ -62,12 +67,12 @@ Private Sub IPrimitiveCommandEvents_Dynamics(Point As Point3d, ByVal View As Vie
         oPtDecale.Y = m_oProj.Y + dOffset * m_dPerpY
         oPtDecale.Z = m_oProj.Z
 
-        ' Altitude corrigee par la pente transversale
         Dim dZAff As Double
         dZAff = m_dZInterp
         If g_oSettings.bAppliquerPente Then
-            dZAff = m_dZInterp + dOffset * g_oSettings.dPenteDecalage / 100#
+            dZAff = dZAff + dOffset * g_oSettings.dPenteDecalage / 100#
         End If
+        If g_oSettings.bDecalageFixe Then dZAff = dZAff + g_oSettings.dDecalageDZ
 
         g_oMoteur.DessinDecalage DrawMode, g_oP1, g_oP2, m_oProj, oPtDecale, _
                                   dZAff, g_oSettings, g_oCalc
@@ -77,17 +82,27 @@ Private Sub IPrimitiveCommandEvents_Dynamics(Point As Point3d, ByVal View As Vie
                                         g_oSettings.oTexte.SepDecimal)
         ShowPrompt "Z=" & sAlt2 & "  decalage=" & Format$(dOffset, "0.000") & _
                    "  (Data=creer  Reset=nouv. selection)"
-    End If
+
+    Case 3
+        ' --- Etape 3 : placement libre du texte ---
+        g_oMoteur.DessinTexteLibre DrawMode, Point, m_dZFinal, g_oSettings, g_oCalc
+
+        Dim sAlt3 As String
+        sAlt3 = g_oCalc.FormatAltitude(m_dZFinal, g_oSettings.oTexte.Decimales, _
+                                        g_oSettings.oTexte.SepDecimal)
+        ShowPrompt "Placez le texte Z=" & sAlt3 & _
+                   "  (Data=poser le texte  Reset=nouv. selection)"
+    End Select
 End Sub
 
 Private Sub IPrimitiveCommandEvents_DataPoint(Point As Point3d, ByVal View As View)
-    If Not m_bEtape2 Then
+    Select Case m_nEtape
+    Case 1
         ' --- Etape 1 : figer l'altitude et passer au decalage ---
         Dim dT As Double
         g_oCalc.ProjecterSurSegment g_oP1, g_oP2, Point, dT, m_oProj
         m_dZInterp = g_oCalc.InterpolerZ(g_oP1.Altitude, g_oP2.Altitude, dT)
 
-        ' Calculer le vecteur perpendiculaire unitaire a P1-P2
         Dim dx As Double, dy As Double, dLen As Double
         dx = g_oP2.X - g_oP1.X
         dy = g_oP2.Y - g_oP1.Y
@@ -99,15 +114,16 @@ Private Sub IPrimitiveCommandEvents_DataPoint(Point As Point3d, ByVal View As Vi
             m_dPerpX = 0: m_dPerpY = 1
         End If
 
-        m_bEtape2 = True
+        m_nEtape = 2
 
         Dim sAlt As String
         sAlt = g_oCalc.FormatAltitude(m_dZInterp, g_oSettings.oTexte.Decimales, _
                                        g_oSettings.oTexte.SepDecimal)
         ShowPrompt "Altitude figee Z=" & sAlt & _
                    "  |  Deplacez pour decaler. Data=creer  Reset=nouv. selection"
-    Else
-        ' --- Etape 2 : creer le point a la position decalee ---
+
+    Case 2
+        ' --- Etape 2 : creer le cercle (+ cellule/tag complet) ---
         Dim dOffset As Double
         Dim oPtDecale As Point3d
         dOffset = (Point.X - m_oProj.X) * m_dPerpX + (Point.Y - m_oProj.Y) * m_dPerpY
@@ -115,24 +131,47 @@ Private Sub IPrimitiveCommandEvents_DataPoint(Point As Point3d, ByVal View As Vi
         oPtDecale.Y = m_oProj.Y + dOffset * m_dPerpY
         oPtDecale.Z = m_oProj.Z
 
-        ' Altitude corrigee par la pente transversale
         Dim dZFinal As Double
         dZFinal = m_dZInterp
         If g_oSettings.bAppliquerPente Then
-            dZFinal = m_dZInterp + Abs(dOffset) * g_oSettings.dPenteDecalage / 100#
+            dZFinal = dZFinal + Abs(dOffset) * g_oSettings.dPenteDecalage / 100#
+        End If
+        If g_oSettings.bDecalageFixe Then dZFinal = dZFinal + g_oSettings.dDecalageDZ
+
+        If Not g_oCellTrouvee Is Nothing Or Not g_oTagTrouve Is Nothing Then
+            ' Cellule/tag : tout creer d'un coup (texte integre)
+            g_oMoteur.CreerPointTopo oPtDecale, dZFinal, g_oSettings, g_oCalc
+
+            Dim sAlt2a As String
+            sAlt2a = g_oCalc.FormatAltitude(dZFinal, g_oSettings.oTexte.Decimales, _
+                                             g_oSettings.oTexte.SepDecimal)
+            ShowPrompt "Point cree Z=" & sAlt2a & _
+                       "  |  Data = autre point, Reset = nouvelle selection"
+            m_nEtape = 1
+        Else
+            ' Texte : creer le cercle seul, passer au placement libre du texte
+            g_oMoteur.CreerCercleSeul oPtDecale, g_oSettings
+            m_dZFinal = dZFinal
+
+            Dim sAlt2b As String
+            sAlt2b = g_oCalc.FormatAltitude(dZFinal, g_oSettings.oTexte.Decimales, _
+                                             g_oSettings.oTexte.SepDecimal)
+            ShowPrompt "Cercle cree Z=" & sAlt2b & _
+                       "  |  Placez le texte altitude  (Data=poser  Reset=nouv. selection)"
+            m_nEtape = 3
         End If
 
-        g_oMoteur.CreerPointTopo oPtDecale, dZFinal, g_oSettings, g_oCalc
+    Case 3
+        ' --- Etape 3 : poser le texte a la position choisie ---
+        g_oMoteur.CreerTexteSeul Point, m_dZFinal, g_oSettings, g_oCalc
 
-        Dim sAlt2 As String
-        sAlt2 = g_oCalc.FormatAltitude(dZFinal, g_oSettings.oTexte.Decimales, _
+        Dim sAlt3 As String
+        sAlt3 = g_oCalc.FormatAltitude(m_dZFinal, g_oSettings.oTexte.Decimales, _
                                         g_oSettings.oTexte.SepDecimal)
-        ShowPrompt "Point cree Z=" & sAlt2 & _
+        ShowPrompt "Point cree Z=" & sAlt3 & _
                    "  |  Data = autre point sur la meme droite, Reset = nouvelle selection"
-
-        ' Revenir a l'etape 1 pour un autre point sur la meme droite
-        m_bEtape2 = False
-    End If
+        m_nEtape = 1
+    End Select
 End Sub
 
 Private Sub IPrimitiveCommandEvents_Keyin(ByVal Keyin As String)

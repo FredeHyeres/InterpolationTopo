@@ -46,6 +46,59 @@ Sub CreerPointTopo(oProj As Point3d, dZInterp As Double, oSettings As CMstSettin
 End Sub
 
 '------------------------------------------------------------------------------
+' Cree uniquement le cercle au point projete.
+Sub CreerCercleSeul(oProj As Point3d, oSettings As CMstSettings)
+    Dim oCercle As EllipseElement
+    Set oCercle = CreateEllipseElement2(Nothing, oProj, _
+                      oSettings.oCercle.Rayon, oSettings.oCercle.Rayon, Matrix3dIdentity())
+    oCercle.Color = oSettings.oCercle.Couleur
+    Set oCercle.Level = ResolverNiveau(oSettings.oCercle.NomNiveau, oSettings)
+    ActiveModelReference.AddElement oCercle
+End Sub
+
+'------------------------------------------------------------------------------
+' Cree uniquement le texte altitude a la position choisie par l'utilisateur.
+Sub CreerTexteSeul(oPtTexte As Point3d, dZ As Double, _
+                   oSettings As CMstSettings, oCalc As CInterpolation)
+    Dim sAlt As String
+    sAlt = oCalc.FormatAltitude(dZ, oSettings.oTexte.Decimales, oSettings.oTexte.SepDecimal)
+
+    Dim oRot As Matrix3d
+    oRot = Matrix3dIdentity()
+    On Error Resume Next
+    If Not oSettings.oTextModele Is Nothing Then oRot = oSettings.oTextModele.Rotation
+    On Error GoTo 0
+
+    Dim oTxt As TextElement
+    Set oTxt = CreateTextElement1(oSettings.oTextModele, sAlt, oPtTexte, oRot)
+    If oSettings.oTextModele Is Nothing Or Not oSettings.oTexte.CommeModele Then
+        oTxt.Color = oSettings.oTexte.Couleur
+        Set oTxt.Level = ResolverNiveau(oSettings.oTexte.NomNiveau, oSettings)
+    End If
+    ActiveModelReference.AddElement oTxt
+End Sub
+
+'------------------------------------------------------------------------------
+' Apercu dynamique du texte altitude en placement libre (etape 3).
+Sub DessinTexteLibre(ByVal DrawMode As MsdDrawingMode, _
+                     oPtTexte As Point3d, dZ As Double, _
+                     oSettings As CMstSettings, oCalc As CInterpolation)
+    Dim sAlt As String
+    sAlt = oCalc.FormatAltitude(dZ, oSettings.oTexte.Decimales, oSettings.oTexte.SepDecimal)
+
+    Dim oRot As Matrix3d
+    oRot = Matrix3dIdentity()
+    On Error Resume Next
+    If Not oSettings.oTextModele Is Nothing Then oRot = oSettings.oTextModele.Rotation
+    On Error GoTo 0
+
+    Dim oTxt As TextElement
+    Set oTxt = CreateTextElement1(oSettings.oTextModele, sAlt, oPtTexte, oRot)
+    If Not oSettings.oTexte.CommeModele Then oTxt.Color = oSettings.oTexte.Couleur
+    oTxt.Redraw DrawMode
+End Sub
+
+'------------------------------------------------------------------------------
 Private Sub CreerTexteEtCercle(oProj As Point3d, sAlt As String, _
                                 oSettings As CMstSettings, oCalc As CInterpolation)
     ' oTextModele peut etre Nothing (cas ou P1 etait un tag) :
@@ -299,6 +352,23 @@ Sub DessinDynamique(ByVal DrawMode As MsdDrawingMode, _
     dTailleCroix = oSettings.oCercle.Rayon * 0.8
     DessinCroix DrawMode, oPt1, dTailleCroix
     DessinCroix DrawMode, oPt2, dTailleCroix
+
+    ' Perpendiculaire au point projete
+    Dim dLen As Double
+    dLen = Sqr(dx * dx + dy * dy)
+    If dLen > 0.0000001 Then
+        Dim dPerpLen As Double
+        dPerpLen = dLen * 0.5
+        Dim dPx As Double, dPy As Double
+        dPx = -dy / dLen: dPy = dx / dLen
+        Dim oPerpA As Point3d, oPerpB As Point3d
+        oPerpA.X = oProj.X - dPerpLen * dPx: oPerpA.Y = oProj.Y - dPerpLen * dPy: oPerpA.Z = oProj.Z
+        oPerpB.X = oProj.X + dPerpLen * dPx: oPerpB.Y = oProj.Y + dPerpLen * dPy: oPerpB.Z = oProj.Z
+        Dim oLPerp As LineElement
+        Set oLPerp = CreateLineElement2(Nothing, oPerpA, oPerpB)
+        oLPerp.Color = 2
+        oLPerp.Redraw DrawMode
+    End If
 
     ' Cercle provisoire au point projete
     Dim oCercle As EllipseElement

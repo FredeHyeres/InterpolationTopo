@@ -33,21 +33,12 @@ Private Sub IPrimitiveCommandEvents_DataPoint(Point As Point3d, ByVal View As Vi
         Exit Sub
     End If
 
-    If g_oCalc.Dist2DRef(g_oP1, g_oP2) < 0.001 Then
-        ShowPrompt "P1 et P2 confondus - choisissez un autre point (P2)"
-        Exit Sub
-    End If
-
     ' Mise a jour decimales si P2 en a davantage
     g_oSettings.AjusterDecimales nDec
 
-    ' Mise a jour du formulaire
-    frmInterpolation.AfficherP2 g_oP2
-    frmInterpolation.AfficherSegment g_oCalc.InfoSegment(g_oP1, g_oP2)
-
-    ShowPrompt "P2 = " & g_sValeurTexte & "  |  " & g_oCalc.InfoSegment(g_oP1, g_oP2) & _
-               "  ->  deplacez le curseur. Data=creer  Reset=nouv. selection"
-    CommandState.StartPrimitive New CPlacerPoint
+    ShowPrompt "P2 = " & g_sValeurTexte & _
+               "  |  Snappez le point terrain P2  (Reset = ancrage du texte)"
+    CommandState.StartPrimitive New CSnapP2
 End Sub
 
 Private Sub IPrimitiveCommandEvents_Dynamics(Point As Point3d, ByVal View As View, _

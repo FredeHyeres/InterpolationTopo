@@ -22,6 +22,8 @@ Public dTolTexte        As Double           ' rayon de recherche autour du clic 
 Public oTextModele      As TextElement      ' element P1 : modele pour CreateTextElement1
 Public dPenteDecalage   As Double           ' pente transversale en % (appliquee au decalage)
 Public bAppliquerPente  As Boolean          ' True = appliquer la pente au decalage
+Public dDecalageDZ      As Double           ' decalage fixe en Z (ajoute a l'altitude interpolee)
+Public bDecalageFixe    As Boolean          ' True = appliquer le decalage fixe DZ
 
 '------------------------------------------------------------------------------
 Sub Init()
@@ -32,6 +34,8 @@ Sub Init()
     Set oTextModele = Nothing
     dPenteDecalage = 0#
     bAppliquerPente = False
+    dDecalageDZ = 0#
+    bDecalageFixe = False
 End Sub
 
 '------------------------------------------------------------------------------

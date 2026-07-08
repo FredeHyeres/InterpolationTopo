@@ -46,8 +46,9 @@ Private Sub IPrimitiveCommandEvents_DataPoint(Point As Point3d, ByVal View As Vi
     frmInterpolation.AfficherP1 g_oP1
     frmInterpolation.RafraichirTexte
 
-    ShowPrompt "P1 = " & g_sValeurTexte & "  ->  cliquez pres du texte altitude du POINT 2"
-    CommandState.StartPrimitive New CSelectP2
+    ShowPrompt "P1 = " & g_sValeurTexte & _
+               "  |  Snappez le point terrain P1  (Reset = ancrage du texte)"
+    CommandState.StartPrimitive New CSnapP1
 End Sub
 
 Private Sub IPrimitiveCommandEvents_Dynamics(Point As Point3d, ByVal View As View, _

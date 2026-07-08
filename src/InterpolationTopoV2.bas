@@ -14,7 +14,7 @@ Attribute VB_Name = "InterpolationTopoV2"
 '     InterpolationTopoV2.bas
 '     CSymboTexte.cls, CSymboCercle.cls, CMstSettings.cls
 '     CPointRef.cls, CInterpolation.cls, CMoteurGraphique.cls
-'     CSelectP1.cls, CSelectP2.cls, CPlacerPoint.cls
+'     CSelectP1.cls, CSnapP1.cls, CSelectP2.cls, CSnapP2.cls, CPlacerPoint.cls
 '     frmInterpolation.frm
 '
 ' LANCEMENT :
