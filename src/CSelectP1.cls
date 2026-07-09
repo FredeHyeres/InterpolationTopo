@@ -34,6 +34,7 @@ Private Sub IPrimitiveCommandEvents_DataPoint(Point As Point3d, ByVal View As Vi
         ShowPrompt "Texte '" & g_sValeurTexte & "' non numerique - recliquez (P1)"
         Exit Sub
     End If
+    g_oSelectionP1.CopierDepuis g_oSelectionCourante
 
     ' Mise a jour des parametres : texte-modele et format
     If Not oText Is Nothing Then

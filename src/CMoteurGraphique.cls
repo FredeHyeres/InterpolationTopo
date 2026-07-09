@@ -31,13 +31,27 @@ Sub CreerPointTopo(oProj As Point3d, dZInterp As Double, oSettings As CMstSettin
     sAlt = oCalc.FormatAltitude(dZInterp, oSettings.oTexte.Decimales, _
                                 oSettings.oTexte.SepDecimal)
 
-    If Not g_oCellTrouvee Is Nothing Then
-        ' --- Cas cellule : cloner, deplacer, modifier le texte interne ---
-        ClonerCellule oProj, sAlt, oCalc
+    Dim oSrc As CAltitudeSelection
+    Set oSrc = g_oSelectionP1
 
-    ElseIf Not g_oTagTrouve Is Nothing Then
+    If oSrc Is Nothing Then
+        CreerTexteEtCercle oProj, sAlt, oSettings, oCalc
+        Exit Sub
+    End If
+
+    If oSrc.EstReference Then
+        ' On lit les references, mais on cree toujours dans le fichier actif.
+        ' Cloner cellule/tag depuis une reference V8i est fragile : fallback sur
+        ' texte + cercle, en gardant le format/symbologie de P1 si disponible.
+        CreerTexteEtCercle oProj, sAlt, oSettings, oCalc
+
+    ElseIf Not oSrc.oCellule Is Nothing Then
+        ' --- Cas cellule : cloner, deplacer, modifier le texte interne ---
+        ClonerCellule oSrc, oProj, sAlt, oCalc
+
+    ElseIf Not oSrc.oTag Is Nothing Then
         ' --- Cas tag : cloner l'hote et reassocier un tag ---
-        ClonerTag oProj, sAlt, oSettings, oCalc
+        ClonerTag oSrc, oProj, sAlt, oSettings, oCalc
 
     Else
         ' --- Cas texte classique : texte + cercle ---
@@ -70,8 +84,16 @@ Sub CreerTexteSeul(oPtTexte As Point3d, dZ As Double, _
     On Error GoTo 0
 
     Dim oTxt As TextElement
+    Dim bSansModele As Boolean
+    On Error Resume Next
     Set oTxt = CreateTextElement1(oSettings.oTextModele, sAlt, oPtTexte, oRot)
-    If oSettings.oTextModele Is Nothing Or Not oSettings.oTexte.CommeModele Then
+    If oTxt Is Nothing Then
+        Err.Clear
+        bSansModele = True
+        Set oTxt = CreateTextElement1(Nothing, sAlt, oPtTexte, oRot)
+    End If
+    On Error GoTo 0
+    If bSansModele Or oSettings.oTextModele Is Nothing Or Not oSettings.oTexte.CommeModele Then
         oTxt.Color = oSettings.oTexte.Couleur
         Set oTxt.Level = ResolverNiveau(oSettings.oTexte.NomNiveau, oSettings)
     End If
@@ -93,8 +115,16 @@ Sub DessinTexteLibre(ByVal DrawMode As MsdDrawingMode, _
     On Error GoTo 0
 
     Dim oTxt As TextElement
+    Dim bSansModele As Boolean
+    On Error Resume Next
     Set oTxt = CreateTextElement1(oSettings.oTextModele, sAlt, oPtTexte, oRot)
-    If Not oSettings.oTexte.CommeModele Then oTxt.Color = oSettings.oTexte.Couleur
+    If oTxt Is Nothing Then
+        Err.Clear
+        bSansModele = True
+        Set oTxt = CreateTextElement1(Nothing, sAlt, oPtTexte, oRot)
+    End If
+    On Error GoTo 0
+    If bSansModele Or Not oSettings.oTexte.CommeModele Then oTxt.Color = oSettings.oTexte.Couleur
     oTxt.Redraw DrawMode
 End Sub
 
@@ -110,8 +140,16 @@ Private Sub CreerTexteEtCercle(oProj As Point3d, sAlt As String, _
     On Error GoTo 0
 
     Dim oTxt As TextElement
+    Dim bSansModele As Boolean
+    On Error Resume Next
     Set oTxt = CreateTextElement1(oSettings.oTextModele, sAlt, oProj, oRot)
-    If oSettings.oTextModele Is Nothing Or Not oSettings.oTexte.CommeModele Then
+    If oTxt Is Nothing Then
+        Err.Clear
+        bSansModele = True
+        Set oTxt = CreateTextElement1(Nothing, sAlt, oProj, oRot)
+    End If
+    On Error GoTo 0
+    If bSansModele Or oSettings.oTextModele Is Nothing Or Not oSettings.oTexte.CommeModele Then
         oTxt.Color = oSettings.oTexte.Couleur
         Set oTxt.Level = ResolverNiveau(oSettings.oTexte.NomNiveau, oSettings)
     End If
@@ -126,15 +164,16 @@ Private Sub CreerTexteEtCercle(oProj As Point3d, sAlt As String, _
 End Sub
 
 '------------------------------------------------------------------------------
-Private Sub ClonerCellule(oProj As Point3d, sAlt As String, oCalc As CInterpolation)
+Private Sub ClonerCellule(oSrc As CAltitudeSelection, oProj As Point3d, _
+                          sAlt As String, oCalc As CInterpolation)
     ' Copier la cellule source dans le modele
     Dim oCopy As CellElement
-    Set oCopy = ActiveModelReference.CopyElement(g_oCellTrouvee)
+    Set oCopy = ActiveModelReference.CopyElement(oSrc.oCellule)
 
     ' Deplacer vers le point projete
     Dim oVec As Point3d
-    oVec.X = oProj.X - g_oCellTrouvee.Origin.X
-    oVec.Y = oProj.Y - g_oCellTrouvee.Origin.Y
+    oVec.X = oProj.X - oSrc.oCellule.Origin.X
+    oVec.Y = oProj.Y - oSrc.oCellule.Origin.Y
     oVec.Z = 0
     oCopy.Move oVec
     oCopy.Rewrite
@@ -143,14 +182,14 @@ Private Sub ClonerCellule(oProj As Point3d, sAlt As String, oCalc As CInterpolat
     bModifie = False
 
     ' D'abord chercher un tag altitude (cas tag dans cellule)
-    If Len(g_sTagDefName) > 0 Then
+    If Len(oSrc.TagDefName) > 0 Then
         Dim oSub1 As ElementEnumerator
         Set oSub1 = oCopy.GetSubElements
         Do While oSub1.MoveNext
             If oSub1.Current.Type = msdElementTypeTag Then
                 Dim oTag As TagElement
                 Set oTag = oSub1.Current
-                If oTag.TagDefinitionName = g_sTagDefName Then
+                If oTag.TagDefinitionName = oSrc.TagDefName Then
                     oTag.Value = sAlt
                     oTag.Rewrite
                     bModifie = True
@@ -179,7 +218,7 @@ Private Sub ClonerCellule(oProj As Point3d, sAlt As String, oCalc As CInterpolat
 End Sub
 
 '------------------------------------------------------------------------------
-Private Sub ClonerTag(oProj As Point3d, sAlt As String, _
+Private Sub ClonerTag(oSrc As CAltitudeSelection, oProj As Point3d, sAlt As String, _
                       oSettings As CMstSettings, oCalc As CInterpolation)
     ' Un tag MicroStation est toujours attache a un element hote via son
     ' BaseElement. Cloner le tag seul produit un orphelin (affiche en pointille).
@@ -190,7 +229,7 @@ Private Sub ClonerTag(oProj As Point3d, sAlt As String, _
     Dim oHost As Element
     Set oHost = Nothing
     On Error Resume Next
-    Set oHost = g_oTagTrouve.BaseElement
+    Set oHost = oSrc.oTag.BaseElement
     On Error GoTo 0
 
     If oHost Is Nothing Then
@@ -201,8 +240,8 @@ Private Sub ClonerTag(oProj As Point3d, sAlt As String, _
 
     ' Vecteur de deplacement (origine du tag source -> point projete)
     Dim oVec As Point3d
-    oVec.X = oProj.X - g_oTagTrouve.Origin.X
-    oVec.Y = oProj.Y - g_oTagTrouve.Origin.Y
+    oVec.X = oProj.X - oSrc.oTag.Origin.X
+    oVec.Y = oProj.Y - oSrc.oTag.Origin.Y
     oVec.Z = 0
 
     ' 2) Copier l'hote et le deplacer
@@ -216,7 +255,7 @@ Private Sub ClonerTag(oProj As Point3d, sAlt As String, _
     bOK = False
     On Error Resume Next
     Dim oCopyTag As TagElement
-    Set oCopyTag = ActiveModelReference.CopyElement(g_oTagTrouve)
+    Set oCopyTag = ActiveModelReference.CopyElement(oSrc.oTag)
     oCopyTag.Move oVec
     Set oCopyTag.BaseElement = oCopyHost
     oCopyTag.Value = sAlt
@@ -234,7 +273,7 @@ Private Sub ClonerTag(oProj As Point3d, sAlt As String, _
     ' 2b) Approche B : recreer le tag via AddTag sur l'hote copie
     On Error Resume Next
     Dim oTagDef As TagDefinition
-    Set oTagDef = TrouverTagDefinition(g_oTagTrouve.TagDefinitionName)
+    Set oTagDef = TrouverTagDefinition(oSrc.oTag.TagDefinitionName)
     Dim oNewTag As TagElement
     If Not oTagDef Is Nothing Then
         Set oNewTag = oCopyHost.AddTag(oTagDef)
@@ -242,7 +281,7 @@ Private Sub ClonerTag(oProj As Point3d, sAlt As String, _
     If Not oNewTag Is Nothing Then
         ' Positionner le tag a l'emplacement du tag source deplace
         Dim oOrig As Point3d
-        oOrig = g_oTagTrouve.Origin
+        oOrig = oSrc.oTag.Origin
         Dim oVecTag As Point3d
         oVecTag.X = (oOrig.X + oVec.X) - oNewTag.Origin.X
         oVecTag.Y = (oOrig.Y + oVec.Y) - oNewTag.Origin.Y
@@ -251,7 +290,7 @@ Private Sub ClonerTag(oProj As Point3d, sAlt As String, _
 
         ' Reprendre la symbologie et les attributs texte du tag source
         ' (AddTag cree le tag avec le style par defaut de la definition)
-        CopierAttributsTag g_oTagTrouve, oNewTag
+        CopierAttributsTag oSrc.oTag, oNewTag
 
         ' Seules la valeur et l'ecriture conditionnent la reussite : un echec
         ' de copie d'attribut ne doit pas declencher le fallback texte+cercle.
@@ -387,7 +426,13 @@ Sub DessinDynamique(ByVal DrawMode As MsdDrawingMode, _
     oRot = oSettings.oTextModele.Rotation
     On Error GoTo 0
     Dim oTxt As TextElement
+    On Error Resume Next
     Set oTxt = CreateTextElement1(oSettings.oTextModele, sAlt, oProj, oRot)
+    If oTxt Is Nothing Then
+        Err.Clear
+        Set oTxt = CreateTextElement1(Nothing, sAlt, oProj, oRot)
+    End If
+    On Error GoTo 0
     If Not oSettings.oTexte.CommeModele Then oTxt.Color = oSettings.oTexte.Couleur
     oTxt.Redraw DrawMode
 End Sub
@@ -446,7 +491,13 @@ Sub DessinDecalage(ByVal DrawMode As MsdDrawingMode, _
     oRot = oSettings.oTextModele.Rotation
     On Error GoTo 0
     Dim oTxt As TextElement
+    On Error Resume Next
     Set oTxt = CreateTextElement1(oSettings.oTextModele, sAlt, oPtDecale, oRot)
+    If oTxt Is Nothing Then
+        Err.Clear
+        Set oTxt = CreateTextElement1(Nothing, sAlt, oPtDecale, oRot)
+    End If
+    On Error GoTo 0
     If Not oSettings.oTexte.CommeModele Then oTxt.Color = oSettings.oTexte.Couleur
     oTxt.Redraw DrawMode
 End Sub

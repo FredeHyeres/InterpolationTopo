@@ -32,6 +32,7 @@ Private Sub IPrimitiveCommandEvents_DataPoint(Point As Point3d, ByVal View As Vi
         ShowPrompt "Texte '" & g_sValeurTexte & "' non numerique - recliquez (P2)"
         Exit Sub
     End If
+    g_oSelectionP2.CopierDepuis g_oSelectionCourante
 
     ' Mise a jour decimales si P2 en a davantage
     g_oSettings.AjusterDecimales nDec

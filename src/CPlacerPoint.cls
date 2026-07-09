@@ -70,7 +70,7 @@ Private Sub IPrimitiveCommandEvents_Dynamics(Point As Point3d, ByVal View As Vie
         Dim dZAff As Double
         dZAff = m_dZInterp
         If g_oSettings.bAppliquerPente Then
-            dZAff = dZAff + abs(dOffset) * g_oSettings.dPenteDecalage / 100#
+            dZAff = dZAff + Abs(dOffset) * g_oSettings.dPenteDecalage / 100#
         End If
         If g_oSettings.bDecalageFixe Then dZAff = dZAff + g_oSettings.dDecalageDZ
 
@@ -138,7 +138,7 @@ Private Sub IPrimitiveCommandEvents_DataPoint(Point As Point3d, ByVal View As Vi
         End If
         If g_oSettings.bDecalageFixe Then dZFinal = dZFinal + g_oSettings.dDecalageDZ
 
-        If Not g_oCellTrouvee Is Nothing Or Not g_oTagTrouve Is Nothing Then
+        If SourceP1Integree() Then
             ' Cellule/tag : tout creer d'un coup (texte integre)
             g_oMoteur.CreerPointTopo oPtDecale, dZFinal, g_oSettings, g_oCalc
 
@@ -186,3 +186,14 @@ End Sub
 
 Private Sub IPrimitiveCommandEvents_Cleanup()
 End Sub
+
+'------------------------------------------------------------------------------
+' True si P1 est une cellule/tag du fichier actif. Si P1 vient d'une reference,
+' on lit son altitude mais on cree un nouveau texte+cercle dans le fichier actif.
+Private Function SourceP1Integree() As Boolean
+    SourceP1Integree = False
+    If g_oSelectionP1 Is Nothing Then Exit Function
+    If g_oSelectionP1.EstReference Then Exit Function
+    SourceP1Integree = (Not g_oSelectionP1.oCellule Is Nothing) Or _
+                       (Not g_oSelectionP1.oTag Is Nothing)
+End Function
