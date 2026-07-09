@@ -70,7 +70,7 @@ Private Sub IPrimitiveCommandEvents_Dynamics(Point As Point3d, ByVal View As Vie
         Dim dZAff As Double
         dZAff = m_dZInterp
         If g_oSettings.bAppliquerPente Then
-            dZAff = dZAff + dOffset * g_oSettings.dPenteDecalage / 100#
+            dZAff = dZAff + abs(dOffset) * g_oSettings.dPenteDecalage / 100#
         End If
         If g_oSettings.bDecalageFixe Then dZAff = dZAff + g_oSettings.dDecalageDZ
 
