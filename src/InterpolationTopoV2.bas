@@ -221,10 +221,12 @@ Private Sub TraiterCelluleCandidate(oElem As Element, oAttachment As Object, _
     Dim sCellVal As String
     Dim sCellTagDef As String
     Dim oTxtCell As TextElement
-    If Not ExtraireAltitudeDeCellule(oCell, sCellVal, sCellTagDef, oTxtCell) Then Exit Sub
+    Dim ptOrigineAltitude As Point3d
+    If Not ExtraireAltitudeDeCellule(oCell, sCellVal, sCellTagDef, _
+                                     oTxtCell, ptOrigineAltitude) Then Exit Sub
 
     Dim ptMaster As Point3d
-    TransformerPointVersMaitre oAttachment, oCell.Origin, ptMaster
+    TransformerPointVersMaitre oAttachment, ptOrigineAltitude, ptMaster
 
     Dim dD As Double
     dD = g_oCalc.Dist2D(oPtClic, ptMaster)
@@ -266,16 +268,48 @@ Private Function AttachmentAffiche(oAttachment As Object) As Boolean
 End Function
 
 '------------------------------------------------------------------------------
-' Point de passage unique pour convertir une origine issue d'une reference vers
-' le repere du modele actif. En V8i, selon le type de scan/reference, l'origine
-' arrive deja dans le repere visible. On garde donc une version sans appel API
-' incertain afin de rester compilable en VBA 6.x ; si une reference deplacee ou
-' tournee ne tombe pas juste, c'est ici qu'il faudra brancher la transformation
-' Attachment -> master disponible dans l'Object Browser de ton installation.
+' Convertit une origine issue d'une reference vers le repere du modele actif.
+' Sans cette conversion, le clic est compare a des coordonnees locales de la
+' reference : on detecte alors un texte numerique proche dans le mauvais repere.
 Private Sub TransformerPointVersMaitre(oAttachment As Object, _
         oPtSource As Point3d, oPtMaster As Point3d)
 
     oPtMaster = oPtSource
+    If oAttachment Is Nothing Then Exit Sub
+
+    Dim ptRefOrigin As Point3d
+    Dim ptMasterOrigin As Point3d
+    Dim dScale As Double
+
+    dScale = 1#
+    ptRefOrigin.X = 0#: ptRefOrigin.Y = 0#: ptRefOrigin.Z = 0#
+    ptMasterOrigin.X = 0#: ptMasterOrigin.Y = 0#: ptMasterOrigin.Z = 0#
+
+    ' Propriete des attachements V8i : point origine dans la reference.
+    On Error Resume Next
+    ptRefOrigin = oAttachment.ReferenceOrigin
+    If Err.Number <> 0 Then
+        Err.Clear
+        ptRefOrigin.X = 0#: ptRefOrigin.Y = 0#: ptRefOrigin.Z = 0#
+    End If
+
+    ' Propriete des attachements V8i : point correspondant dans le modele actif.
+    ptMasterOrigin = oAttachment.MasterOrigin
+    If Err.Number <> 0 Then
+        Err.Clear
+        ptMasterOrigin.X = 0#: ptMasterOrigin.Y = 0#: ptMasterOrigin.Z = 0#
+    End If
+
+    dScale = CDbl(oAttachment.ScaleFactor)
+    If Err.Number <> 0 Or Abs(dScale) < 0.0000000001 Then
+        Err.Clear
+        dScale = 1#
+    End If
+    On Error GoTo 0
+
+    oPtMaster.X = ptMasterOrigin.X + (oPtSource.X - ptRefOrigin.X) * dScale
+    oPtMaster.Y = ptMasterOrigin.Y + (oPtSource.Y - ptRefOrigin.Y) * dScale
+    oPtMaster.Z = ptMasterOrigin.Z + (oPtSource.Z - ptRefOrigin.Z) * dScale
 End Sub
 
 '------------------------------------------------------------------------------
@@ -307,10 +341,12 @@ End Function
 ' le nom de definition du tag dans sDefName (vide si c'est un texte),
 ' et le TextElement si c'est un texte (Nothing si c'est un tag).
 Private Function ExtraireAltitudeDeCellule(oCell As CellElement, _
-        sVal As String, sDefName As String, oTxtOut As TextElement) As Boolean
+        sVal As String, sDefName As String, oTxtOut As TextElement, _
+        ptOrigineOut As Point3d) As Boolean
     ExtraireAltitudeDeCellule = False
     sDefName = ""
     Set oTxtOut = Nothing
+    ptOrigineOut = oCell.Origin
 
     Dim oSubEnum As ElementEnumerator
     Set oSubEnum = oCell.GetSubElements
@@ -326,6 +362,7 @@ Private Function ExtraireAltitudeDeCellule(oCell As CellElement, _
             If g_oCalc.EstNombre(Replace(sTV, ",", ".")) Then
                 sVal = sTV
                 sDefName = oTag.TagDefinitionName
+                ptOrigineOut = oTag.Origin
                 ExtraireAltitudeDeCellule = True
                 Exit Function
             End If
@@ -338,6 +375,7 @@ Private Function ExtraireAltitudeDeCellule(oCell As CellElement, _
             If g_oCalc.EstNombre(Replace(Trim$(oT.Text), ",", ".")) Then
                 sVal = Trim$(oT.Text)
                 Set oTxtOut = oT
+                ptOrigineOut = oT.Origin
                 ExtraireAltitudeDeCellule = True
                 Exit Function
             End If
