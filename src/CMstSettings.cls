@@ -66,9 +66,18 @@ Sub ChargerModeleTexte(oText As TextElement, sSep As String, nDec As Integer)
     oTexte.SepDecimal = sSep
     oTexte.Decimales = nDec
     On Error Resume Next
-    dModeleHauteur = CDbl(oText.TextStyle.Height)
+    Dim oTemp As TextElement
+    Dim ptO As Point3d
+    Set oTemp = CreateTextElement1(oText, "0", ptO, Matrix3dIdentity())
+    If Not oTemp Is Nothing Then
+        dModeleHauteur = CDbl(oTemp.TextStyle.Height)
+        dPenteLargeur = CDbl(oTemp.TextStyle.Width)
+    Else
+        Err.Clear
+        dModeleHauteur = CDbl(oText.TextStyle.Height)
+        dPenteLargeur = CDbl(oText.TextStyle.Width)
+    End If
     dPenteHauteur = dModeleHauteur
-    dPenteLargeur = CDbl(oText.TextStyle.Width)
     If dPenteLargeur <= 0 Then dPenteLargeur = dModeleHauteur
     nPenteCouleur = oText.Color
     If Err.Number <> 0 Then

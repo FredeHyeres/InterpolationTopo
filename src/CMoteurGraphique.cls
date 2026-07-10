@@ -549,29 +549,30 @@ Sub DessinPenteDynamique(ByVal DrawMode As MsdDrawingMode, _
     oRot = Matrix3dFromAxisAndRotationAngle(2, dAngleTxt)
 
     Dim oTxt As TextElement
-    Set oTxt = CreateTextElement1(Nothing, sPente, oPtTxt, oRot)
     On Error Resume Next
-    Dim dHD As Double, dWD As Double
     If oSettings.bPentePerso Then
-        dHD = oSettings.dPenteHauteur
-        dWD = oSettings.dPenteLargeur
-    Else
-        dHD = oSettings.dModeleHauteur
-        dWD = dHD
-    End If
-    If dHD > 0 Then
+        Set oTxt = CreateTextElement1(Nothing, sPente, oPtTxt, oRot)
         Dim oTSd As TextStyle: Set oTSd = oTxt.TextStyle
-        oTSd.Height = dHD
-        If dWD > 0 Then oTSd.Width = dWD Else oTSd.Width = dHD
+        oTSd.Height = oSettings.dPenteHauteur
+        Dim dWD As Double: dWD = oSettings.dPenteLargeur
+        If dWD > 0 Then oTSd.Width = dWD Else oTSd.Width = oSettings.dPenteHauteur
         oTSd.Justification = msdTextJustificationLeftBottom
         oTxt.TextStyle = oTSd
+        oTxt.Color = oSettings.nPenteCouleur
+    Else
+        Set oTxt = CreateTextElement1(oSettings.oTextModele, sPente, oPtTxt, oRot)
+        If oTxt Is Nothing Then
+            Err.Clear
+            Set oTxt = CreateTextElement1(Nothing, sPente, oPtTxt, oRot)
+        End If
+        Dim oTSm As TextStyle: Set oTSm = oTxt.TextStyle
+        oTSm.Justification = msdTextJustificationLeftBottom
+        oTxt.TextStyle = oTSm
+        If Not oSettings.oTexte.CommeModele Then
+            oTxt.Color = oSettings.oTexte.Couleur
+        End If
     End If
     oTxt.Rotation = oRot
-    If oSettings.bPentePerso Then
-        oTxt.Color = oSettings.nPenteCouleur
-    ElseIf Not oSettings.oTexte.CommeModele Then
-        oTxt.Color = oSettings.oTexte.Couleur
-    End If
     Err.Clear
     On Error GoTo 0
     oTxt.Redraw DrawMode
@@ -632,31 +633,32 @@ Sub CreerPente(oPtPlace As Point3d, _
     oRot = Matrix3dFromAxisAndRotationAngle(2, dAngleTxt)
 
     Dim oTxt As TextElement
-    Set oTxt = CreateTextElement1(Nothing, sPente, oPtTxt, oRot)
     On Error Resume Next
-    Dim dHC As Double, dWC As Double
     If oSettings.bPentePerso Then
-        dHC = oSettings.dPenteHauteur
-        dWC = oSettings.dPenteLargeur
-    Else
-        dHC = oSettings.dModeleHauteur
-        dWC = dHC
-    End If
-    If dHC > 0 Then
+        Set oTxt = CreateTextElement1(Nothing, sPente, oPtTxt, oRot)
         Dim oTSc As TextStyle: Set oTSc = oTxt.TextStyle
-        oTSc.Height = dHC
-        If dWC > 0 Then oTSc.Width = dWC Else oTSc.Width = dHC
+        oTSc.Height = oSettings.dPenteHauteur
+        Dim dWC As Double: dWC = oSettings.dPenteLargeur
+        If dWC > 0 Then oTSc.Width = dWC Else oTSc.Width = oSettings.dPenteHauteur
         oTSc.Justification = msdTextJustificationLeftBottom
         oTxt.TextStyle = oTSc
-    End If
-    oTxt.Rotation = oRot
-    If oSettings.bPentePerso Then
         oTxt.Color = oSettings.nPenteCouleur
         Set oTxt.Level = ResolverNiveau(oSettings.sPenteNiveau, oSettings)
-    ElseIf oSettings.oTextModele Is Nothing Or Not oSettings.oTexte.CommeModele Then
-        oTxt.Color = oSettings.oTexte.Couleur
-        Set oTxt.Level = ResolverNiveau(oSettings.oTexte.NomNiveau, oSettings)
+    Else
+        Set oTxt = CreateTextElement1(oSettings.oTextModele, sPente, oPtTxt, oRot)
+        If oTxt Is Nothing Then
+            Err.Clear
+            Set oTxt = CreateTextElement1(Nothing, sPente, oPtTxt, oRot)
+        End If
+        Dim oTSp As TextStyle: Set oTSp = oTxt.TextStyle
+        oTSp.Justification = msdTextJustificationLeftBottom
+        oTxt.TextStyle = oTSp
+        If oSettings.oTextModele Is Nothing Or Not oSettings.oTexte.CommeModele Then
+            oTxt.Color = oSettings.oTexte.Couleur
+            Set oTxt.Level = ResolverNiveau(oSettings.oTexte.NomNiveau, oSettings)
+        End If
     End If
+    oTxt.Rotation = oRot
     Err.Clear
     On Error GoTo 0
     ActiveModelReference.AddElement oTxt
