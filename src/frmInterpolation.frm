@@ -77,6 +77,20 @@ Private WithEvents chkDecalageFixe As MSForms.CheckBox
 Attribute chkDecalageFixe.VB_VarHelpID = -1
 Private WithEvents txtDecalageDZ As MSForms.TextBox
 Attribute txtDecalageDZ.VB_VarHelpID = -1
+Private WithEvents chkPentePerso As MSForms.CheckBox
+Attribute chkPentePerso.VB_VarHelpID = -1
+Private WithEvents txtPenteH As MSForms.TextBox
+Attribute txtPenteH.VB_VarHelpID = -1
+Private WithEvents txtPenteL As MSForms.TextBox
+Attribute txtPenteL.VB_VarHelpID = -1
+Private WithEvents cmbPenteNiveau As MSForms.ComboBox
+Attribute cmbPenteNiveau.VB_VarHelpID = -1
+Private WithEvents txtPenteCoulTxt As MSForms.TextBox
+Attribute txtPenteCoulTxt.VB_VarHelpID = -1
+Private WithEvents txtPenteCoulFl As MSForms.TextBox
+Attribute txtPenteCoulFl.VB_VarHelpID = -1
+Private WithEvents txtPenteFlLong As MSForms.TextBox
+Attribute txtPenteFlLong.VB_VarHelpID = -1
 Private WithEvents btnRetourInterp As MSForms.CommandButton
 Attribute btnRetourInterp.VB_VarHelpID = -1
 Private WithEvents btnPlacerPente As MSForms.CommandButton
@@ -101,7 +115,7 @@ Private Sub ConstruireControles()
 
     Me.Caption = "Interpolation Topo"
     Me.Width = 212
-    Me.Height = 490
+    Me.Height = 580
 
     ' --- Cadre Cercle -------------------------------------------------------
     Dim fraCercle As MSForms.Frame
@@ -192,11 +206,58 @@ Private Sub ConstruireControles()
     txtDecalageDZ.Text = "0"
     txtDecalageDZ.Enabled = False
 
+    ' --- Cadre Indicateur pente ---------------------------------------------
+    Dim fraIndPente As MSForms.Frame
+    Set fraIndPente = Me.Controls.Add("Forms.Frame.1", "fraIndPente")
+    fraIndPente.Caption = "Indicateur pente"
+    fraIndPente.Left = 6: fraIndPente.Top = 350
+    fraIndPente.Width = 192: fraIndPente.Height = 90
+
+    Set chkPentePerso = fraIndPente.Controls.Add("Forms.CheckBox.1", "chkPentePerso")
+    chkPentePerso.Caption = "Personnaliser"
+    chkPentePerso.Left = 6: chkPentePerso.Top = 10
+    chkPentePerso.Width = 180: chkPentePerso.Height = 14
+    chkPentePerso.Value = False
+
+    CreerLabel fraIndPente, "lblPenteH", "H:", 6, 30, 12
+    Set txtPenteH = fraIndPente.Controls.Add("Forms.TextBox.1", "txtPenteH")
+    txtPenteH.Left = 20: txtPenteH.Top = 28: txtPenteH.Width = 40: txtPenteH.Height = 16
+    txtPenteH.Enabled = False
+
+    CreerLabel fraIndPente, "lblPenteL", "L:", 68, 30, 12
+    Set txtPenteL = fraIndPente.Controls.Add("Forms.TextBox.1", "txtPenteL")
+    txtPenteL.Left = 82: txtPenteL.Top = 28: txtPenteL.Width = 40: txtPenteL.Height = 16
+    txtPenteL.Enabled = False
+
+    CreerLabel fraIndPente, "lblPenteNiv", "Niv:", 6, 50, 18
+    Set cmbPenteNiveau = fraIndPente.Controls.Add("Forms.ComboBox.1", "cmbPenteNiveau")
+    cmbPenteNiveau.Left = 28: cmbPenteNiveau.Top = 48
+    cmbPenteNiveau.Width = 158: cmbPenteNiveau.Height = 16
+    cmbPenteNiveau.Enabled = False
+
+    CreerLabel fraIndPente, "lblPCTxt", "C.txt:", 6, 70, 26
+    Set txtPenteCoulTxt = fraIndPente.Controls.Add("Forms.TextBox.1", "txtPenteCoulTxt")
+    txtPenteCoulTxt.Left = 34: txtPenteCoulTxt.Top = 68
+    txtPenteCoulTxt.Width = 24: txtPenteCoulTxt.Height = 16
+    txtPenteCoulTxt.Enabled = False
+
+    CreerLabel fraIndPente, "lblPCFl", "C.fl:", 66, 70, 22
+    Set txtPenteCoulFl = fraIndPente.Controls.Add("Forms.TextBox.1", "txtPenteCoulFl")
+    txtPenteCoulFl.Left = 90: txtPenteCoulFl.Top = 68
+    txtPenteCoulFl.Width = 24: txtPenteCoulFl.Height = 16
+    txtPenteCoulFl.Enabled = False
+
+    CreerLabel fraIndPente, "lblPFlLong", "Long:", 122, 70, 24
+    Set txtPenteFlLong = fraIndPente.Controls.Add("Forms.TextBox.1", "txtPenteFlLong")
+    txtPenteFlLong.Left = 148: txtPenteFlLong.Top = 68
+    txtPenteFlLong.Width = 38: txtPenteFlLong.Height = 16
+    txtPenteFlLong.Enabled = False
+
     ' --- Cadre Etat ---------------------------------------------------------
     Dim fraEtat As MSForms.Frame
     Set fraEtat = Me.Controls.Add("Forms.Frame.1", "fraEtat")
     fraEtat.Caption = "Etat"
-    fraEtat.Left = 6: fraEtat.Top = 350
+    fraEtat.Left = 6: fraEtat.Top = 446
     fraEtat.Width = 192: fraEtat.Height = 64
 
     Set lblP1 = CreerLabel(fraEtat, "lblP1", "P1 : -", 6, 12, 180)
@@ -207,7 +268,7 @@ Private Sub ConstruireControles()
     Dim fraActions As MSForms.Frame
     Set fraActions = Me.Controls.Add("Forms.Frame.1", "fraActions")
     fraActions.Caption = "Actions"
-    fraActions.Left = 6: fraActions.Top = 420
+    fraActions.Left = 6: fraActions.Top = 516
     fraActions.Width = 192: fraActions.Height = 46
 
     Set btnRetourInterp = fraActions.Controls.Add("Forms.CommandButton.1", "btnRetourInterp")
@@ -257,6 +318,16 @@ Sub Initialiser(oSettings As CMstSettings)
     txtCouleurTexte.Text = CStr(m_oSettings.oTexte.Couleur)
     ActiverChampsTexte
 
+    ' Indicateur pente
+    chkPentePerso.Value = m_oSettings.bPentePerso
+    txtPenteH.Text = Format$(m_oSettings.dPenteHauteur, "0.000")
+    txtPenteL.Text = Format$(m_oSettings.dPenteLargeur, "0.000")
+    RemplirNiveaux cmbPenteNiveau
+    txtPenteCoulTxt.Text = CStr(m_oSettings.nPenteCouleur)
+    txtPenteCoulFl.Text = CStr(m_oSettings.nFlecheCouleur)
+    txtPenteFlLong.Text = Format$(m_oSettings.dFlecheLongueur, "0.00")
+    ActiverChampsPente
+
     ' Pente decalage
     chkPente.Value = m_oSettings.bAppliquerPente
     txtPente.Text = Format$(m_oSettings.dPenteDecalage, "0.00")
@@ -283,6 +354,28 @@ Private Sub RemplirNiveaux(cmb As MSForms.ComboBox)
         cmb.AddItem oLvl.Number & " : " & oLvl.Name
     Next
     cmb.ListIndex = 0  ' vide selectionne par defaut
+End Sub
+
+'------------------------------------------------------------------------------
+Private Sub ActiverChampsPente()
+    Dim bActif As Boolean
+    bActif = m_oSettings.bPentePerso
+    txtPenteH.Enabled = bActif
+    txtPenteL.Enabled = bActif
+    cmbPenteNiveau.Enabled = bActif
+    txtPenteCoulTxt.Enabled = bActif
+    txtPenteCoulFl.Enabled = bActif
+    txtPenteFlLong.Enabled = bActif
+End Sub
+
+'------------------------------------------------------------------------------
+Sub RafraichirPente()
+    If m_oSettings Is Nothing Then Exit Sub
+    m_bInit = True
+    txtPenteH.Text = Format$(m_oSettings.dPenteHauteur, "0.000")
+    txtPenteL.Text = Format$(m_oSettings.dPenteLargeur, "0.000")
+    txtPenteCoulTxt.Text = CStr(m_oSettings.nPenteCouleur)
+    m_bInit = False
 End Sub
 
 '------------------------------------------------------------------------------
@@ -485,6 +578,95 @@ Private Sub txtDecalageDZ_KeyDown(ByVal KeyCode As MSForms.ReturnInteger, _
                                    ByVal Shift As Integer)
     If KeyCode = vbKeyReturn And Not m_oSettings Is Nothing Then _
         txtDecalageDZ.Text = Format$(m_oSettings.dDecalageDZ, "0.00")
+End Sub
+
+'==============================================================================
+' Evenements Indicateur pente
+'==============================================================================
+
+Private Sub chkPentePerso_Change()
+    If m_bInit Then Exit Sub
+    If m_oSettings Is Nothing Then Exit Sub
+    m_oSettings.bPentePerso = (chkPentePerso.Value = True)
+    ActiverChampsPente
+End Sub
+
+Private Sub txtPenteH_Change()
+    If m_bInit Then Exit Sub
+    If m_oSettings Is Nothing Then Exit Sub
+    Dim dVal As Double
+    dVal = Val(Replace(Trim$(txtPenteH.Text), ",", "."))
+    If dVal > 0 Then m_oSettings.dPenteHauteur = dVal
+End Sub
+
+Private Sub txtPenteH_KeyDown(ByVal KeyCode As MSForms.ReturnInteger, _
+                               ByVal Shift As Integer)
+    If KeyCode = vbKeyReturn And Not m_oSettings Is Nothing Then _
+        txtPenteH.Text = Format$(m_oSettings.dPenteHauteur, "0.000")
+End Sub
+
+Private Sub txtPenteL_Change()
+    If m_bInit Then Exit Sub
+    If m_oSettings Is Nothing Then Exit Sub
+    Dim dVal As Double
+    dVal = Val(Replace(Trim$(txtPenteL.Text), ",", "."))
+    If dVal > 0 Then m_oSettings.dPenteLargeur = dVal
+End Sub
+
+Private Sub txtPenteL_KeyDown(ByVal KeyCode As MSForms.ReturnInteger, _
+                               ByVal Shift As Integer)
+    If KeyCode = vbKeyReturn And Not m_oSettings Is Nothing Then _
+        txtPenteL.Text = Format$(m_oSettings.dPenteLargeur, "0.000")
+End Sub
+
+Private Sub cmbPenteNiveau_Change()
+    If m_bInit Then Exit Sub
+    If m_oSettings Is Nothing Then Exit Sub
+    m_oSettings.sPenteNiveau = ExtraireNiveau(cmbPenteNiveau.Text)
+End Sub
+
+Private Sub txtPenteCoulTxt_Change()
+    If m_bInit Then Exit Sub
+    If m_oSettings Is Nothing Then Exit Sub
+    Dim sVal As String: sVal = Trim$(txtPenteCoulTxt.Text)
+    If sVal = "" Then Exit Sub
+    Dim nCoul As Long: nCoul = CLng(Val(sVal))
+    If nCoul >= 0 And nCoul <= 255 Then m_oSettings.nPenteCouleur = nCoul
+End Sub
+
+Private Sub txtPenteCoulTxt_KeyDown(ByVal KeyCode As MSForms.ReturnInteger, _
+                                     ByVal Shift As Integer)
+    If KeyCode = vbKeyReturn And Not m_oSettings Is Nothing Then _
+        txtPenteCoulTxt.Text = CStr(m_oSettings.nPenteCouleur)
+End Sub
+
+Private Sub txtPenteCoulFl_Change()
+    If m_bInit Then Exit Sub
+    If m_oSettings Is Nothing Then Exit Sub
+    Dim sVal As String: sVal = Trim$(txtPenteCoulFl.Text)
+    If sVal = "" Then Exit Sub
+    Dim nCoul As Long: nCoul = CLng(Val(sVal))
+    If nCoul >= 0 And nCoul <= 255 Then m_oSettings.nFlecheCouleur = nCoul
+End Sub
+
+Private Sub txtPenteCoulFl_KeyDown(ByVal KeyCode As MSForms.ReturnInteger, _
+                                    ByVal Shift As Integer)
+    If KeyCode = vbKeyReturn And Not m_oSettings Is Nothing Then _
+        txtPenteCoulFl.Text = CStr(m_oSettings.nFlecheCouleur)
+End Sub
+
+Private Sub txtPenteFlLong_Change()
+    If m_bInit Then Exit Sub
+    If m_oSettings Is Nothing Then Exit Sub
+    Dim dVal As Double
+    dVal = Val(Replace(Trim$(txtPenteFlLong.Text), ",", "."))
+    If dVal > 0 Then m_oSettings.dFlecheLongueur = dVal
+End Sub
+
+Private Sub txtPenteFlLong_KeyDown(ByVal KeyCode As MSForms.ReturnInteger, _
+                                    ByVal Shift As Integer)
+    If KeyCode = vbKeyReturn And Not m_oSettings Is Nothing Then _
+        txtPenteFlLong.Text = Format$(m_oSettings.dFlecheLongueur, "0.00")
 End Sub
 
 '==============================================================================

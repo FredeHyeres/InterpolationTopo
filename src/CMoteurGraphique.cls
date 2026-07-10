@@ -545,10 +545,32 @@ Sub DessinPenteDynamique(ByVal DrawMode As MsdDrawingMode, _
 
     Dim oTxt As TextElement
     Set oTxt = CreateTextElement1(Nothing, sPente, oPtTxt, oRot)
-    Dim oTS As TextStyle: Set oTS = oTxt.TextStyle
-    oTS.Justification = msdTextJustificationLeftBottom
-    oTxt.TextStyle = oTS
-    If Not oSettings.oTexte.CommeModele Then oTxt.Color = oSettings.oTexte.Couleur
+    If oSettings.bPentePerso Then
+        Dim oTSp As TextStyle: Set oTSp = oTxt.TextStyle
+        oTSp.Height = oSettings.dPenteHauteur
+        oTSp.Width = oSettings.dPenteLargeur
+        oTSp.Justification = msdTextJustificationLeftBottom
+        oTxt.TextStyle = oTSp
+        oTxt.Rotation = oRot
+        oTxt.Color = oSettings.nPenteCouleur
+    Else
+        On Error Resume Next
+        If Not oSettings.oTextModele Is Nothing Then
+            oTxt.TextStyle = oSettings.oTextModele.TextStyle
+        ElseIf oSettings.dModeleHauteur > 0 Then
+            Dim oTSd As TextStyle: Set oTSd = oTxt.TextStyle
+            oTSd.Height = oSettings.dModeleHauteur
+            oTSd.Width = oSettings.dModeleHauteur
+            oTxt.TextStyle = oTSd
+        End If
+        Err.Clear
+        On Error GoTo 0
+        Dim oTS As TextStyle: Set oTS = oTxt.TextStyle
+        oTS.Justification = msdTextJustificationLeftBottom
+        oTxt.TextStyle = oTS
+        oTxt.Rotation = oRot
+        If Not oSettings.oTexte.CommeModele Then oTxt.Color = oSettings.oTexte.Couleur
+    End If
     oTxt.Redraw DrawMode
 
     ' Fleche
@@ -608,12 +630,35 @@ Sub CreerPente(oPtPlace As Point3d, _
 
     Dim oTxt As TextElement
     Set oTxt = CreateTextElement1(Nothing, sPente, oPtTxt, oRot)
-    Dim oTS As TextStyle: Set oTS = oTxt.TextStyle
-    oTS.Justification = msdTextJustificationLeftBottom
-    oTxt.TextStyle = oTS
-    If oSettings.oTextModele Is Nothing Or Not oSettings.oTexte.CommeModele Then
-        oTxt.Color = oSettings.oTexte.Couleur
-        Set oTxt.Level = ResolverNiveau(oSettings.oTexte.NomNiveau, oSettings)
+    If oSettings.bPentePerso Then
+        Dim oTSp2 As TextStyle: Set oTSp2 = oTxt.TextStyle
+        oTSp2.Height = oSettings.dPenteHauteur
+        oTSp2.Width = oSettings.dPenteLargeur
+        oTSp2.Justification = msdTextJustificationLeftBottom
+        oTxt.TextStyle = oTSp2
+        oTxt.Rotation = oRot
+        oTxt.Color = oSettings.nPenteCouleur
+        Set oTxt.Level = ResolverNiveau(oSettings.sPenteNiveau, oSettings)
+    Else
+        On Error Resume Next
+        If Not oSettings.oTextModele Is Nothing Then
+            oTxt.TextStyle = oSettings.oTextModele.TextStyle
+        ElseIf oSettings.dModeleHauteur > 0 Then
+            Dim oTSc As TextStyle: Set oTSc = oTxt.TextStyle
+            oTSc.Height = oSettings.dModeleHauteur
+            oTSc.Width = oSettings.dModeleHauteur
+            oTxt.TextStyle = oTSc
+        End If
+        Err.Clear
+        On Error GoTo 0
+        Dim oTS As TextStyle: Set oTS = oTxt.TextStyle
+        oTS.Justification = msdTextJustificationLeftBottom
+        oTxt.TextStyle = oTS
+        oTxt.Rotation = oRot
+        If oSettings.oTextModele Is Nothing Or Not oSettings.oTexte.CommeModele Then
+            oTxt.Color = oSettings.oTexte.Couleur
+            Set oTxt.Level = ResolverNiveau(oSettings.oTexte.NomNiveau, oSettings)
+        End If
     End If
     ActiveModelReference.AddElement oTxt
 
@@ -739,12 +784,11 @@ End Sub
 '------------------------------------------------------------------------------
 ' Hauteur du texte modele P1 (fallback 0.1 u.m.).
 Private Function HauteurTexteModele(oSettings As CMstSettings) As Double
-    HauteurTexteModele = 0.1
-    If oSettings.oTextModele Is Nothing Then Exit Function
-    On Error Resume Next
-    Dim dH As Double
-    dH = CDbl(oSettings.oTextModele.TextStyle.Height)
-    If Err.Number = 0 And dH > 0 Then HauteurTexteModele = dH
-    Err.Clear
-    On Error GoTo 0
+    If oSettings.bPentePerso Then
+        HauteurTexteModele = oSettings.dPenteHauteur
+    ElseIf oSettings.dModeleHauteur > 0 Then
+        HauteurTexteModele = oSettings.dModeleHauteur
+    Else
+        HauteurTexteModele = 0.1
+    End If
 End Function

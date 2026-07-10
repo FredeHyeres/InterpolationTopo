@@ -34,8 +34,8 @@ Private Sub IPrimitiveCommandEvents_DataPoint(Point As Point3d, ByVal View As Vi
     End If
     g_oSelectionP2.CopierDepuis g_oSelectionCourante
 
-    ' Mise a jour decimales si P2 en a davantage
     g_oSettings.AjusterDecimales nDec
+    frmInterpolation.AfficherP2 g_oP2
 
     ShowPrompt "P2 = " & g_sValeurTexte & _
                "  |  Snappez le point terrain P2  (Reset = ancrage du texte)"

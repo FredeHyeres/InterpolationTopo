@@ -40,12 +40,13 @@ Private Sub IPrimitiveCommandEvents_DataPoint(Point As Point3d, ByVal View As Vi
     If Not oText Is Nothing Then
         g_oSettings.ChargerModeleTexte oText, sSep, nDec
     Else
-        g_oSettings.ChargerModeleDepuisTag sSep, nDec
+        g_oSettings.ChargerModeleDepuisTag g_oTagTrouve, sSep, nDec
     End If
 
     ' Mise a jour du formulaire (etat P1 + attributs herites du texte modele)
     frmInterpolation.AfficherP1 g_oP1
     frmInterpolation.RafraichirTexte
+    frmInterpolation.RafraichirPente
 
     ShowPrompt "P1 = " & g_sValeurTexte & _
                "  |  Snappez le point terrain P1  (Reset = ancrage du texte)"
