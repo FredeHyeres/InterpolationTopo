@@ -43,6 +43,23 @@ Private Sub IPrimitiveCommandEvents_DataPoint(Point As Point3d, ByVal View As Vi
         g_oSettings.ChargerModeleDepuisTag g_oTagTrouve, sSep, nDec
     End If
 
+    ' Si P1 vient d'une reference, convertir les tailles texte des unites
+    ' de la reference vers les unites du fichier actif (ScaleFactor)
+    If g_oSelectionP1.EstReference And Not g_oSelectionP1.oAttachment Is Nothing Then
+        Dim dScale As Double
+        dScale = 1#
+        On Error Resume Next
+        dScale = CDbl(g_oSelectionP1.oAttachment.ScaleFactor)
+        If Err.Number <> 0 Or Abs(dScale) < 0.0000000001 Then dScale = 1#
+        Err.Clear
+        On Error GoTo 0
+        If Abs(dScale - 1#) > 0.0000000001 Then
+            g_oSettings.dModeleHauteur = g_oSettings.dModeleHauteur * dScale
+            g_oSettings.dPenteHauteur = g_oSettings.dPenteHauteur * dScale
+            g_oSettings.dPenteLargeur = g_oSettings.dPenteLargeur * dScale
+        End If
+    End If
+
     ' Mise a jour du formulaire (etat P1 + attributs herites du texte modele)
     frmInterpolation.AfficherP1 g_oP1
     frmInterpolation.RafraichirTexte
