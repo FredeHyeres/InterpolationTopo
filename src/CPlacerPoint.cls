@@ -65,7 +65,6 @@ Private Sub IPrimitiveCommandEvents_Dynamics(Point As Point3d, ByVal View As Vie
         dOffset = (Point.X - m_oProj.X) * m_dPerpX + (Point.Y - m_oProj.Y) * m_dPerpY
         oPtDecale.X = m_oProj.X + dOffset * m_dPerpX
         oPtDecale.Y = m_oProj.Y + dOffset * m_dPerpY
-        oPtDecale.Z = m_oProj.Z
 
         Dim dZAff As Double
         dZAff = m_dZInterp
@@ -73,6 +72,7 @@ Private Sub IPrimitiveCommandEvents_Dynamics(Point As Point3d, ByVal View As Vie
             dZAff = dZAff + Abs(dOffset) * g_oSettings.dPenteDecalage / 100#
         End If
         If g_oSettings.bDecalageFixe Then dZAff = dZAff + g_oSettings.dDecalageDZ
+        oPtDecale.Z = dZAff
 
         g_oMoteur.DessinDecalage DrawMode, g_oP1, g_oP2, m_oProj, oPtDecale, _
                                   dZAff, g_oSettings, g_oCalc
@@ -129,14 +129,13 @@ Private Sub IPrimitiveCommandEvents_DataPoint(Point As Point3d, ByVal View As Vi
         dOffset = (Point.X - m_oProj.X) * m_dPerpX + (Point.Y - m_oProj.Y) * m_dPerpY
         oPtDecale.X = m_oProj.X + dOffset * m_dPerpX
         oPtDecale.Y = m_oProj.Y + dOffset * m_dPerpY
-        oPtDecale.Z = m_oProj.Z
-
         Dim dZFinal As Double
         dZFinal = m_dZInterp
         If g_oSettings.bAppliquerPente Then
             dZFinal = dZFinal + Abs(dOffset) * g_oSettings.dPenteDecalage / 100#
         End If
         If g_oSettings.bDecalageFixe Then dZFinal = dZFinal + g_oSettings.dDecalageDZ
+        oPtDecale.Z = dZFinal
 
         If SourceP1Integree() Then
             ' Cellule/tag : tout creer d'un coup (texte integre)
@@ -163,6 +162,7 @@ Private Sub IPrimitiveCommandEvents_DataPoint(Point As Point3d, ByVal View As Vi
 
     Case 3
         ' --- Etape 3 : poser le texte a la position choisie ---
+        Point.Z = m_dZFinal
         g_oMoteur.CreerTexteSeul Point, m_dZFinal, g_oSettings, g_oCalc
 
         Dim sAlt3 As String
