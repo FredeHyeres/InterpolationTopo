@@ -24,6 +24,8 @@ Public dPenteDecalage   As Double           ' pente transversale en % (appliquee
 Public bAppliquerPente  As Boolean          ' True = appliquer la pente au decalage
 Public dDecalageDZ      As Double           ' decalage fixe en Z (ajoute a l'altitude interpolee)
 Public bDecalageFixe    As Boolean          ' True = appliquer le decalage fixe DZ
+Public dFlecheLongueur  As Double           ' longueur de la fleche indicatrice de pente (u.m.)
+Public nFlecheCouleur   As Long             ' couleur de la fleche (index MicroStation 0-255)
 
 '------------------------------------------------------------------------------
 Sub Init()
@@ -36,6 +38,8 @@ Sub Init()
     bAppliquerPente = False
     dDecalageDZ = 0#
     bDecalageFixe = False
+    dFlecheLongueur = 1#
+    nFlecheCouleur = 3
 End Sub
 
 '------------------------------------------------------------------------------

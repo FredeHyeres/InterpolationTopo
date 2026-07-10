@@ -169,6 +169,20 @@ Function InfoSegment(oP1 As CPointRef, oP2 As CPointRef) As String
 End Function
 
 '==============================================================================
+' Angles
+'==============================================================================
+
+'------------------------------------------------------------------------------
+' Angle en radians depuis l'axe X (sens trigonometrique) pour un vecteur (dDX, dDY).
+Function Angle2D(dDX As Double, dDY As Double) As Double
+    If Abs(dDX) < 0.0000000001 And Abs(dDY) < 0.0000000001 Then
+        Angle2D = 0#
+        Exit Function
+    End If
+    Angle2D = Atn2Priv(dDY, dDX)
+End Function
+
+'==============================================================================
 ' Formatage
 '==============================================================================
 
@@ -182,4 +196,14 @@ Function FormatAltitude(dZ As Double, nDec As Integer, sSep As String) As String
     sRes = Replace(sRes, ",", ".")
     If sSep = "," Then sRes = Replace(sRes, ".", ",")
     FormatAltitude = sRes
+End Function
+
+'------------------------------------------------------------------------------
+' Formate une pente en pourcentage (valeur absolue, 2 decimales, separateur donne).
+Function FormatPente(dPente As Double, sSep As String) As String
+    Dim sRes As String
+    sRes = Format$(Abs(dPente), "0.00")
+    sRes = Replace(sRes, ",", ".")
+    If sSep = "," Then sRes = Replace(sRes, ".", ",")
+    FormatPente = sRes & "%"
 End Function

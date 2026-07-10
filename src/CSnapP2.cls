@@ -34,6 +34,7 @@ Private Sub IPrimitiveCommandEvents_DataPoint(Point As Point3d, ByVal View As Vi
 
     frmInterpolation.AfficherP2 g_oP2
     frmInterpolation.AfficherSegment g_oCalc.InfoSegment(g_oP1, g_oP2)
+    frmInterpolation.ActiverBoutonsActions True
 
     ShowPrompt "P2 positionne  |  " & g_oCalc.InfoSegment(g_oP1, g_oP2) & _
                "  ->  deplacez le curseur. Data=figer altitude  Reset=nouv. selection"
@@ -57,6 +58,7 @@ Private Sub IPrimitiveCommandEvents_Reset()
 
     frmInterpolation.AfficherP2 g_oP2
     frmInterpolation.AfficherSegment g_oCalc.InfoSegment(g_oP1, g_oP2)
+    frmInterpolation.ActiverBoutonsActions True
 
     ShowPrompt "P2 = ancrage texte  |  " & g_oCalc.InfoSegment(g_oP1, g_oP2) & _
                "  ->  deplacez le curseur. Data=figer altitude  Reset=nouv. selection"

@@ -503,6 +503,147 @@ Sub DessinDecalage(ByVal DrawMode As MsdDrawingMode, _
 End Sub
 
 '==============================================================================
+' Indicateur de pente (texte + fleche)
+'==============================================================================
+
+'------------------------------------------------------------------------------
+' Apercu dynamique du texte pente + fleche au curseur.
+Sub DessinPenteDynamique(ByVal DrawMode As MsdDrawingMode, _
+                         oPtPlace As Point3d, _
+                         oP1 As CPointRef, oP2 As CPointRef, _
+                         oSettings As CMstSettings, oCalc As CInterpolation)
+
+    Dim dPente As Double
+    dPente = oCalc.PentePct(oP1, oP2)
+
+    Dim sPente As String
+    sPente = oCalc.FormatPente(dPente, oSettings.oTexte.SepDecimal)
+
+    Dim dDesX As Double, dDesY As Double
+    DirectionDescente oP1, oP2, dDesX, dDesY
+
+    ' Angle aligne sur la fleche (direction descente), ajuste pour lisibilite
+    Dim dAngleTxt As Double
+    dAngleTxt = oCalc.Angle2D(dDesX, dDesY)
+    Const PI_D As Double = 3.14159265358979
+    If dAngleTxt > PI_D / 2# Then dAngleTxt = dAngleTxt - PI_D
+    If dAngleTxt < -PI_D / 2# Then dAngleTxt = dAngleTxt + PI_D
+
+    Dim dTH As Double
+    dTH = HauteurTexteModele(oSettings)
+
+    Dim dPerpX As Double, dPerpY As Double
+    dPerpX = -Sin(dAngleTxt): dPerpY = Cos(dAngleTxt)
+
+    Dim oPtTxt As Point3d
+    oPtTxt.X = oPtPlace.X + dPerpX * dTH * 0.8
+    oPtTxt.Y = oPtPlace.Y + dPerpY * dTH * 0.8
+    oPtTxt.Z = oPtPlace.Z
+
+    Dim oRot As Matrix3d
+    oRot = Matrix3dFromAxisAndRotationAngle(2, dAngleTxt)
+
+    Dim oTxt As TextElement
+    Set oTxt = CreateTextElement1(Nothing, sPente, oPtTxt, oRot)
+    Dim oTS As TextStyle: Set oTS = oTxt.TextStyle
+    oTS.Justification = msdTextJustificationLeftBottom
+    oTxt.TextStyle = oTS
+    If Not oSettings.oTexte.CommeModele Then oTxt.Color = oSettings.oTexte.Couleur
+    oTxt.Redraw DrawMode
+
+    ' Fleche
+    Dim oPtDeb As Point3d, oPtFin As Point3d
+    Dim oPtH1 As Point3d, oPtH2 As Point3d
+    GeometrieFleche oPtPlace, dDesX, dDesY, oSettings.dFlecheLongueur, _
+                    oPtDeb, oPtFin, oPtH1, oPtH2
+
+    Dim oL As LineElement
+    Set oL = CreateLineElement2(Nothing, oPtDeb, oPtFin)
+    oL.Color = oSettings.nFlecheCouleur
+    oL.Redraw DrawMode
+
+    Dim oLH1 As LineElement, oLH2 As LineElement
+    Set oLH1 = CreateLineElement2(Nothing, oPtFin, oPtH1)
+    oLH1.Color = oSettings.nFlecheCouleur
+    oLH1.Redraw DrawMode
+    Set oLH2 = CreateLineElement2(Nothing, oPtFin, oPtH2)
+    oLH2.Color = oSettings.nFlecheCouleur
+    oLH2.Redraw DrawMode
+End Sub
+
+'------------------------------------------------------------------------------
+' Creation definitive du texte pente + fleche.
+Sub CreerPente(oPtPlace As Point3d, _
+               oP1 As CPointRef, oP2 As CPointRef, _
+               oSettings As CMstSettings, oCalc As CInterpolation)
+
+    Dim dPente As Double
+    dPente = oCalc.PentePct(oP1, oP2)
+
+    Dim sPente As String
+    sPente = oCalc.FormatPente(dPente, oSettings.oTexte.SepDecimal)
+
+    Dim dDesX As Double, dDesY As Double
+    DirectionDescente oP1, oP2, dDesX, dDesY
+
+    Dim dAngleTxt As Double
+    dAngleTxt = oCalc.Angle2D(dDesX, dDesY)
+    Const PI_C As Double = 3.14159265358979
+    If dAngleTxt > PI_C / 2# Then dAngleTxt = dAngleTxt - PI_C
+    If dAngleTxt < -PI_C / 2# Then dAngleTxt = dAngleTxt + PI_C
+
+    Dim dTH As Double
+    dTH = HauteurTexteModele(oSettings)
+
+    Dim dPerpX As Double, dPerpY As Double
+    dPerpX = -Sin(dAngleTxt): dPerpY = Cos(dAngleTxt)
+
+    Dim oPtTxt As Point3d
+    oPtTxt.X = oPtPlace.X + dPerpX * dTH * 0.8
+    oPtTxt.Y = oPtPlace.Y + dPerpY * dTH * 0.8
+    oPtTxt.Z = oPtPlace.Z
+
+    Dim oRot As Matrix3d
+    oRot = Matrix3dFromAxisAndRotationAngle(2, dAngleTxt)
+
+    Dim oTxt As TextElement
+    Set oTxt = CreateTextElement1(Nothing, sPente, oPtTxt, oRot)
+    Dim oTS As TextStyle: Set oTS = oTxt.TextStyle
+    oTS.Justification = msdTextJustificationLeftBottom
+    oTxt.TextStyle = oTS
+    If oSettings.oTextModele Is Nothing Or Not oSettings.oTexte.CommeModele Then
+        oTxt.Color = oSettings.oTexte.Couleur
+        Set oTxt.Level = ResolverNiveau(oSettings.oTexte.NomNiveau, oSettings)
+    End If
+    ActiveModelReference.AddElement oTxt
+
+    ' Fleche permanente
+    Dim oPtDeb As Point3d, oPtFin As Point3d
+    Dim oPtH1 As Point3d, oPtH2 As Point3d
+    GeometrieFleche oPtPlace, dDesX, dDesY, oSettings.dFlecheLongueur, _
+                    oPtDeb, oPtFin, oPtH1, oPtH2
+
+    Dim oLvl As Level
+    Set oLvl = ResolverNiveau(oSettings.oTexte.NomNiveau, oSettings)
+
+    Dim oL As LineElement
+    Set oL = CreateLineElement2(Nothing, oPtDeb, oPtFin)
+    oL.Color = oSettings.nFlecheCouleur
+    Set oL.Level = oLvl
+    ActiveModelReference.AddElement oL
+
+    Dim oLH1 As LineElement, oLH2 As LineElement
+    Set oLH1 = CreateLineElement2(Nothing, oPtFin, oPtH1)
+    oLH1.Color = oSettings.nFlecheCouleur
+    Set oLH1.Level = oLvl
+    ActiveModelReference.AddElement oLH1
+    Set oLH2 = CreateLineElement2(Nothing, oPtFin, oPtH2)
+    oLH2.Color = oSettings.nFlecheCouleur
+    Set oLH2.Level = oLvl
+    ActiveModelReference.AddElement oLH2
+End Sub
+
+'==============================================================================
 ' Utilitaires prives
 '==============================================================================
 
@@ -546,4 +687,68 @@ Private Function ResolverNiveau(sNiveau As String, oSettings As CMstSettings) As
         Next
     End If
     If Not oLvl Is Nothing Then Set ResolverNiveau = oLvl
+End Function
+
+'------------------------------------------------------------------------------
+' Direction unitaire de descente (du point le plus haut vers le plus bas).
+Private Sub DirectionDescente(oP1 As CPointRef, oP2 As CPointRef, _
+                               dDirX As Double, dDirY As Double)
+    Dim dx As Double, dy As Double, dLen As Double
+    dx = oP2.X - oP1.X: dy = oP2.Y - oP1.Y
+    dLen = Sqr(dx * dx + dy * dy)
+    If dLen < 0.0000001 Then
+        dDirX = 1#: dDirY = 0#
+        Exit Sub
+    End If
+    If oP1.Altitude >= oP2.Altitude Then
+        dDirX = dx / dLen: dDirY = dy / dLen
+    Else
+        dDirX = -dx / dLen: dDirY = -dy / dLen
+    End If
+End Sub
+
+
+'------------------------------------------------------------------------------
+' Calcule les 4 points d'une fleche centree sur oPtCentre.
+' oPtDeb/oPtFin = extremites du corps, oPtH1/oPtH2 = pointe de fleche.
+Private Sub GeometrieFleche(oPtCentre As Point3d, _
+                             dDirX As Double, dDirY As Double, _
+                             dLongueur As Double, _
+                             oPtDeb As Point3d, oPtFin As Point3d, _
+                             oPtH1 As Point3d, oPtH2 As Point3d)
+    Dim dHL As Double
+    dHL = dLongueur / 2#
+
+    oPtDeb.X = oPtCentre.X - dDirX * dHL
+    oPtDeb.Y = oPtCentre.Y - dDirY * dHL
+    oPtDeb.Z = oPtCentre.Z
+    oPtFin.X = oPtCentre.X + dDirX * dHL
+    oPtFin.Y = oPtCentre.Y + dDirY * dHL
+    oPtFin.Z = oPtCentre.Z
+
+    Dim dHeadLen As Double
+    dHeadLen = dLongueur * 0.2
+    Const HEAD_ANGLE As Double = 0.4363
+
+    oPtH1.X = oPtFin.X - dHeadLen * (dDirX * Cos(HEAD_ANGLE) - dDirY * Sin(HEAD_ANGLE))
+    oPtH1.Y = oPtFin.Y - dHeadLen * (dDirX * Sin(HEAD_ANGLE) + dDirY * Cos(HEAD_ANGLE))
+    oPtH1.Z = oPtFin.Z
+
+    oPtH2.X = oPtFin.X - dHeadLen * (dDirX * Cos(HEAD_ANGLE) + dDirY * Sin(HEAD_ANGLE))
+    oPtH2.Y = oPtFin.Y - dHeadLen * (-dDirX * Sin(HEAD_ANGLE) + dDirY * Cos(HEAD_ANGLE))
+    oPtH2.Z = oPtFin.Z
+End Sub
+
+
+'------------------------------------------------------------------------------
+' Hauteur du texte modele P1 (fallback 0.1 u.m.).
+Private Function HauteurTexteModele(oSettings As CMstSettings) As Double
+    HauteurTexteModele = 0.1
+    If oSettings.oTextModele Is Nothing Then Exit Function
+    On Error Resume Next
+    Dim dH As Double
+    dH = CDbl(oSettings.oTextModele.TextStyle.Height)
+    If Err.Number = 0 And dH > 0 Then HauteurTexteModele = dH
+    Err.Clear
+    On Error GoTo 0
 End Function

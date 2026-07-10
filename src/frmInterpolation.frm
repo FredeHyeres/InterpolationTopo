@@ -77,6 +77,10 @@ Private WithEvents chkDecalageFixe As MSForms.CheckBox
 Attribute chkDecalageFixe.VB_VarHelpID = -1
 Private WithEvents txtDecalageDZ As MSForms.TextBox
 Attribute txtDecalageDZ.VB_VarHelpID = -1
+Private WithEvents btnRetourInterp As MSForms.CommandButton
+Attribute btnRetourInterp.VB_VarHelpID = -1
+Private WithEvents btnPlacerPente As MSForms.CommandButton
+Attribute btnPlacerPente.VB_VarHelpID = -1
 Private lblP1       As MSForms.Label
 Private lblP2       As MSForms.Label
 Private lblSegment  As MSForms.Label
@@ -97,7 +101,7 @@ Private Sub ConstruireControles()
 
     Me.Caption = "Interpolation Topo"
     Me.Width = 212
-    Me.Height = 450
+    Me.Height = 490
 
     ' --- Cadre Cercle -------------------------------------------------------
     Dim fraCercle As MSForms.Frame
@@ -198,6 +202,25 @@ Private Sub ConstruireControles()
     Set lblP1 = CreerLabel(fraEtat, "lblP1", "P1 : -", 6, 12, 180)
     Set lblP2 = CreerLabel(fraEtat, "lblP2", "P2 : -", 6, 26, 180)
     Set lblSegment = CreerLabel(fraEtat, "lblSegment", "-", 6, 40, 180)
+
+    ' --- Cadre Actions (disponible apres snap P2) ---------------------------
+    Dim fraActions As MSForms.Frame
+    Set fraActions = Me.Controls.Add("Forms.Frame.1", "fraActions")
+    fraActions.Caption = "Actions"
+    fraActions.Left = 6: fraActions.Top = 420
+    fraActions.Width = 192: fraActions.Height = 46
+
+    Set btnRetourInterp = fraActions.Controls.Add("Forms.CommandButton.1", "btnRetourInterp")
+    btnRetourInterp.Caption = "Interpolation"
+    btnRetourInterp.Left = 6: btnRetourInterp.Top = 14
+    btnRetourInterp.Width = 86: btnRetourInterp.Height = 22
+    btnRetourInterp.Enabled = False
+
+    Set btnPlacerPente = fraActions.Controls.Add("Forms.CommandButton.1", "btnPlacerPente")
+    btnPlacerPente.Caption = "Pente + fleche"
+    btnPlacerPente.Left = 98: btnPlacerPente.Top = 14
+    btnPlacerPente.Width = 88: btnPlacerPente.Height = 22
+    btnPlacerPente.Enabled = False
 End Sub
 
 '------------------------------------------------------------------------------
@@ -302,6 +325,14 @@ Sub ReinitialiserEtat()
     lblP1.Caption = "P1 : -"
     lblP2.Caption = "P2 : -"
     lblSegment.Caption = "-"
+    ActiverBoutonsActions False
+End Sub
+
+'------------------------------------------------------------------------------
+' Active ou desactive les boutons Interpolation/Pente (disponibles apres snap P2).
+Sub ActiverBoutonsActions(bActif As Boolean)
+    btnRetourInterp.Enabled = bActif
+    btnPlacerPente.Enabled = bActif
 End Sub
 
 '==============================================================================
@@ -454,6 +485,18 @@ Private Sub txtDecalageDZ_KeyDown(ByVal KeyCode As MSForms.ReturnInteger, _
                                    ByVal Shift As Integer)
     If KeyCode = vbKeyReturn And Not m_oSettings Is Nothing Then _
         txtDecalageDZ.Text = Format$(m_oSettings.dDecalageDZ, "0.00")
+End Sub
+
+'==============================================================================
+' Boutons Actions (apres snap P2)
+'==============================================================================
+
+Private Sub btnPlacerPente_Click()
+    CommandState.StartPrimitive New CPlacerPente
+End Sub
+
+Private Sub btnRetourInterp_Click()
+    CommandState.StartPrimitive New CPlacerPoint
 End Sub
 
 '==============================================================================
