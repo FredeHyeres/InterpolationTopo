@@ -95,6 +95,8 @@ Private WithEvents btnRetourInterp As MSForms.CommandButton
 Attribute btnRetourInterp.VB_VarHelpID = -1
 Private WithEvents btnPlacerPente As MSForms.CommandButton
 Attribute btnPlacerPente.VB_VarHelpID = -1
+Private WithEvents btnChemin As MSForms.CommandButton
+Attribute btnChemin.VB_VarHelpID = -1
 Private lblP1       As MSForms.Label
 Private lblP2       As MSForms.Label
 Private lblSegment  As MSForms.Label
@@ -115,7 +117,7 @@ Private Sub ConstruireControles()
 
     Me.Caption = "Interpolation Topo"
     Me.Width = 212
-    Me.Height = 580
+    Me.Height = 602
 
     ' --- Cadre Cercle -------------------------------------------------------
     Dim fraCercle As MSForms.Frame
@@ -269,7 +271,7 @@ Private Sub ConstruireControles()
     Set fraActions = Me.Controls.Add("Forms.Frame.1", "fraActions")
     fraActions.Caption = "Actions"
     fraActions.Left = 6: fraActions.Top = 516
-    fraActions.Width = 192: fraActions.Height = 46
+    fraActions.Width = 192: fraActions.Height = 68
 
     Set btnRetourInterp = fraActions.Controls.Add("Forms.CommandButton.1", "btnRetourInterp")
     btnRetourInterp.Caption = "Interpolation"
@@ -282,6 +284,12 @@ Private Sub ConstruireControles()
     btnPlacerPente.Left = 98: btnPlacerPente.Top = 14
     btnPlacerPente.Width = 88: btnPlacerPente.Height = 22
     btnPlacerPente.Enabled = False
+
+    Set btnChemin = fraActions.Controls.Add("Forms.CommandButton.1", "btnChemin")
+    btnChemin.Caption = "Chemin"
+    btnChemin.Left = 6: btnChemin.Top = 38
+    btnChemin.Width = 180: btnChemin.Height = 22
+    btnChemin.Enabled = False
 End Sub
 
 '------------------------------------------------------------------------------
@@ -426,6 +434,7 @@ End Sub
 Sub ActiverBoutonsActions(bActif As Boolean)
     btnRetourInterp.Enabled = bActif
     btnPlacerPente.Enabled = bActif
+    btnChemin.Enabled = bActif
 End Sub
 
 '==============================================================================
@@ -679,6 +688,10 @@ End Sub
 
 Private Sub btnRetourInterp_Click()
     CommandState.StartPrimitive New CPlacerPoint
+End Sub
+
+Private Sub btnChemin_Click()
+    CommandState.StartPrimitive New CPlacerChemin
 End Sub
 
 '==============================================================================
