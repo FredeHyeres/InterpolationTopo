@@ -370,9 +370,12 @@ Sub DessinDynamique(ByVal DrawMode As MsdDrawingMode, _
     dZInterp = oCalc.InterpolerZ(oP1.Altitude, oP2.Altitude, dT)
 
     ' Positions des points de reference en Point3d locaux
+    ' Utilise Altitude plutot que Z de position (Z=0 si reference 2D)
     Dim oPt1 As Point3d, oPt2 As Point3d
     oP1.CopierPosition oPt1
     oP2.CopierPosition oPt2
+    oPt1.Z = oP1.Altitude
+    oPt2.Z = oP2.Altitude
 
     ' Ligne support P1-P2 etendue de 20% de chaque cote
     Dim dx As Double, dy As Double
@@ -449,6 +452,8 @@ Sub DessinDecalage(ByVal DrawMode As MsdDrawingMode, _
     Dim oPt1 As Point3d, oPt2 As Point3d
     oP1.CopierPosition oPt1
     oP2.CopierPosition oPt2
+    oPt1.Z = oP1.Altitude
+    oPt2.Z = oP2.Altitude
 
     ' Ligne support P1-P2
     Dim dx As Double, dy As Double
@@ -545,6 +550,7 @@ Sub DessinPenteDynamique(ByVal DrawMode As MsdDrawingMode, _
 
     Dim oTxt As TextElement
     Set oTxt = CreateTextElement1(Nothing, sPente, oPtTxt, oRot)
+    On Error Resume Next
     If oSettings.bPentePerso Then
         Dim oTSp As TextStyle: Set oTSp = oTxt.TextStyle
         oTSp.Height = oSettings.dPenteHauteur
@@ -554,9 +560,21 @@ Sub DessinPenteDynamique(ByVal DrawMode As MsdDrawingMode, _
         oTxt.Rotation = oRot
         oTxt.Color = oSettings.nPenteCouleur
     Else
-        On Error Resume Next
         If Not oSettings.oTextModele Is Nothing Then
-            oTxt.TextStyle = oSettings.oTextModele.TextStyle
+            Dim dH As Double, dW As Double
+            dH = oSettings.oTextModele.TextStyle.Height
+            dW = oSettings.oTextModele.TextStyle.Width
+            If Err.Number <> 0 Then
+                Err.Clear
+                dH = oSettings.dModeleHauteur
+                dW = dH
+            End If
+            If dH > 0 Then
+                Dim oTSr As TextStyle: Set oTSr = oTxt.TextStyle
+                oTSr.Height = dH
+                If dW > 0 Then oTSr.Width = dW Else oTSr.Width = dH
+                oTxt.TextStyle = oTSr
+            End If
         ElseIf oSettings.dModeleHauteur > 0 Then
             Dim oTSd As TextStyle: Set oTSd = oTxt.TextStyle
             oTSd.Height = oSettings.dModeleHauteur
@@ -564,13 +582,14 @@ Sub DessinPenteDynamique(ByVal DrawMode As MsdDrawingMode, _
             oTxt.TextStyle = oTSd
         End If
         Err.Clear
-        On Error GoTo 0
         Dim oTS As TextStyle: Set oTS = oTxt.TextStyle
         oTS.Justification = msdTextJustificationLeftBottom
         oTxt.TextStyle = oTS
         oTxt.Rotation = oRot
         If Not oSettings.oTexte.CommeModele Then oTxt.Color = oSettings.oTexte.Couleur
     End If
+    Err.Clear
+    On Error GoTo 0
     oTxt.Redraw DrawMode
 
     ' Fleche
@@ -630,6 +649,7 @@ Sub CreerPente(oPtPlace As Point3d, _
 
     Dim oTxt As TextElement
     Set oTxt = CreateTextElement1(Nothing, sPente, oPtTxt, oRot)
+    On Error Resume Next
     If oSettings.bPentePerso Then
         Dim oTSp2 As TextStyle: Set oTSp2 = oTxt.TextStyle
         oTSp2.Height = oSettings.dPenteHauteur
@@ -640,9 +660,21 @@ Sub CreerPente(oPtPlace As Point3d, _
         oTxt.Color = oSettings.nPenteCouleur
         Set oTxt.Level = ResolverNiveau(oSettings.sPenteNiveau, oSettings)
     Else
-        On Error Resume Next
         If Not oSettings.oTextModele Is Nothing Then
-            oTxt.TextStyle = oSettings.oTextModele.TextStyle
+            Dim dHC As Double, dWC As Double
+            dHC = oSettings.oTextModele.TextStyle.Height
+            dWC = oSettings.oTextModele.TextStyle.Width
+            If Err.Number <> 0 Then
+                Err.Clear
+                dHC = oSettings.dModeleHauteur
+                dWC = dHC
+            End If
+            If dHC > 0 Then
+                Dim oTSrc As TextStyle: Set oTSrc = oTxt.TextStyle
+                oTSrc.Height = dHC
+                If dWC > 0 Then oTSrc.Width = dWC Else oTSrc.Width = dHC
+                oTxt.TextStyle = oTSrc
+            End If
         ElseIf oSettings.dModeleHauteur > 0 Then
             Dim oTSc As TextStyle: Set oTSc = oTxt.TextStyle
             oTSc.Height = oSettings.dModeleHauteur
@@ -650,7 +682,6 @@ Sub CreerPente(oPtPlace As Point3d, _
             oTxt.TextStyle = oTSc
         End If
         Err.Clear
-        On Error GoTo 0
         Dim oTS As TextStyle: Set oTS = oTxt.TextStyle
         oTS.Justification = msdTextJustificationLeftBottom
         oTxt.TextStyle = oTS
@@ -660,6 +691,8 @@ Sub CreerPente(oPtPlace As Point3d, _
             Set oTxt.Level = ResolverNiveau(oSettings.oTexte.NomNiveau, oSettings)
         End If
     End If
+    Err.Clear
+    On Error GoTo 0
     ActiveModelReference.AddElement oTxt
 
     ' Fleche permanente
@@ -710,13 +743,23 @@ End Sub
 ' Resout un niveau par nom ou numero ; chaine vide ou niveau introuvable =
 ' niveau du texte-modele P1. Sert au cercle comme au texte personnalise.
 Private Function ResolverNiveau(sNiveau As String, oSettings As CMstSettings) As Level
-    ' Defaut : niveau du texte-modele P1, sinon niveau actif
-    ' (oTextModele peut etre Nothing quand P1 etait un tag)
-    If oSettings.oTextModele Is Nothing Then
-        Set ResolverNiveau = ActiveSettings.Level
-    Else
-        Set ResolverNiveau = oSettings.oTextModele.Level
+    Set ResolverNiveau = ActiveSettings.Level
+
+    If Not oSettings.oTextModele Is Nothing Then
+        On Error Resume Next
+        Dim sModNiv As String
+        sModNiv = oSettings.oTextModele.Level.Name
+        If Err.Number = 0 And Len(sModNiv) > 0 Then
+            Dim oLvlMod As Level
+            Set oLvlMod = ActiveDesignFile.Levels(sModNiv)
+            If Err.Number = 0 And Not oLvlMod Is Nothing Then
+                Set ResolverNiveau = oLvlMod
+            End If
+        End If
+        Err.Clear
+        On Error GoTo 0
     End If
+
     If sNiveau = "" Then Exit Function
 
     Dim oLvl As Level

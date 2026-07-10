@@ -29,7 +29,9 @@ End Sub
 
 Private Sub IPrimitiveCommandEvents_Dynamics(Point As Point3d, ByVal View As View, _
                                              ByVal DrawMode As MsdDrawingMode)
+    On Error Resume Next
     g_oMoteur.DessinPenteDynamique DrawMode, Point, g_oP1, g_oP2, g_oSettings, g_oCalc
+    On Error GoTo 0
 End Sub
 
 Private Sub IPrimitiveCommandEvents_DataPoint(Point As Point3d, ByVal View As View)

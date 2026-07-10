@@ -38,6 +38,7 @@ End Sub
 
 Private Sub IPrimitiveCommandEvents_Dynamics(Point As Point3d, ByVal View As View, _
                                              ByVal DrawMode As MsdDrawingMode)
+    On Error Resume Next
     Dim oPt1 As Point3d, oPt2 As Point3d
     Dim dTailleCroix As Double
     Dim dTotalDist As Double, dCursorDist As Double
@@ -67,7 +68,7 @@ Private Sub IPrimitiveCommandEvents_Dynamics(Point As Point3d, ByVal View As Vie
     dTotalDist = dCursorDist + DistXY(Point.X, Point.Y, oPt2.X, oPt2.Y)
 
     ' --- Segments places (vert) avec croix et texte altitude ---
-    dPrevX = oPt1.X: dPrevY = oPt1.Y: dPrevZ = oPt1.Z
+    dPrevX = oPt1.X: dPrevY = oPt1.Y: dPrevZ = g_oP1.Altitude
     dCumDist = 0
 
     For i = 0 To m_nPts - 1
@@ -136,6 +137,7 @@ Private Sub IPrimitiveCommandEvents_Dynamics(Point As Point3d, ByVal View As Vie
                    Format$(dTotalDist, "0.00") & _
                    "  (" & m_nPts & " pts)  Data=ajouter  Reset=valider"
     End If
+    On Error GoTo 0
 End Sub
 
 Private Sub IPrimitiveCommandEvents_DataPoint(Point As Point3d, ByVal View As View)
@@ -193,6 +195,7 @@ Private Sub IPrimitiveCommandEvents_Reset()
     dPrevX = oPt1.X: dPrevY = oPt1.Y
     dCumDist = 0
 
+    On Error Resume Next
     For i = 0 To m_nPts - 1
         dCumDist = dCumDist + DistXY(dPrevX, dPrevY, m_dPtsX(i), m_dPtsY(i))
 
@@ -208,6 +211,7 @@ Private Sub IPrimitiveCommandEvents_Reset()
 
         dPrevX = m_dPtsX(i): dPrevY = m_dPtsY(i)
     Next i
+    On Error GoTo 0
 
     nCreated = m_nPts
 

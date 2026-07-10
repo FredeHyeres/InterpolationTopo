@@ -121,6 +121,8 @@ Sub ProjecterSurSegment(oP1 As CPointRef, oP2 As CPointRef, oC As Point3d, _
     Dim oA As Point3d, oB As Point3d
     oP1.CopierPosition oA
     oP2.CopierPosition oB
+    oA.Z = oP1.Altitude
+    oB.Z = oP2.Altitude
     ProjecterSurDroite oA, oB, oC, dT, oRes
 End Sub
 
