@@ -520,7 +520,7 @@ Sub DessinPenteDynamique(ByVal DrawMode As MsdDrawingMode, _
     sPente = oCalc.FormatPente(dPente, oSettings.oTexte.SepDecimal)
 
     Dim dDesX As Double, dDesY As Double
-    DirectionDescente oP1, oP2, dDesX, dDesY
+    DirectionP1P2 oP1, oP2, dDesX, dDesY
 
     ' Angle aligne sur la fleche (direction descente), ajuste pour lisibilite
     Dim dAngleTxt As Double
@@ -584,7 +584,7 @@ Sub CreerPente(oPtPlace As Point3d, _
     sPente = oCalc.FormatPente(dPente, oSettings.oTexte.SepDecimal)
 
     Dim dDesX As Double, dDesY As Double
-    DirectionDescente oP1, oP2, dDesX, dDesY
+    DirectionP1P2 oP1, oP2, dDesX, dDesY
 
     Dim dAngleTxt As Double
     dAngleTxt = oCalc.Angle2D(dDesX, dDesY)
@@ -690,9 +690,9 @@ Private Function ResolverNiveau(sNiveau As String, oSettings As CMstSettings) As
 End Function
 
 '------------------------------------------------------------------------------
-' Direction unitaire de descente (du point le plus haut vers le plus bas).
-Private Sub DirectionDescente(oP1 As CPointRef, oP2 As CPointRef, _
-                               dDirX As Double, dDirY As Double)
+' Direction unitaire de P1 vers P2.
+Private Sub DirectionP1P2(oP1 As CPointRef, oP2 As CPointRef, _
+                           dDirX As Double, dDirY As Double)
     Dim dx As Double, dy As Double, dLen As Double
     dx = oP2.X - oP1.X: dy = oP2.Y - oP1.Y
     dLen = Sqr(dx * dx + dy * dy)
@@ -700,11 +700,7 @@ Private Sub DirectionDescente(oP1 As CPointRef, oP2 As CPointRef, _
         dDirX = 1#: dDirY = 0#
         Exit Sub
     End If
-    If oP1.Altitude >= oP2.Altitude Then
-        dDirX = dx / dLen: dDirY = dy / dLen
-    Else
-        dDirX = -dx / dLen: dDirY = -dy / dLen
-    End If
+    dDirX = dx / dLen: dDirY = dy / dLen
 End Sub
 
 
