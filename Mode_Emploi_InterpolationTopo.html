@@ -44,7 +44,7 @@
   nav a {
     color: var(--bleu-clair);
     text-decoration: none;
-    margin: 0 14px;
+    margin: 0 10px;
     font-weight: 600;
   }
   nav a:hover { text-decoration: underline; }
@@ -101,7 +101,7 @@
     margin: 20px 0;
   }
   .etape {
-    flex: 1 1 150px;
+    flex: 1 1 120px;
     background: #eaf2f8;
     border-radius: 8px;
     padding: 14px;
@@ -157,9 +157,11 @@
   <a href="#installation">Installation</a>
   <a href="#formulaire">Formulaire</a>
   <a href="#utilisation">Utilisation</a>
+  <a href="#pente">Indicateur pente</a>
   <a href="#keyin">Key-in</a>
-  <a href="#fonction">Touche de fonction</a>
-  <a href="#boite">Bo&icirc;te &agrave; outils</a>
+  <a href="#fonction">Touche F</a>
+  <a href="#boite">ToolBox</a>
+  <a href="#depannage">D&eacute;pannage</a>
 </nav>
 
 <main>
@@ -173,24 +175,30 @@
   </p>
   <ul>
     <li>des <strong>textes simples</strong> contenant une valeur num&eacute;rique ;</li>
-    <li>des <strong>tags</strong> et <strong>cellules contenant des tags</strong> d'altitude.</li>
+    <li>des <strong>tags</strong> et <strong>cellules contenant des tags</strong> d'altitude ;</li>
+    <li>des &eacute;l&eacute;ments provenant de <strong>fichiers de r&eacute;f&eacute;rence</strong> attach&eacute;s
+        (les coordonn&eacute;es sont converties automatiquement dans le rep&egrave;re du mod&egrave;le actif).</li>
   </ul>
   <p>Elle cr&eacute;e :</p>
   <ul>
     <li>un <strong>texte altitude</strong> reprenant automatiquement la mise en forme
         (police, taille, niveau, couleur) du texte du point&nbsp;1 pris comme mod&egrave;le ;</li>
     <li>un <strong>cercle</strong> centr&eacute; sur le point projet&eacute;, avec diam&egrave;tre, couleur
-        et niveau au choix.</li>
+        et niveau au choix ;</li>
+    <li>un <strong>indicateur de pente</strong> optionnel : texte pente sign&eacute;e (+/&minus;) et
+        fl&egrave;che dirig&eacute;e de P1 vers P2.</li>
   </ul>
   <p>Pendant le placement, un <strong>aper&ccedil;u dynamique</strong> affiche :</p>
   <ul>
-    <li>la ligne support P1–P2 (verte, &eacute;tendue de 20&nbsp;% de part et d'autre) ;</li>
+    <li>la ligne support P1&ndash;P2 (verte, &eacute;tendue de 20&nbsp;% de part et d'autre) ;</li>
     <li>des croix sur P1 et P2 ;</li>
     <li>le cercle et le texte altitude provisoires qui suivent le curseur ;</li>
     <li>dans la barre d'&eacute;tat : l'altitude interpol&eacute;e <code>Z</code>, l'abscisse <code>t</code>
         (0&nbsp;=&nbsp;P1, 1&nbsp;=&nbsp;P2), la <strong>pente en&nbsp;%</strong> et le
         <strong>gisement en gon</strong> (0&nbsp;=&nbsp;nord, sens horaire).</li>
   </ul>
+  <p>Les &eacute;l&eacute;ments cr&eacute;&eacute;s sont positionn&eacute;s en <strong>3D</strong> &agrave; l'altitude
+     interpol&eacute;e (coordonn&eacute;e Z).</p>
   <div class="astuce">
     &#9989; Le s&eacute;parateur d&eacute;cimal (point ou virgule) et le nombre de d&eacute;cimales du texte cr&eacute;&eacute;
     sont repris automatiquement des textes source.
@@ -219,14 +227,14 @@
   <ol>
     <li>Dans MicroStation : <strong>Utilitaires &gt; Macros &gt; Gestionnaire de projets VBA</strong></li>
     <li>Utilisez le projet <strong>Default</strong> (charg&eacute; automatiquement au d&eacute;marrage)
-        — ou cr&eacute;ez un projet d&eacute;di&eacute; si vous pr&eacute;f&eacute;rez</li>
+        &mdash; ou cr&eacute;ez un projet d&eacute;di&eacute; si vous pr&eacute;f&eacute;rez</li>
     <li>Ouvrez l'&eacute;diteur VBA : <kbd>Alt</kbd>+<kbd>F11</kbd></li>
   </ol>
 
   <h3>2.2 Importer les fichiers sources</h3>
   <ol>
     <li>Dans l'&eacute;diteur VBA : <strong>Fichier &gt; Importer un fichier</strong> (<kbd>Ctrl</kbd>+<kbd>M</kbd>)</li>
-    <li>Importez, un par un, depuis le dossier <code>src\v2\</code> :
+    <li>Importez, un par un, depuis le dossier <code>src\</code> :
       <table>
         <tr><th>Fichier</th><th>Type attendu apr&egrave;s import</th></tr>
         <tr><td><code>InterpolationTopoV2.bas</code></td><td>Modules</td></tr>
@@ -236,9 +244,13 @@
         <tr><td><code>CPointRef.cls</code></td><td>Modules de classe</td></tr>
         <tr><td><code>CInterpolation.cls</code></td><td>Modules de classe</td></tr>
         <tr><td><code>CMoteurGraphique.cls</code></td><td>Modules de classe</td></tr>
+        <tr><td><code>CAltitudeSelection.cls</code></td><td>Modules de classe</td></tr>
         <tr><td><code>CSelectP1.cls</code></td><td>Modules de classe</td></tr>
+        <tr><td><code>CSnapP1.cls</code></td><td>Modules de classe</td></tr>
         <tr><td><code>CSelectP2.cls</code></td><td>Modules de classe</td></tr>
+        <tr><td><code>CSnapP2.cls</code></td><td>Modules de classe</td></tr>
         <tr><td><code>CPlacerPoint.cls</code></td><td>Modules de classe</td></tr>
+        <tr><td><code>CPlacerPente.cls</code></td><td>Modules de classe</td></tr>
         <tr><td><code>frmInterpolation.frm</code> + <code>.frx</code></td><td>UserForm</td></tr>
       </table>
     </li>
@@ -277,7 +289,7 @@
   <h3>Cercle (si l'altitude est un texte)</h3>
   <ul>
     <li><strong>Diam&egrave;tre</strong> en unit&eacute;s ma&icirc;tre (ex. <code>0.50</code>)</li>
-    <li><strong>Couleur</strong> : index MicroStation 0–255 (0=blanc, 1=bleu, 2=vert, 3=rouge, 4=jaune, 6=orange)</li>
+    <li><strong>Couleur</strong> : index MicroStation 0&ndash;255 (0=blanc, 1=bleu, 2=vert, 3=rouge, 4=jaune, 6=orange)</li>
     <li><strong>Niveau</strong> : liste des niveaux existants du fichier DGN.
         Laisser vide pour reprendre le niveau du texte P1</li>
   </ul>
@@ -294,44 +306,75 @@
   <ul>
     <li><strong>Appliquer pente transversale</strong> : cocher la case pour activer</li>
     <li><strong>Pente (%)</strong> : valeur de la pente. Positive = mont&eacute;e, n&eacute;gative = descente.
-        La pente s'applique <strong>identiquement des deux c&ocirc;t&eacute;s</strong> de la ligne P1–P2</li>
+        La pente s'applique <strong>identiquement des deux c&ocirc;t&eacute;s</strong> de la ligne P1&ndash;P2</li>
     <li>Bouton <strong>+/-</strong> : inverse le signe de la pente en un clic</li>
+    <li><strong>D&eacute;calage fixe DZ</strong> : cocher la case pour activer. La valeur (en unit&eacute;s
+        ma&icirc;tre) est ajout&eacute;e &agrave; l'altitude interpol&eacute;e</li>
+  </ul>
+
+  <h3>Indicateur pente</h3>
+  <ul>
+    <li><strong>Personnaliser</strong> : cocher la case pour d&eacute;finir manuellement les propri&eacute;t&eacute;s
+        du texte de pente et de la fl&egrave;che. Sans personnalisation, les attributs sont
+        repris du texte mod&egrave;le</li>
+    <li><strong>H / L</strong> : hauteur et largeur du texte de pente</li>
+    <li><strong>Niv</strong> : niveau (liste des niveaux DGN)</li>
+    <li><strong>C.txt</strong> : couleur du texte de pente (index 0&ndash;255)</li>
+    <li><strong>C.fl</strong> : couleur de la fl&egrave;che (index 0&ndash;255)</li>
+    <li><strong>Long</strong> : longueur de la fl&egrave;che (en unit&eacute;s ma&icirc;tre)</li>
   </ul>
 
   <h3>&Eacute;tat (lecture seule)</h3>
   <ul>
-    <li><strong>P1</strong> : altitude du premier point s&eacute;lectionn&eacute;</li>
-    <li><strong>P2</strong> : altitude du second point s&eacute;lectionn&eacute;</li>
+    <li><strong>P1</strong> : altitude du premier point s&eacute;lectionn&eacute; (affich&eacute;e d&egrave;s la s&eacute;lection)</li>
+    <li><strong>P2</strong> : altitude du second point s&eacute;lectionn&eacute; (affich&eacute;e d&egrave;s la s&eacute;lection)</li>
     <li>Pente (%) et gisement (gon) du segment</li>
+  </ul>
+
+  <h3>Actions</h3>
+  <ul>
+    <li><strong>Interpolation</strong> : bascule vers le mode placement de points interpol&eacute;s
+        (actif apr&egrave;s snap P2)</li>
+    <li><strong>Pente + fl&egrave;che</strong> : bascule vers le placement de l'indicateur de pente
+        (actif apr&egrave;s snap P2)</li>
   </ul>
 </section>
 
 <!-- ==================== UTILISATION ==================== -->
 <section id="utilisation">
-  <h2>4. Utilisation</h2>
+  <h2>4. Utilisation — Interpolation de points</h2>
 
   <div class="etapes">
-    <div class="etape"><span class="num">1</span><br>Lancer la commande<br><small>(key-in, touche F ou bouton)</small></div>
-    <div class="etape"><span class="num">2</span><br>Formulaire<br><small>param&egrave;tres modifiables &agrave; tout moment</small></div>
-    <div class="etape"><span class="num">3</span><br>Clic pr&egrave;s du point<br>altitude <strong>P1</strong></div>
-    <div class="etape"><span class="num">4</span><br>Clic pr&egrave;s du point<br>altitude <strong>P2</strong></div>
-    <div class="etape"><span class="num">5</span><br>Placement dynamique<br><small>Data = cr&eacute;er<br>Reset = nouvelle s&eacute;lection<br>Reset &times;2 = quitter</small></div>
+    <div class="etape"><span class="num">1</span><br>Lancer la<br>commande</div>
+    <div class="etape"><span class="num">2</span><br>Clic altitude<br><strong>P1</strong></div>
+    <div class="etape"><span class="num">3</span><br>Snap terrain<br><strong>P1</strong></div>
+    <div class="etape"><span class="num">4</span><br>Clic altitude<br><strong>P2</strong></div>
+    <div class="etape"><span class="num">5</span><br>Snap terrain<br><strong>P2</strong></div>
+    <div class="etape"><span class="num">6</span><br>Placement<br><small>Data=cr&eacute;er<br>Reset=nouv. s&eacute;l.</small></div>
   </div>
 
   <ol>
     <li><strong>Lancement</strong> : le formulaire <strong>Interpolation Topo</strong> s'ouvre.
         Tous les param&egrave;tres sont modifiables &agrave; tout moment via le formulaire.</li>
-    <li><strong>Point 1</strong> : cliquez &agrave; proximit&eacute; d'un texte, tag ou cellule d'altitude.
+    <li><strong>S&eacute;lection P1</strong> : cliquez &agrave; proximit&eacute; d'un texte, tag ou cellule d'altitude.
         Ce texte sert de <em>mod&egrave;le de mise en forme</em> pour le texte cr&eacute;&eacute;.
-        Les niveaux gel&eacute;s sont automatiquement ignor&eacute;s.</li>
-    <li><strong>Point 2</strong> : idem. Le formulaire affiche alors la
-        <strong>pente</strong> et le <strong>gisement</strong> du segment.</li>
-    <li><strong>Placement</strong> : d&eacute;placez le curseur — sa position est projet&eacute;e sur la
-        droite P1–P2 et l'altitude interpol&eacute;e s'affiche en dynamique.
+        L'altitude s'affiche imm&eacute;diatement dans le formulaire.
+        Les niveaux gel&eacute;s sont automatiquement ignor&eacute;s.
+        <strong>Les r&eacute;f&eacute;rences attach&eacute;es sont &eacute;galement recherch&eacute;es.</strong></li>
+    <li><strong>Snap terrain P1</strong> : cliquez sur le point terrain r&eacute;el pour positionner P1
+        (le snap MicroStation est utilis&eacute;). <strong>Reset</strong> = garder l'ancrage du texte
+        comme position terrain.</li>
+    <li><strong>S&eacute;lection P2</strong> : idem que P1. Le formulaire affiche alors la
+        <strong>pente</strong> et le <strong>gisement</strong> du segment. Les boutons
+        <strong>Interpolation</strong> et <strong>Pente + fl&egrave;che</strong> deviennent actifs.</li>
+    <li><strong>Snap terrain P2</strong> : idem que pour P1.</li>
+    <li><strong>Placement</strong> : d&eacute;placez le curseur &mdash; sa position est projet&eacute;e sur la
+        droite P1&ndash;P2 et l'altitude interpol&eacute;e s'affiche en dynamique.
       <ul>
-        <li><strong>Data</strong> (clic gauche) : cr&eacute;e le point (texte + cercle).
+        <li><strong>Data</strong> (clic gauche) : cr&eacute;e le point (texte + cercle) &agrave; l'altitude
+            interpol&eacute;e en 3D.
             R&eacute;p&eacute;table : on peut cr&eacute;er plusieurs points sur la m&ecirc;me droite.</li>
-        <li><strong>Reset</strong> (clic droit) : <strong>nouvelle s&eacute;lection</strong> —
+        <li><strong>Reset</strong> (clic droit) : <strong>nouvelle s&eacute;lection</strong> &mdash;
             on revient au choix du point 1 pour travailler sur une autre paire de points
             (les param&egrave;tres sont conserv&eacute;s).</li>
         <li><strong>Reset une seconde fois</strong> (pendant le choix du point 1) :
@@ -342,7 +385,7 @@
 
   <div class="attention">
     &#9888;&#65039; Si <code>t &lt; 0</code> ou <code>t &gt; 1</code>, le point est
-    <strong>hors du segment P1–P2</strong> : l'altitude est extrapol&eacute;e, un avertissement
+    <strong>hors du segment P1&ndash;P2</strong> : l'altitude est extrapol&eacute;e, un avertissement
     s'affiche dans la barre d'&eacute;tat.
   </div>
   <div class="astuce">
@@ -351,14 +394,47 @@
   </div>
   <div class="astuce">
     &#9989; La <strong>pente transversale</strong> s'applique de mani&egrave;re uniforme des deux c&ocirc;t&eacute;s
-    de la ligne P1–P2 : une valeur positive fait monter, une valeur n&eacute;gative fait descendre,
+    de la ligne P1&ndash;P2 : une valeur positive fait monter, une valeur n&eacute;gative fait descendre,
     quel que soit le c&ocirc;t&eacute;. Utilisez le bouton <strong>+/-</strong> pour inverser rapidement.
+  </div>
+  <div class="astuce">
+    &#9989; Le <strong>d&eacute;calage fixe DZ</strong> s'ajoute &agrave; l'altitude interpol&eacute;e et &agrave; la pente
+    transversale. Utile pour un d&eacute;calage constant (ex. &eacute;paisseur de chape, arase).
+  </div>
+</section>
+
+<!-- ==================== INDICATEUR PENTE ==================== -->
+<section id="pente">
+  <h2>5. Indicateur de pente</h2>
+  <p>
+    Apr&egrave;s s&eacute;lection et snap des deux points, le bouton <strong>Pente + fl&egrave;che</strong>
+    dans le cadre <em>Actions</em> bascule vers le placement de l'indicateur de pente.
+  </p>
+  <ul>
+    <li>Un <strong>texte</strong> affiche la pente sign&eacute;e : <code>+2,50%</code> (mont&eacute;e)
+        ou <code>-1,30%</code> (descente)</li>
+    <li>Une <strong>fl&egrave;che</strong> dirig&eacute;e de P1 vers P2, orient&eacute;e parall&egrave;lement au segment</li>
+    <li>Le texte est justifi&eacute; en bas &agrave; gauche, au-dessus de la fl&egrave;che</li>
+    <li><strong>Data</strong> = placer l'indicateur (r&eacute;p&eacute;table)</li>
+    <li><strong>Reset</strong> = nouvelle s&eacute;lection de points</li>
+  </ul>
+
+  <h3>Personnalisation</h3>
+  <p>
+    Cocher <strong>Personnaliser</strong> dans le cadre <em>Indicateur pente</em> du formulaire
+    pour d&eacute;finir manuellement la hauteur/largeur du texte, les couleurs (texte et fl&egrave;che),
+    la longueur de la fl&egrave;che et le niveau. Sans personnalisation, les propri&eacute;t&eacute;s sont
+    h&eacute;rit&eacute;es du texte mod&egrave;le (P1).
+  </p>
+  <div class="astuce">
+    &#9989; Le bouton <strong>Interpolation</strong> permet de revenir au mode placement de
+    points interpol&eacute;s sans refaire la s&eacute;lection P1/P2.
   </div>
 </section>
 
 <!-- ==================== KEY-IN ==================== -->
 <section id="keyin">
-  <h2>5. Lancement par key-in</h2>
+  <h2>6. Lancement par key-in</h2>
   <ol>
     <li>Ouvrez la fen&ecirc;tre de saisie : <strong>Utilitaires &gt; Saisie au clavier</strong> (Key-in)</li>
     <li>Tapez :
@@ -374,7 +450,7 @@
 
 <!-- ==================== TOUCHE DE FONCTION ==================== -->
 <section id="fonction">
-  <h2>6. Lancement par touche de fonction</h2>
+  <h2>7. Lancement par touche de fonction</h2>
   <ol>
     <li>Menu <strong>Utilitaires &gt; Touches de fonction</strong></li>
     <li>S&eacute;lectionnez une touche libre, par exemple <kbd>F6</kbd>
@@ -382,7 +458,7 @@
     <li>Dans le champ <strong>Action</strong>, saisissez :
       <pre>vba run [InterpolationTopoV2]InterpolerPoint</pre>
     </li>
-    <li>Cliquez <strong>OK</strong> — le menu de touches de fonction est enregistr&eacute;
+    <li>Cliquez <strong>OK</strong> &mdash; le menu de touches de fonction est enregistr&eacute;
         (fichier <code>.mnu</code> du workspace)</li>
   </ol>
   <p>Un appui sur <kbd>F6</kbd> lance d&eacute;sormais directement la commande.</p>
@@ -390,7 +466,7 @@
 
 <!-- ==================== BOITE A OUTILS ==================== -->
 <section id="boite">
-  <h2>7. Bouton dans une bo&icirc;te &agrave; outils personnalis&eacute;e</h2>
+  <h2>8. Bouton dans une bo&icirc;te &agrave; outils personnalis&eacute;e</h2>
   <p>La m&eacute;thode la plus confortable pour un usage quotidien.
      <em>Proc&eacute;dure test&eacute;e et valid&eacute;e sur V8i SS3 (08.11.09.578).</em></p>
 
@@ -399,11 +475,11 @@
     si les menus sont gris&eacute;s et qu'aucune cr&eacute;ation n'est possible, c'est qu'il manque un
     fichier <code>.dgnlib</code> valide comme cible des personnalisations.<br>
     <strong>Pi&egrave;ge n&deg;2 :</strong> un <code>.dgnlib</code> cr&eacute;&eacute; via <em>File &gt; New</em>
-    (ou en renommant l'extension d'un <code>.dgn</code>) n'est <u>pas reconnu</u> —
+    (ou en renommant l'extension d'un <code>.dgn</code>) n'est <u>pas reconnu</u> &mdash;
     sa structure interne est incorrecte. Il faut <strong>copier un .dgnlib existant</strong>.
   </div>
 
-  <h3>&Eacute;tape 1 — Cr&eacute;er un vrai fichier .dgnlib</h3>
+  <h3>&Eacute;tape 1 &mdash; Cr&eacute;er un vrai fichier .dgnlib</h3>
   <ol>
     <li>Aller dans le dossier scann&eacute; automatiquement par MicroStation :<br>
         <code>C:\Users\[VotreNom]\Documents\MicroStV8i\WorkSpace\System\GUI</code></li>
@@ -412,14 +488,14 @@
     <li>Red&eacute;marrer MicroStation</li>
   </ol>
 
-  <h3>&Eacute;tape 2 — V&eacute;rifier que le fichier est reconnu</h3>
+  <h3>&Eacute;tape 2 &mdash; V&eacute;rifier que le fichier est reconnu</h3>
   <ol>
     <li><strong>Workspace &gt; Customize</strong> : <code>MesMacros.dgnlib</code> doit
         appara&icirc;tre dans la liste des librairies</li>
     <li>Sinon, v&eacute;rifier qu'il est bien dans <code>System\GUI</code></li>
   </ol>
 
-  <h3>&Eacute;tape 3 — Ouvrir le .dgnlib pour le rendre &eacute;ditable</h3>
+  <h3>&Eacute;tape 3 &mdash; Ouvrir le .dgnlib pour le rendre &eacute;ditable</h3>
   <ol>
     <li><strong>File &gt; Open</strong>, changer le filtre de type pour afficher les
         <code>.dgnlib</code></li>
@@ -428,7 +504,7 @@
         les menus sont maintenant d&eacute;verrouill&eacute;s</li>
   </ol>
 
-  <h3>&Eacute;tape 4 — Cr&eacute;er la ToolBox</h3>
+  <h3>&Eacute;tape 4 &mdash; Cr&eacute;er la ToolBox</h3>
   <ol>
     <li>S&eacute;lectionner <code>MesMacros.dgnlib</code> comme fichier cible
         (menu d&eacute;roulant en haut)</li>
@@ -436,7 +512,7 @@
         <strong>New Tool Box</strong>, nommer (ex. <code>MesMacros</code>)</li>
   </ol>
 
-  <h3>&Eacute;tape 5 — Cr&eacute;er le bouton</h3>
+  <h3>&Eacute;tape 5 &mdash; Cr&eacute;er le bouton</h3>
   <ol>
     <li>S&eacute;lectionner la ToolBox, panneau de droite &gt; clic droit &gt;
         <strong>New Tool</strong></li>
@@ -450,14 +526,14 @@
     </li>
   </ol>
 
-  <h3>&Eacute;tape 6 — Afficher la ToolBox</h3>
+  <h3>&Eacute;tape 6 &mdash; Afficher la ToolBox</h3>
   <ol>
     <li>Clic droit sur la ToolBox dans la liste &gt; <strong>Open</strong> :
         elle appara&icirc;t flottante</li>
     <li>La docker contre une barre d'outils existante par glisser-d&eacute;poser</li>
   </ol>
 
-  <h3>&Eacute;tape 7 — Autoload de la macro (indispensable)</h3>
+  <h3>&Eacute;tape 7 &mdash; Autoload de la macro (indispensable)</h3>
   <ol>
     <li><strong>Utilities &gt; Macros &gt; Project Manager</strong></li>
     <li>Charger le projet VBA s'il ne l'est pas d&eacute;j&agrave;</li>
@@ -468,7 +544,7 @@
 
 <!-- ==================== DEPANNAGE ==================== -->
 <section id="depannage">
-  <h2>8. D&eacute;pannage rapide</h2>
+  <h2>9. D&eacute;pannage rapide</h2>
   <table>
     <tr><th>Sympt&ocirc;me</th><th>Cause / rem&egrave;de</th></tr>
     <tr>
@@ -505,19 +581,25 @@
       <td>Le fichier <code>frmInterpolation.frx</code> doit &ecirc;tre dans le m&ecirc;me dossier
           que le <code>.frm</code>. En dernier recours : Insertion &gt; UserForm, nommer
           <code>frmInterpolation</code>, puis coller le code &agrave; partir de
-          <code>Option Explicit</code> — les contr&ocirc;les sont cr&eacute;&eacute;s au runtime.</td>
+          <code>Option Explicit</code> &mdash; les contr&ocirc;les sont cr&eacute;&eacute;s au runtime.</td>
     </tr>
     <tr>
       <td>Menus gris&eacute;s dans Workspace &gt; Customize</td>
       <td>Aucun <code>.dgnlib</code> cible valide. Copier <code>VectorIcon.dgnlib</code>
           (dossier <code>WorkSpace\System\GUI</code>), renommer la copie
           (ex. <code>MesMacros.dgnlib</code>), red&eacute;marrer, puis l'ouvrir comme fichier
-          actif pour d&eacute;verrouiller Customize (voir &sect;&nbsp;7).</td>
+          actif pour d&eacute;verrouiller Customize (voir &sect;&nbsp;8).</td>
     </tr>
     <tr>
       <td>Le bouton de la ToolBox ne fait rien au d&eacute;marrage</td>
       <td>Le projet VBA n'est pas charg&eacute; : Utilities &gt; Macros &gt; Project Manager,
           clic droit sur le projet &gt; <strong>Autoload</strong>.</td>
+    </tr>
+    <tr>
+      <td>Taille texte pente H:1 / L:1 avec des tags</td>
+      <td>Le <code>TagElement</code> VBA V8i n'expose pas <code>.TextStyle</code>.
+          Cocher <strong>Personnaliser</strong> dans le cadre <em>Indicateur pente</em>
+          du formulaire et r&eacute;gler manuellement la hauteur et la largeur du texte.</td>
     </tr>
   </table>
 </section>
@@ -525,7 +607,7 @@
 </main>
 
 <footer>
-  Interpolation Topo V2 — MicroStation V8i SS3 (08.11.09.578) &middot; Mode d'emploi &middot; Juillet 2026
+  Interpolation Topo V2 &mdash; MicroStation V8i SS3 (08.11.09.578) &middot; Mode d'emploi &middot; Juillet 2026
 </footer>
 
 </body>
