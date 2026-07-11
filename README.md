@@ -88,26 +88,25 @@ son chargement automatique au demarrage dans le `.ucf` utilisateur. Il ne touche
 
    | Fichier | Type apres import |
    |---|---|
-   | `InterpolationTopoV2.bas` | Module (Interpolation) |
-   | `InterpolPonctuelle.bas` | Module (Ponctuelle) |
+   | `InterpolationTopoV2.bas` | Module (globals, init commune, entree Interpolation) |
+   | `InterpolPonctuelle.bas` | Module (entree Ponctuelle) |
+   | `RechercheAltitude.bas` | Module (recherche des altitudes sources) |
    | `CMstSettings.cls` | Module de classe |
    | `CSymboTexte.cls` | Module de classe |
    | `CSymboCercle.cls` | Module de classe |
+   | `CSymboPente.cls` | Module de classe |
+   | `CParamPenteDZ.cls` | Module de classe |
    | `CPointRef.cls` | Module de classe |
    | `CInterpolation.cls` | Module de classe |
    | `CMoteurGraphique.cls` | Module de classe |
    | `CAltitudeSelection.cls` | Module de classe |
-   | `CSelectP1.cls` | Module de classe (Interpolation) |
-   | `CSnapP1.cls` | Module de classe (Interpolation) |
-   | `CSelectP2.cls` | Module de classe (Interpolation) |
-   | `CSnapP2.cls` | Module de classe (Interpolation) |
+   | `CSelectP1.cls` | Module de classe (commune aux deux commandes) |
+   | `CSnapP1.cls` | Module de classe (commune aux deux commandes) |
+   | `CSelectP2.cls` | Module de classe (commune aux deux commandes) |
+   | `CSnapP2.cls` | Module de classe (commune aux deux commandes) |
    | `CPlacerPoint.cls` | Module de classe (Interpolation) |
    | `CPlacerChemin.cls` | Module de classe (Interpolation) |
    | `CPlacerPente.cls` | Module de classe (Interpolation) |
-   | `CSelectP1Ponct.cls` | Module de classe (Ponctuelle) |
-   | `CSnapP1Ponct.cls` | Module de classe (Ponctuelle) |
-   | `CSelectP2Ponct.cls` | Module de classe (Ponctuelle) |
-   | `CSnapP2Ponct.cls` | Module de classe (Ponctuelle) |
    | `CPlacerPonctuel.cls` | Module de classe (Ponctuelle) |
    | `frmInterpolation.frm` + `.frx` | UserForm (Interpolation) |
    | `frmInterpolPonct.frm` + `.frx` | UserForm (Ponctuelle) |

@@ -63,10 +63,10 @@ Private Sub IPrimitiveCommandEvents_Dynamics(Point As Point3d, ByVal View As Vie
 
         Dim dZFinal As Double
         dZFinal = dZInterp
-        If g_oSettings.bAppliquerPente Then
-            dZFinal = dZFinal + Abs(dOffset) * g_oSettings.dPenteDecalage / 100#
+        If g_oSettings.oDecalage.PenteActive Then
+            dZFinal = dZFinal + Abs(dOffset) * g_oSettings.oDecalage.Pente / 100#
         End If
-        If g_oSettings.bDecalageFixe Then dZFinal = dZFinal + g_oSettings.dDecalageDZ
+        If g_oSettings.oDecalage.DZActive Then dZFinal = dZFinal + g_oSettings.oDecalage.DZ
         oPtDecale.Z = dZFinal
 
         g_oMoteur.DessinDecalage DrawMode, g_oP1, g_oP2, oProj, oPtDecale, _
@@ -133,10 +133,10 @@ Private Sub IPrimitiveCommandEvents_DataPoint(Point As Point3d, ByVal View As Vi
 
         Dim dZFinal As Double
         dZFinal = dZInterp
-        If g_oSettings.bAppliquerPente Then
-            dZFinal = dZFinal + Abs(dOffset) * g_oSettings.dPenteDecalage / 100#
+        If g_oSettings.oDecalage.PenteActive Then
+            dZFinal = dZFinal + Abs(dOffset) * g_oSettings.oDecalage.Pente / 100#
         End If
-        If g_oSettings.bDecalageFixe Then dZFinal = dZFinal + g_oSettings.dDecalageDZ
+        If g_oSettings.oDecalage.DZActive Then dZFinal = dZFinal + g_oSettings.oDecalage.DZ
         oPtDecale.Z = dZFinal
 
         If SourceP1Integree() Then

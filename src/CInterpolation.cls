@@ -50,7 +50,7 @@ Function EstNombre(ByVal s As String) As Boolean
 End Function
 
 '------------------------------------------------------------------------------
-' Lit l'altitude d'un TextElement et charge le CPointRef.
+' Lit l'altitude de la selection courante et charge le CPointRef.
 ' Renseigne aussi sSep ("." ou ",") et nDec (nb de decimales).
 ' Retourne False si le texte n'est pas numerique.
 Function LireAltitudeTexte(oPoint As CPointRef, _
@@ -59,7 +59,7 @@ Function LireAltitudeTexte(oPoint As CPointRef, _
     oPoint.Invalider
 
     Dim sBrut As String
-    sBrut = g_sValeurTexte
+    sBrut = g_oSelectionCourante.ValeurTexte
     If InStr(sBrut, ",") > 0 Then
         sSep = ","
         sBrut = Replace(sBrut, ",", ".")
@@ -70,7 +70,9 @@ Function LireAltitudeTexte(oPoint As CPointRef, _
     If Not EstNombre(sBrut) Then Exit Function
 
     oPoint.Altitude = Val(sBrut)
-    oPoint.DefinirPosition g_ptOrigineTexte
+    Dim ptOrigine As Point3d
+    g_oSelectionCourante.CopierOrigine ptOrigine
+    oPoint.DefinirPosition ptOrigine
     oPoint.Valide = True
 
     Dim nDot As Integer

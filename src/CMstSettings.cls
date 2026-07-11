@@ -10,7 +10,14 @@ Attribute VB_Exposed = False
 '==============================================================================
 ' CMstSettings - Parametres de la commande Interpolation Topo V2
 '
-' Agregateur unique des attributs texte, cercle, tolerance et texte-modele.
+' Agregateur unique des parametres, regroupes par domaine :
+'   oTexte      : symbologie et format du texte altitude
+'   oCercle     : symbologie du cercle
+'   oIndicPente : indicateur de pente (texte + fleche)
+'   oDecalage   : pente transversale + DZ fixe (interpolation)
+'   oChemin     : pente + DZ du chemin principal (ponctuelle)
+'   oRayon      : pente + DZ du rayonnement (ponctuelle)
+'
 ' Instancie une seule fois dans le module principal.
 ' Passe en parametre aux classes qui en ont besoin (CMoteurGraphique, etc.).
 '==============================================================================
@@ -18,69 +25,36 @@ Option Explicit
 
 Public oTexte           As CSymboTexte      ' symbologie et format du texte
 Public oCercle          As CSymboCercle     ' symbologie du cercle
+Public oIndicPente      As CSymboPente      ' indicateur de pente (texte + fleche)
+Public oDecalage        As CParamPenteDZ    ' interpolation : pente transversale + DZ fixe
+Public oChemin          As CParamPenteDZ    ' ponctuelle : chemin principal
+Public oRayon           As CParamPenteDZ    ' ponctuelle : rayonnement
 Public dTolTexte        As Double           ' rayon de recherche autour du clic (u.m.)
 Public oTextModele      As TextElement      ' element P1 : modele pour CreateTextElement1
 Public oTagModele       As TagElement       ' tag P1 : modele quand la source est un tag
-Public dPenteDecalage   As Double           ' pente transversale en % (appliquee au decalage)
-Public bAppliquerPente  As Boolean          ' True = appliquer la pente au decalage
-Public dDecalageDZ      As Double           ' decalage fixe en Z (ajoute a l'altitude interpolee)
-Public bDecalageFixe    As Boolean          ' True = appliquer le decalage fixe DZ
 Public dModeleHauteur   As Double           ' hauteur du texte source (0 = non defini)
-Public bPentePerso      As Boolean          ' True = utiliser parametres personnalises
-Public dPenteHauteur    As Double           ' hauteur du texte pente
-Public dPenteLargeur    As Double           ' largeur du texte pente
-Public nPenteCouleur    As Long             ' couleur du texte pente (index 0-255)
-Public sPenteNiveau     As String           ' niveau du texte pente
-Public dFlecheLongueur  As Double           ' longueur de la fleche indicatrice de pente (u.m.)
-Public nFlecheCouleur   As Long             ' couleur de la fleche (index MicroStation 0-255)
-
-' --- Interpolation ponctuelle : chemin principal ---
-Public dCheminPente     As Double           ' pente chemin principal (%)
-Public bCheminPente     As Boolean          ' True = appliquer pente chemin
-Public dCheminDZ        As Double           ' DZ fixe chemin principal
-Public bCheminDZ        As Boolean          ' True = appliquer DZ chemin
-' --- Interpolation ponctuelle : rayonnement ---
-Public dRayonPente      As Double           ' pente rayonnement (%)
-Public bRayonPente      As Boolean          ' True = appliquer pente rayonnement
-Public dRayonDZ         As Double           ' DZ fixe rayonnement
-Public bRayonDZ         As Boolean          ' True = appliquer DZ rayonnement
-' --- Interpolation ponctuelle : decimales (commun chemin+rayon) ---
-Public nPonctDecimales  As Integer          ' nombre de decimales pour les points crees
+Public nPonctDecimales  As Integer          ' ponctuelle : decimales des points crees (chemin + rayon)
 
 '------------------------------------------------------------------------------
 Sub Init()
     Set oTexte = New CSymboTexte
     Set oCercle = New CSymboCercle
     oCercle.InitDefauts
+    Set oIndicPente = New CSymboPente
+    oIndicPente.InitDefauts
+    Set oDecalage = New CParamPenteDZ
+    Set oChemin = New CParamPenteDZ
+    Set oRayon = New CParamPenteDZ
     dTolTexte = 1#
     Set oTextModele = Nothing
     Set oTagModele = Nothing
     dModeleHauteur = 0#
-    bPentePerso = False
-    dPenteHauteur = 0.1
-    dPenteLargeur = 0.1
-    nPenteCouleur = 0
-    sPenteNiveau = ""
-    dPenteDecalage = 0#
-    bAppliquerPente = False
-    dDecalageDZ = 0#
-    bDecalageFixe = False
-    dFlecheLongueur = 1#
-    nFlecheCouleur = 3
-    dCheminPente = 0#
-    bCheminPente = False
-    dCheminDZ = 0#
-    bCheminDZ = False
-    dRayonPente = 0#
-    bRayonPente = False
-    dRayonDZ = 0#
-    bRayonDZ = False
     nPonctDecimales = 2
 End Sub
 
 '------------------------------------------------------------------------------
 ' Appele apres la selection de P1 : charge le texte-modele et ses attributs.
-' nDecP2 permet de mettre a jour les decimales si P2 en a davantage.
+' L'indicateur de pente herite de la hauteur/largeur/couleur du texte P1.
 Sub ChargerModeleTexte(oText As TextElement, sSep As String, nDec As Integer)
     Set oTextModele = oText
     Set oTagModele = Nothing
@@ -93,26 +67,26 @@ Sub ChargerModeleTexte(oText As TextElement, sSep As String, nDec As Integer)
     Set oTemp = CreateTextElement1(oText, "0", ptO, Matrix3dIdentity())
     If Not oTemp Is Nothing Then
         dModeleHauteur = CDbl(oTemp.TextStyle.Height)
-        dPenteLargeur = CDbl(oTemp.TextStyle.Width)
+        oIndicPente.Largeur = CDbl(oTemp.TextStyle.Width)
     Else
         Err.Clear
         dModeleHauteur = CDbl(oText.TextStyle.Height)
-        dPenteLargeur = CDbl(oText.TextStyle.Width)
+        oIndicPente.Largeur = CDbl(oText.TextStyle.Width)
     End If
-    dPenteHauteur = dModeleHauteur
-    If dPenteLargeur <= 0 Then dPenteLargeur = dModeleHauteur
-    nPenteCouleur = oText.Color
+    oIndicPente.Hauteur = dModeleHauteur
+    If oIndicPente.Largeur <= 0 Then oIndicPente.Largeur = dModeleHauteur
+    oIndicPente.Couleur = oText.Color
     If Err.Number <> 0 Then
         dModeleHauteur = 0#
-        dPenteHauteur = 0.1
-        dPenteLargeur = 0.1
+        oIndicPente.Hauteur = 0.1
+        oIndicPente.Largeur = 0.1
     End If
     Err.Clear
     On Error GoTo 0
 End Sub
 
 '------------------------------------------------------------------------------
-' Appele apres la selection de P2 : ajuste les decimales si besoin.
+' Appele quand la source P1 est un tag : estime la hauteur depuis le Range.
 Sub ChargerModeleDepuisTag(oTag As TagElement, sSep As String, nDec As Integer)
     Set oTagModele = oTag
     oTexte.SepDecimal = sSep
@@ -130,10 +104,10 @@ Sub ChargerModeleDepuisTag(oTag As TagElement, sSep As String, nDec As Integer)
         If dHX < dHY Then dModeleHauteur = dHX Else dModeleHauteur = dHY
     End If
     If dModeleHauteur > 0 Then
-        dPenteHauteur = dModeleHauteur
-        dPenteLargeur = dModeleHauteur
+        oIndicPente.Hauteur = dModeleHauteur
+        oIndicPente.Largeur = dModeleHauteur
     End If
-    nPenteCouleur = oTag.Color
+    oIndicPente.Couleur = oTag.Color
     Err.Clear
     On Error GoTo 0
 End Sub

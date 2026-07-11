@@ -84,10 +84,10 @@ Private Sub IPrimitiveCommandEvents_DataPoint(Point As Point3d, ByVal View As Vi
         Dim dDist As Double, dZNew As Double
         dDist = DistXYLocal(m_dLastX, m_dLastY, Point.X, Point.Y)
         dZNew = m_dLastZ
-        If g_oSettings.bCheminPente Then
-            dZNew = dZNew + dDist * g_oSettings.dCheminPente / 100#
+        If g_oSettings.oChemin.PenteActive Then
+            dZNew = dZNew + dDist * g_oSettings.oChemin.Pente / 100#
         End If
-        If g_oSettings.bCheminDZ Then dZNew = dZNew + g_oSettings.dCheminDZ
+        If g_oSettings.oChemin.DZActive Then dZNew = dZNew + g_oSettings.oChemin.DZ
 
         Dim oPtChem As Point3d
         oPtChem.X = Point.X: oPtChem.Y = Point.Y: oPtChem.Z = dZNew
@@ -120,10 +120,10 @@ Private Sub IPrimitiveCommandEvents_DataPoint(Point As Point3d, ByVal View As Vi
         Dim dDistR As Double, dZRay As Double
         dDistR = DistXYLocal(m_dCentreX, m_dCentreY, Point.X, Point.Y)
         dZRay = m_dCentreZ
-        If g_oSettings.bRayonPente Then
-            dZRay = dZRay + dDistR * g_oSettings.dRayonPente / 100#
+        If g_oSettings.oRayon.PenteActive Then
+            dZRay = dZRay + dDistR * g_oSettings.oRayon.Pente / 100#
         End If
-        If g_oSettings.bRayonDZ Then dZRay = dZRay + g_oSettings.dRayonDZ
+        If g_oSettings.oRayon.DZActive Then dZRay = dZRay + g_oSettings.oRayon.DZ
 
         Dim oPtRay As Point3d
         oPtRay.X = Point.X: oPtRay.Y = Point.Y: oPtRay.Z = dZRay
@@ -168,7 +168,9 @@ Private Sub IPrimitiveCommandEvents_Reset()
         ' Reset en chemin = nouvelle selection P1
         frmInterpolPonct.ReinitialiserEtat
         ShowPrompt "Nouvelle selection : cliquez pres du texte altitude du POINT 1  (Reset=quitter)"
-        CommandState.StartPrimitive New CSelectP1Ponct
+        Dim oEtat As New CSelectP1
+        oEtat.Mode = modePonctuelle
+        CommandState.StartPrimitive oEtat
 
     Case 3, 4
         ' Reset en rayonnement = repartir en chemin depuis le centre
@@ -190,10 +192,10 @@ Private Sub DessinChemin(ByVal DrawMode As MsdDrawingMode, oPtCurseur As Point3d
     Dim dDist As Double, dZNew As Double
     dDist = DistXYLocal(m_dLastX, m_dLastY, oPtCurseur.X, oPtCurseur.Y)
     dZNew = m_dLastZ
-    If g_oSettings.bCheminPente Then
-        dZNew = dZNew + dDist * g_oSettings.dCheminPente / 100#
+    If g_oSettings.oChemin.PenteActive Then
+        dZNew = dZNew + dDist * g_oSettings.oChemin.Pente / 100#
     End If
-    If g_oSettings.bCheminDZ Then dZNew = dZNew + g_oSettings.dCheminDZ
+    If g_oSettings.oChemin.DZActive Then dZNew = dZNew + g_oSettings.oChemin.DZ
 
     ' Ligne depuis dernier point vers curseur
     Dim oPtDep As Point3d, oPtArr As Point3d
@@ -229,10 +231,10 @@ Private Sub DessinRayon(ByVal DrawMode As MsdDrawingMode, oPtCurseur As Point3d)
     Dim dDist As Double, dZRay As Double
     dDist = DistXYLocal(m_dCentreX, m_dCentreY, oPtCurseur.X, oPtCurseur.Y)
     dZRay = m_dCentreZ
-    If g_oSettings.bRayonPente Then
-        dZRay = dZRay + dDist * g_oSettings.dRayonPente / 100#
+    If g_oSettings.oRayon.PenteActive Then
+        dZRay = dZRay + dDist * g_oSettings.oRayon.Pente / 100#
     End If
-    If g_oSettings.bRayonDZ Then dZRay = dZRay + g_oSettings.dRayonDZ
+    If g_oSettings.oRayon.DZActive Then dZRay = dZRay + g_oSettings.oRayon.DZ
 
     ' Ligne depuis le centre vers le curseur
     Dim oPtC As Point3d, oPtR As Point3d

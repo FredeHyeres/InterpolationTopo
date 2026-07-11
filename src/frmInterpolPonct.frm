@@ -262,22 +262,22 @@ Sub Initialiser(oSettings As CMstSettings)
     m_bInit = True
 
     ' Chemin principal
-    chkCheminPente.Value = m_oSettings.bCheminPente
-    txtCheminPente.Text = Format$(m_oSettings.dCheminPente, "0.00")
-    txtCheminPente.Enabled = m_oSettings.bCheminPente
-    btnInverserCheminPente.Enabled = m_oSettings.bCheminPente
-    chkCheminDZ.Value = m_oSettings.bCheminDZ
-    txtCheminDZ.Text = Format$(m_oSettings.dCheminDZ, "0.00")
-    txtCheminDZ.Enabled = m_oSettings.bCheminDZ
+    chkCheminPente.Value = m_oSettings.oChemin.PenteActive
+    txtCheminPente.Text = Format$(m_oSettings.oChemin.Pente, "0.00")
+    txtCheminPente.Enabled = m_oSettings.oChemin.PenteActive
+    btnInverserCheminPente.Enabled = m_oSettings.oChemin.PenteActive
+    chkCheminDZ.Value = m_oSettings.oChemin.DZActive
+    txtCheminDZ.Text = Format$(m_oSettings.oChemin.DZ, "0.00")
+    txtCheminDZ.Enabled = m_oSettings.oChemin.DZActive
 
     ' Rayonnement
-    chkRayonPente.Value = m_oSettings.bRayonPente
-    txtRayonPente.Text = Format$(m_oSettings.dRayonPente, "0.00")
-    txtRayonPente.Enabled = m_oSettings.bRayonPente
-    btnInverserRayonPente.Enabled = m_oSettings.bRayonPente
-    chkRayonDZ.Value = m_oSettings.bRayonDZ
-    txtRayonDZ.Text = Format$(m_oSettings.dRayonDZ, "0.00")
-    txtRayonDZ.Enabled = m_oSettings.bRayonDZ
+    chkRayonPente.Value = m_oSettings.oRayon.PenteActive
+    txtRayonPente.Text = Format$(m_oSettings.oRayon.Pente, "0.00")
+    txtRayonPente.Enabled = m_oSettings.oRayon.PenteActive
+    btnInverserRayonPente.Enabled = m_oSettings.oRayon.PenteActive
+    chkRayonDZ.Value = m_oSettings.oRayon.DZActive
+    txtRayonDZ.Text = Format$(m_oSettings.oRayon.DZ, "0.00")
+    txtRayonDZ.Enabled = m_oSettings.oRayon.DZActive
 
     ' Decimales
     txtDecimales.Text = CStr(m_oSettings.nPonctDecimales)
@@ -343,10 +343,10 @@ End Sub
 Sub RafraichirChemin()
     If m_oSettings Is Nothing Then Exit Sub
     m_bInit = True
-    chkCheminPente.Value = m_oSettings.bCheminPente
-    txtCheminPente.Text = Format$(m_oSettings.dCheminPente, "0.00")
-    txtCheminPente.Enabled = m_oSettings.bCheminPente
-    btnInverserCheminPente.Enabled = m_oSettings.bCheminPente
+    chkCheminPente.Value = m_oSettings.oChemin.PenteActive
+    txtCheminPente.Text = Format$(m_oSettings.oChemin.Pente, "0.00")
+    txtCheminPente.Enabled = m_oSettings.oChemin.PenteActive
+    btnInverserCheminPente.Enabled = m_oSettings.oChemin.PenteActive
     m_bInit = False
 End Sub
 
@@ -357,46 +357,46 @@ End Sub
 Private Sub chkCheminPente_Change()
     If m_bInit Then Exit Sub
     If m_oSettings Is Nothing Then Exit Sub
-    m_oSettings.bCheminPente = (chkCheminPente.Value = True)
-    txtCheminPente.Enabled = m_oSettings.bCheminPente
-    btnInverserCheminPente.Enabled = m_oSettings.bCheminPente
+    m_oSettings.oChemin.PenteActive = (chkCheminPente.Value = True)
+    txtCheminPente.Enabled = m_oSettings.oChemin.PenteActive
+    btnInverserCheminPente.Enabled = m_oSettings.oChemin.PenteActive
 End Sub
 
 Private Sub txtCheminPente_Change()
     If m_bInit Then Exit Sub
     If m_oSettings Is Nothing Then Exit Sub
-    m_oSettings.dCheminPente = Val(Replace(Trim$(txtCheminPente.Text), ",", "."))
+    m_oSettings.oChemin.Pente = Val(Replace(Trim$(txtCheminPente.Text), ",", "."))
 End Sub
 
 Private Sub txtCheminPente_KeyDown(ByVal KeyCode As MSForms.ReturnInteger, _
                                     ByVal Shift As Integer)
     If KeyCode = vbKeyReturn And Not m_oSettings Is Nothing Then _
-        txtCheminPente.Text = Format$(m_oSettings.dCheminPente, "0.00")
+        txtCheminPente.Text = Format$(m_oSettings.oChemin.Pente, "0.00")
 End Sub
 
 Private Sub btnInverserCheminPente_Click()
     If m_oSettings Is Nothing Then Exit Sub
-    m_oSettings.dCheminPente = -m_oSettings.dCheminPente
-    txtCheminPente.Text = Format$(m_oSettings.dCheminPente, "0.00")
+    m_oSettings.oChemin.Pente = -m_oSettings.oChemin.Pente
+    txtCheminPente.Text = Format$(m_oSettings.oChemin.Pente, "0.00")
 End Sub
 
 Private Sub chkCheminDZ_Change()
     If m_bInit Then Exit Sub
     If m_oSettings Is Nothing Then Exit Sub
-    m_oSettings.bCheminDZ = (chkCheminDZ.Value = True)
-    txtCheminDZ.Enabled = m_oSettings.bCheminDZ
+    m_oSettings.oChemin.DZActive = (chkCheminDZ.Value = True)
+    txtCheminDZ.Enabled = m_oSettings.oChemin.DZActive
 End Sub
 
 Private Sub txtCheminDZ_Change()
     If m_bInit Then Exit Sub
     If m_oSettings Is Nothing Then Exit Sub
-    m_oSettings.dCheminDZ = Val(Replace(Trim$(txtCheminDZ.Text), ",", "."))
+    m_oSettings.oChemin.DZ = Val(Replace(Trim$(txtCheminDZ.Text), ",", "."))
 End Sub
 
 Private Sub txtCheminDZ_KeyDown(ByVal KeyCode As MSForms.ReturnInteger, _
                                  ByVal Shift As Integer)
     If KeyCode = vbKeyReturn And Not m_oSettings Is Nothing Then _
-        txtCheminDZ.Text = Format$(m_oSettings.dCheminDZ, "0.00")
+        txtCheminDZ.Text = Format$(m_oSettings.oChemin.DZ, "0.00")
 End Sub
 
 '==============================================================================
@@ -406,46 +406,46 @@ End Sub
 Private Sub chkRayonPente_Change()
     If m_bInit Then Exit Sub
     If m_oSettings Is Nothing Then Exit Sub
-    m_oSettings.bRayonPente = (chkRayonPente.Value = True)
-    txtRayonPente.Enabled = m_oSettings.bRayonPente
-    btnInverserRayonPente.Enabled = m_oSettings.bRayonPente
+    m_oSettings.oRayon.PenteActive = (chkRayonPente.Value = True)
+    txtRayonPente.Enabled = m_oSettings.oRayon.PenteActive
+    btnInverserRayonPente.Enabled = m_oSettings.oRayon.PenteActive
 End Sub
 
 Private Sub txtRayonPente_Change()
     If m_bInit Then Exit Sub
     If m_oSettings Is Nothing Then Exit Sub
-    m_oSettings.dRayonPente = Val(Replace(Trim$(txtRayonPente.Text), ",", "."))
+    m_oSettings.oRayon.Pente = Val(Replace(Trim$(txtRayonPente.Text), ",", "."))
 End Sub
 
 Private Sub txtRayonPente_KeyDown(ByVal KeyCode As MSForms.ReturnInteger, _
                                    ByVal Shift As Integer)
     If KeyCode = vbKeyReturn And Not m_oSettings Is Nothing Then _
-        txtRayonPente.Text = Format$(m_oSettings.dRayonPente, "0.00")
+        txtRayonPente.Text = Format$(m_oSettings.oRayon.Pente, "0.00")
 End Sub
 
 Private Sub btnInverserRayonPente_Click()
     If m_oSettings Is Nothing Then Exit Sub
-    m_oSettings.dRayonPente = -m_oSettings.dRayonPente
-    txtRayonPente.Text = Format$(m_oSettings.dRayonPente, "0.00")
+    m_oSettings.oRayon.Pente = -m_oSettings.oRayon.Pente
+    txtRayonPente.Text = Format$(m_oSettings.oRayon.Pente, "0.00")
 End Sub
 
 Private Sub chkRayonDZ_Change()
     If m_bInit Then Exit Sub
     If m_oSettings Is Nothing Then Exit Sub
-    m_oSettings.bRayonDZ = (chkRayonDZ.Value = True)
-    txtRayonDZ.Enabled = m_oSettings.bRayonDZ
+    m_oSettings.oRayon.DZActive = (chkRayonDZ.Value = True)
+    txtRayonDZ.Enabled = m_oSettings.oRayon.DZActive
 End Sub
 
 Private Sub txtRayonDZ_Change()
     If m_bInit Then Exit Sub
     If m_oSettings Is Nothing Then Exit Sub
-    m_oSettings.dRayonDZ = Val(Replace(Trim$(txtRayonDZ.Text), ",", "."))
+    m_oSettings.oRayon.DZ = Val(Replace(Trim$(txtRayonDZ.Text), ",", "."))
 End Sub
 
 Private Sub txtRayonDZ_KeyDown(ByVal KeyCode As MSForms.ReturnInteger, _
                                 ByVal Shift As Integer)
     If KeyCode = vbKeyReturn And Not m_oSettings Is Nothing Then _
-        txtRayonDZ.Text = Format$(m_oSettings.dRayonDZ, "0.00")
+        txtRayonDZ.Text = Format$(m_oSettings.oRayon.DZ, "0.00")
 End Sub
 
 '==============================================================================

@@ -563,15 +563,15 @@ Sub DessinPenteDynamique(ByVal DrawMode As MsdDrawingMode, _
 
     Dim oTxt As TextElement
     On Error Resume Next
-    If oSettings.bPentePerso Then
+    If oSettings.oIndicPente.Perso Then
         Set oTxt = CreateTextElement1(Nothing, sPente, oPtTxt, oRot)
         Dim oTSd As TextStyle: Set oTSd = oTxt.TextStyle
-        oTSd.Height = oSettings.dPenteHauteur
-        Dim dWD As Double: dWD = oSettings.dPenteLargeur
-        If dWD > 0 Then oTSd.Width = dWD Else oTSd.Width = oSettings.dPenteHauteur
+        oTSd.Height = oSettings.oIndicPente.Hauteur
+        Dim dWD As Double: dWD = oSettings.oIndicPente.Largeur
+        If dWD > 0 Then oTSd.Width = dWD Else oTSd.Width = oSettings.oIndicPente.Hauteur
         oTSd.Justification = msdTextJustificationLeftBottom
         oTxt.TextStyle = oTSd
-        oTxt.Color = oSettings.nPenteCouleur
+        oTxt.Color = oSettings.oIndicPente.Couleur
     Else
         Set oTxt = CreateTextElement1(oSettings.oTextModele, sPente, oPtTxt, oRot)
         If oTxt Is Nothing Then
@@ -593,20 +593,20 @@ Sub DessinPenteDynamique(ByVal DrawMode As MsdDrawingMode, _
     ' Fleche
     Dim oPtDeb As Point3d, oPtFin As Point3d
     Dim oPtH1 As Point3d, oPtH2 As Point3d
-    GeometrieFleche oPtPlace, dDesX, dDesY, oSettings.dFlecheLongueur, _
+    GeometrieFleche oPtPlace, dDesX, dDesY, oSettings.oIndicPente.FlecheLongueur, _
                     oPtDeb, oPtFin, oPtH1, oPtH2
 
     Dim oL As LineElement
     Set oL = CreateLineElement2(Nothing, oPtDeb, oPtFin)
-    oL.Color = oSettings.nFlecheCouleur
+    oL.Color = oSettings.oIndicPente.FlecheCouleur
     oL.Redraw DrawMode
 
     Dim oLH1 As LineElement, oLH2 As LineElement
     Set oLH1 = CreateLineElement2(Nothing, oPtFin, oPtH1)
-    oLH1.Color = oSettings.nFlecheCouleur
+    oLH1.Color = oSettings.oIndicPente.FlecheCouleur
     oLH1.Redraw DrawMode
     Set oLH2 = CreateLineElement2(Nothing, oPtFin, oPtH2)
-    oLH2.Color = oSettings.nFlecheCouleur
+    oLH2.Color = oSettings.oIndicPente.FlecheCouleur
     oLH2.Redraw DrawMode
 End Sub
 
@@ -647,16 +647,16 @@ Sub CreerPente(oPtPlace As Point3d, _
 
     Dim oTxt As TextElement
     On Error Resume Next
-    If oSettings.bPentePerso Then
+    If oSettings.oIndicPente.Perso Then
         Set oTxt = CreateTextElement1(Nothing, sPente, oPtTxt, oRot)
         Dim oTSc As TextStyle: Set oTSc = oTxt.TextStyle
-        oTSc.Height = oSettings.dPenteHauteur
-        Dim dWC As Double: dWC = oSettings.dPenteLargeur
-        If dWC > 0 Then oTSc.Width = dWC Else oTSc.Width = oSettings.dPenteHauteur
+        oTSc.Height = oSettings.oIndicPente.Hauteur
+        Dim dWC As Double: dWC = oSettings.oIndicPente.Largeur
+        If dWC > 0 Then oTSc.Width = dWC Else oTSc.Width = oSettings.oIndicPente.Hauteur
         oTSc.Justification = msdTextJustificationLeftBottom
         oTxt.TextStyle = oTSc
-        oTxt.Color = oSettings.nPenteCouleur
-        Set oTxt.Level = ResolverNiveau(oSettings.sPenteNiveau, oSettings)
+        oTxt.Color = oSettings.oIndicPente.Couleur
+        Set oTxt.Level = ResolverNiveau(oSettings.oIndicPente.NomNiveau, oSettings)
     Else
         Set oTxt = CreateTextElement1(oSettings.oTextModele, sPente, oPtTxt, oRot)
         If oTxt Is Nothing Then
@@ -679,7 +679,7 @@ Sub CreerPente(oPtPlace As Point3d, _
     ' Fleche permanente
     Dim oPtDeb As Point3d, oPtFin As Point3d
     Dim oPtH1 As Point3d, oPtH2 As Point3d
-    GeometrieFleche oPtPlace, dDesX, dDesY, oSettings.dFlecheLongueur, _
+    GeometrieFleche oPtPlace, dDesX, dDesY, oSettings.oIndicPente.FlecheLongueur, _
                     oPtDeb, oPtFin, oPtH1, oPtH2
 
     Dim oLvl As Level
@@ -687,17 +687,17 @@ Sub CreerPente(oPtPlace As Point3d, _
 
     Dim oL As LineElement
     Set oL = CreateLineElement2(Nothing, oPtDeb, oPtFin)
-    oL.Color = oSettings.nFlecheCouleur
+    oL.Color = oSettings.oIndicPente.FlecheCouleur
     Set oL.Level = oLvl
     ActiveModelReference.AddElement oL
 
     Dim oLH1 As LineElement, oLH2 As LineElement
     Set oLH1 = CreateLineElement2(Nothing, oPtFin, oPtH1)
-    oLH1.Color = oSettings.nFlecheCouleur
+    oLH1.Color = oSettings.oIndicPente.FlecheCouleur
     Set oLH1.Level = oLvl
     ActiveModelReference.AddElement oLH1
     Set oLH2 = CreateLineElement2(Nothing, oPtFin, oPtH2)
-    oLH2.Color = oSettings.nFlecheCouleur
+    oLH2.Color = oSettings.oIndicPente.FlecheCouleur
     Set oLH2.Level = oLvl
     ActiveModelReference.AddElement oLH2
 End Sub
@@ -808,8 +808,8 @@ End Sub
 '------------------------------------------------------------------------------
 ' Hauteur du texte modele P1 (fallback 0.1 u.m.).
 Private Function HauteurTexteModele(oSettings As CMstSettings) As Double
-    If oSettings.bPentePerso Then
-        HauteurTexteModele = oSettings.dPenteHauteur
+    If oSettings.oIndicPente.Perso Then
+        HauteurTexteModele = oSettings.oIndicPente.Hauteur
     ElseIf oSettings.dModeleHauteur > 0 Then
         HauteurTexteModele = oSettings.dModeleHauteur
     Else

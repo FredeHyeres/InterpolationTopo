@@ -77,7 +77,7 @@ Private Sub IPrimitiveCommandEvents_Dynamics(Point As Point3d, ByVal View As Vie
 
         If dTotalDist > 0.0001 Then dT = dCumDist / dTotalDist Else dT = 0
         dZi = g_oCalc.InterpolerZ(g_oP1.Altitude, g_oP2.Altitude, dT)
-        If g_oSettings.bDecalageFixe Then dZi = dZi + g_oSettings.dDecalageDZ
+        If g_oSettings.oDecalage.DZActive Then dZi = dZi + g_oSettings.oDecalage.DZ
 
         oPtA.X = dPrevX: oPtA.Y = dPrevY: oPtA.Z = dPrevZ
         oPtB.X = m_dPtsX(i): oPtB.Y = m_dPtsY(i): oPtB.Z = dZi
@@ -97,7 +97,7 @@ Private Sub IPrimitiveCommandEvents_Dynamics(Point As Point3d, ByVal View As Vie
     ' --- Z interpole au curseur ---
     If dTotalDist > 0.0001 Then dTCursor = dCursorDist / dTotalDist Else dTCursor = 0
     dZCursor = g_oCalc.InterpolerZ(g_oP1.Altitude, g_oP2.Altitude, dTCursor)
-    If g_oSettings.bDecalageFixe Then dZCursor = dZCursor + g_oSettings.dDecalageDZ
+    If g_oSettings.oDecalage.DZActive Then dZCursor = dZCursor + g_oSettings.oDecalage.DZ
 
     ' --- Segment dynamique : dernier point -> curseur (jaune) ---
     oPtC.X = dPrevX: oPtC.Y = dPrevY: oPtC.Z = dPrevZ
@@ -199,7 +199,7 @@ Private Sub IPrimitiveCommandEvents_Reset()
 
         dT = dCumDist / dTotalDist
         dZ = g_oCalc.InterpolerZ(g_oP1.Altitude, g_oP2.Altitude, dT)
-        If g_oSettings.bDecalageFixe Then dZ = dZ + g_oSettings.dDecalageDZ
+        If g_oSettings.oDecalage.DZActive Then dZ = dZ + g_oSettings.oDecalage.DZ
 
         oPt.X = m_dPtsX(i)
         oPt.Y = m_dPtsY(i)

@@ -336,25 +336,25 @@ Sub Initialiser(oSettings As CMstSettings)
     ActiverChampsTexte
 
     ' Indicateur pente
-    chkPentePerso.Value = m_oSettings.bPentePerso
-    txtPenteH.Text = Format$(m_oSettings.dPenteHauteur, "0.000")
-    txtPenteL.Text = Format$(m_oSettings.dPenteLargeur, "0.000")
+    chkPentePerso.Value = m_oSettings.oIndicPente.Perso
+    txtPenteH.Text = Format$(m_oSettings.oIndicPente.Hauteur, "0.000")
+    txtPenteL.Text = Format$(m_oSettings.oIndicPente.Largeur, "0.000")
     RemplirNiveaux cmbPenteNiveau
-    txtPenteCoulTxt.Text = CStr(m_oSettings.nPenteCouleur)
-    txtPenteCoulFl.Text = CStr(m_oSettings.nFlecheCouleur)
-    txtPenteFlLong.Text = Format$(m_oSettings.dFlecheLongueur, "0.00")
+    txtPenteCoulTxt.Text = CStr(m_oSettings.oIndicPente.Couleur)
+    txtPenteCoulFl.Text = CStr(m_oSettings.oIndicPente.FlecheCouleur)
+    txtPenteFlLong.Text = Format$(m_oSettings.oIndicPente.FlecheLongueur, "0.00")
     ActiverChampsPente
 
     ' Pente decalage
-    chkPente.Value = m_oSettings.bAppliquerPente
-    txtPente.Text = Format$(m_oSettings.dPenteDecalage, "0.00")
-    txtPente.Enabled = m_oSettings.bAppliquerPente
-    btnInverserPente.Enabled = m_oSettings.bAppliquerPente
+    chkPente.Value = m_oSettings.oDecalage.PenteActive
+    txtPente.Text = Format$(m_oSettings.oDecalage.Pente, "0.00")
+    txtPente.Enabled = m_oSettings.oDecalage.PenteActive
+    btnInverserPente.Enabled = m_oSettings.oDecalage.PenteActive
 
     ' Decalage fixe DZ
-    chkDecalageFixe.Value = m_oSettings.bDecalageFixe
-    txtDecalageDZ.Text = Format$(m_oSettings.dDecalageDZ, "0.00")
-    txtDecalageDZ.Enabled = m_oSettings.bDecalageFixe
+    chkDecalageFixe.Value = m_oSettings.oDecalage.DZActive
+    txtDecalageDZ.Text = Format$(m_oSettings.oDecalage.DZ, "0.00")
+    txtDecalageDZ.Enabled = m_oSettings.oDecalage.DZActive
 
     ' Etat : reinitialiser
     ReinitialiserEtat
@@ -376,7 +376,7 @@ End Sub
 '------------------------------------------------------------------------------
 Private Sub ActiverChampsPente()
     Dim bActif As Boolean
-    bActif = m_oSettings.bPentePerso
+    bActif = m_oSettings.oIndicPente.Perso
     txtPenteH.Enabled = bActif
     txtPenteL.Enabled = bActif
     cmbPenteNiveau.Enabled = bActif
@@ -389,9 +389,9 @@ End Sub
 Sub RafraichirPente()
     If m_oSettings Is Nothing Then Exit Sub
     m_bInit = True
-    txtPenteH.Text = Format$(m_oSettings.dPenteHauteur, "0.000")
-    txtPenteL.Text = Format$(m_oSettings.dPenteLargeur, "0.000")
-    txtPenteCoulTxt.Text = CStr(m_oSettings.nPenteCouleur)
+    txtPenteH.Text = Format$(m_oSettings.oIndicPente.Hauteur, "0.000")
+    txtPenteL.Text = Format$(m_oSettings.oIndicPente.Largeur, "0.000")
+    txtPenteCoulTxt.Text = CStr(m_oSettings.oIndicPente.Couleur)
     m_bInit = False
 End Sub
 
@@ -563,15 +563,15 @@ End Function
 Private Sub chkPente_Change()
     If m_bInit Then Exit Sub
     If m_oSettings Is Nothing Then Exit Sub
-    m_oSettings.bAppliquerPente = (chkPente.Value = True)
-    txtPente.Enabled = m_oSettings.bAppliquerPente
-    btnInverserPente.Enabled = m_oSettings.bAppliquerPente
+    m_oSettings.oDecalage.PenteActive = (chkPente.Value = True)
+    txtPente.Enabled = m_oSettings.oDecalage.PenteActive
+    btnInverserPente.Enabled = m_oSettings.oDecalage.PenteActive
 End Sub
 
 Private Sub btnInverserPente_Click()
     If m_oSettings Is Nothing Then Exit Sub
-    m_oSettings.dPenteDecalage = -m_oSettings.dPenteDecalage
-    txtPente.Text = Format$(m_oSettings.dPenteDecalage, "0.00")
+    m_oSettings.oDecalage.Pente = -m_oSettings.oDecalage.Pente
+    txtPente.Text = Format$(m_oSettings.oDecalage.Pente, "0.00")
 End Sub
 
 Private Sub txtPente_Change()
@@ -579,13 +579,13 @@ Private Sub txtPente_Change()
     If m_oSettings Is Nothing Then Exit Sub
     Dim dP As Double
     dP = Val(Replace(Trim$(txtPente.Text), ",", "."))
-    m_oSettings.dPenteDecalage = dP
+    m_oSettings.oDecalage.Pente = dP
 End Sub
 
 Private Sub txtPente_KeyDown(ByVal KeyCode As MSForms.ReturnInteger, _
                               ByVal Shift As Integer)
     If KeyCode = vbKeyReturn And Not m_oSettings Is Nothing Then _
-        txtPente.Text = Format$(m_oSettings.dPenteDecalage, "0.00")
+        txtPente.Text = Format$(m_oSettings.oDecalage.Pente, "0.00")
 End Sub
 
 '==============================================================================
@@ -595,8 +595,8 @@ End Sub
 Private Sub chkDecalageFixe_Change()
     If m_bInit Then Exit Sub
     If m_oSettings Is Nothing Then Exit Sub
-    m_oSettings.bDecalageFixe = (chkDecalageFixe.Value = True)
-    txtDecalageDZ.Enabled = m_oSettings.bDecalageFixe
+    m_oSettings.oDecalage.DZActive = (chkDecalageFixe.Value = True)
+    txtDecalageDZ.Enabled = m_oSettings.oDecalage.DZActive
 End Sub
 
 Private Sub txtDecalageDZ_Change()
@@ -604,13 +604,13 @@ Private Sub txtDecalageDZ_Change()
     If m_oSettings Is Nothing Then Exit Sub
     Dim dDZ As Double
     dDZ = Val(Replace(Trim$(txtDecalageDZ.Text), ",", "."))
-    m_oSettings.dDecalageDZ = dDZ
+    m_oSettings.oDecalage.DZ = dDZ
 End Sub
 
 Private Sub txtDecalageDZ_KeyDown(ByVal KeyCode As MSForms.ReturnInteger, _
                                    ByVal Shift As Integer)
     If KeyCode = vbKeyReturn And Not m_oSettings Is Nothing Then _
-        txtDecalageDZ.Text = Format$(m_oSettings.dDecalageDZ, "0.00")
+        txtDecalageDZ.Text = Format$(m_oSettings.oDecalage.DZ, "0.00")
 End Sub
 
 '==============================================================================
@@ -620,7 +620,7 @@ End Sub
 Private Sub chkPentePerso_Change()
     If m_bInit Then Exit Sub
     If m_oSettings Is Nothing Then Exit Sub
-    m_oSettings.bPentePerso = (chkPentePerso.Value = True)
+    m_oSettings.oIndicPente.Perso = (chkPentePerso.Value = True)
     ActiverChampsPente
 End Sub
 
@@ -629,13 +629,13 @@ Private Sub txtPenteH_Change()
     If m_oSettings Is Nothing Then Exit Sub
     Dim dVal As Double
     dVal = Val(Replace(Trim$(txtPenteH.Text), ",", "."))
-    If dVal > 0 Then m_oSettings.dPenteHauteur = dVal
+    If dVal > 0 Then m_oSettings.oIndicPente.Hauteur = dVal
 End Sub
 
 Private Sub txtPenteH_KeyDown(ByVal KeyCode As MSForms.ReturnInteger, _
                                ByVal Shift As Integer)
     If KeyCode = vbKeyReturn And Not m_oSettings Is Nothing Then _
-        txtPenteH.Text = Format$(m_oSettings.dPenteHauteur, "0.000")
+        txtPenteH.Text = Format$(m_oSettings.oIndicPente.Hauteur, "0.000")
 End Sub
 
 Private Sub txtPenteL_Change()
@@ -643,19 +643,19 @@ Private Sub txtPenteL_Change()
     If m_oSettings Is Nothing Then Exit Sub
     Dim dVal As Double
     dVal = Val(Replace(Trim$(txtPenteL.Text), ",", "."))
-    If dVal > 0 Then m_oSettings.dPenteLargeur = dVal
+    If dVal > 0 Then m_oSettings.oIndicPente.Largeur = dVal
 End Sub
 
 Private Sub txtPenteL_KeyDown(ByVal KeyCode As MSForms.ReturnInteger, _
                                ByVal Shift As Integer)
     If KeyCode = vbKeyReturn And Not m_oSettings Is Nothing Then _
-        txtPenteL.Text = Format$(m_oSettings.dPenteLargeur, "0.000")
+        txtPenteL.Text = Format$(m_oSettings.oIndicPente.Largeur, "0.000")
 End Sub
 
 Private Sub cmbPenteNiveau_Change()
     If m_bInit Then Exit Sub
     If m_oSettings Is Nothing Then Exit Sub
-    m_oSettings.sPenteNiveau = ExtraireNiveau(cmbPenteNiveau.Text)
+    m_oSettings.oIndicPente.NomNiveau = ExtraireNiveau(cmbPenteNiveau.Text)
 End Sub
 
 Private Sub txtPenteCoulTxt_Change()
@@ -664,13 +664,13 @@ Private Sub txtPenteCoulTxt_Change()
     Dim sVal As String: sVal = Trim$(txtPenteCoulTxt.Text)
     If sVal = "" Then Exit Sub
     Dim nCoul As Long: nCoul = CLng(Val(sVal))
-    If nCoul >= 0 And nCoul <= 255 Then m_oSettings.nPenteCouleur = nCoul
+    If nCoul >= 0 And nCoul <= 255 Then m_oSettings.oIndicPente.Couleur = nCoul
 End Sub
 
 Private Sub txtPenteCoulTxt_KeyDown(ByVal KeyCode As MSForms.ReturnInteger, _
                                      ByVal Shift As Integer)
     If KeyCode = vbKeyReturn And Not m_oSettings Is Nothing Then _
-        txtPenteCoulTxt.Text = CStr(m_oSettings.nPenteCouleur)
+        txtPenteCoulTxt.Text = CStr(m_oSettings.oIndicPente.Couleur)
 End Sub
 
 Private Sub txtPenteCoulFl_Change()
@@ -679,13 +679,13 @@ Private Sub txtPenteCoulFl_Change()
     Dim sVal As String: sVal = Trim$(txtPenteCoulFl.Text)
     If sVal = "" Then Exit Sub
     Dim nCoul As Long: nCoul = CLng(Val(sVal))
-    If nCoul >= 0 And nCoul <= 255 Then m_oSettings.nFlecheCouleur = nCoul
+    If nCoul >= 0 And nCoul <= 255 Then m_oSettings.oIndicPente.FlecheCouleur = nCoul
 End Sub
 
 Private Sub txtPenteCoulFl_KeyDown(ByVal KeyCode As MSForms.ReturnInteger, _
                                     ByVal Shift As Integer)
     If KeyCode = vbKeyReturn And Not m_oSettings Is Nothing Then _
-        txtPenteCoulFl.Text = CStr(m_oSettings.nFlecheCouleur)
+        txtPenteCoulFl.Text = CStr(m_oSettings.oIndicPente.FlecheCouleur)
 End Sub
 
 Private Sub txtPenteFlLong_Change()
@@ -693,13 +693,13 @@ Private Sub txtPenteFlLong_Change()
     If m_oSettings Is Nothing Then Exit Sub
     Dim dVal As Double
     dVal = Val(Replace(Trim$(txtPenteFlLong.Text), ",", "."))
-    If dVal > 0 Then m_oSettings.dFlecheLongueur = dVal
+    If dVal > 0 Then m_oSettings.oIndicPente.FlecheLongueur = dVal
 End Sub
 
 Private Sub txtPenteFlLong_KeyDown(ByVal KeyCode As MSForms.ReturnInteger, _
                                     ByVal Shift As Integer)
     If KeyCode = vbKeyReturn And Not m_oSettings Is Nothing Then _
-        txtPenteFlLong.Text = Format$(m_oSettings.dFlecheLongueur, "0.00")
+        txtPenteFlLong.Text = Format$(m_oSettings.oIndicPente.FlecheLongueur, "0.00")
 End Sub
 
 '==============================================================================
