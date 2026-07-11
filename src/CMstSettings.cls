@@ -34,6 +34,19 @@ Public sPenteNiveau     As String           ' niveau du texte pente
 Public dFlecheLongueur  As Double           ' longueur de la fleche indicatrice de pente (u.m.)
 Public nFlecheCouleur   As Long             ' couleur de la fleche (index MicroStation 0-255)
 
+' --- Interpolation ponctuelle : chemin principal ---
+Public dCheminPente     As Double           ' pente chemin principal (%)
+Public bCheminPente     As Boolean          ' True = appliquer pente chemin
+Public dCheminDZ        As Double           ' DZ fixe chemin principal
+Public bCheminDZ        As Boolean          ' True = appliquer DZ chemin
+' --- Interpolation ponctuelle : rayonnement ---
+Public dRayonPente      As Double           ' pente rayonnement (%)
+Public bRayonPente      As Boolean          ' True = appliquer pente rayonnement
+Public dRayonDZ         As Double           ' DZ fixe rayonnement
+Public bRayonDZ         As Boolean          ' True = appliquer DZ rayonnement
+' --- Interpolation ponctuelle : decimales (commun chemin+rayon) ---
+Public nPonctDecimales  As Integer          ' nombre de decimales pour les points crees
+
 '------------------------------------------------------------------------------
 Sub Init()
     Set oTexte = New CSymboTexte
@@ -54,6 +67,15 @@ Sub Init()
     bDecalageFixe = False
     dFlecheLongueur = 1#
     nFlecheCouleur = 3
+    dCheminPente = 0#
+    bCheminPente = False
+    dCheminDZ = 0#
+    bCheminDZ = False
+    dRayonPente = 0#
+    bRayonPente = False
+    dRayonDZ = 0#
+    bRayonDZ = False
+    nPonctDecimales = 2
 End Sub
 
 '------------------------------------------------------------------------------
