@@ -5,7 +5,7 @@
 # puis configure le chargement automatique du projet au demarrage.
 #
 # Usage : clic droit sur install.cmd > Executer  (ou .\install.ps1 en PowerShell)
-# RelanÃ§able sans risque : chaque etape est ignoree si deja faite.
+# Relançable sans risque : chaque etape est ignoree si deja faite.
 # ==============================================================================
 
 $ErrorActionPreference = "Stop"
@@ -78,6 +78,31 @@ if (Test-Path $Dgnlib) {
     }
 } else {
     Write-Host "[!] MesMacros.dgnlib absente : pas de ToolBox installee." -ForegroundColor Yellow
+}
+
+# --- 2b. Neutraliser les copies masquantes de la ToolBox ---------------------
+# MicroStation charge TOUS les *.dgnlib du dossier d'interface
+# (WorkSpace\Interfaces\MicroStation\<interface>\) et du dossier dgnlib du
+# projet actif (gui.cfg + .pcf) : une vieille copie -- meme renommee en
+# MesMacros_old.dgnlib -- serait chargee en plus de celle de System\GUI et
+# creerait une toolbox en double impossible a modifier. On renomme en .bak
+# (extension differente = plus jamais chargee, aucune suppression).
+if (Test-Path $Dgnlib) {
+    $Masquantes = @()
+    foreach ($Dir in @((Join-Path $Workspace "Interfaces"), (Join-Path $Workspace "Projects"))) {
+        if (Test-Path $Dir) {
+            $Masquantes += @(Get-ChildItem $Dir -Recurse -Filter "MesMacros*.dgnlib" -File -ErrorAction SilentlyContinue)
+        }
+    }
+    foreach ($M in $Masquantes) {
+        $Bak = "$($M.FullName).bak"
+        if (Test-Path $Bak) { Remove-Item $Bak -Force }
+        Rename-Item $M.FullName $Bak
+        Write-Host "[OK] ToolBox masquante neutralisee : $($M.FullName) -> .bak" -ForegroundColor Yellow
+    }
+    if ($Masquantes.Count -eq 0) {
+        Write-Host "[OK] Aucune copie masquante de MesMacros*.dgnlib" -ForegroundColor Green
+    }
 }
 
 # --- 3. Chargement automatique du projet (fichier .ucf utilisateur) ----------
