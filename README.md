@@ -1,14 +1,20 @@
 # Interpolation Topo V2 — MicroStation V8i (VBA)
 
-Macro VBA pour **MicroStation V8i SS3** qui interpole l'altitude d'un point situe sur la
-droite reliant deux points d'altitude existants (textes topo, tags ou cellules), avec
-**apercu dynamique**, **formulaire modeless** (Tool Settings) et **indicateur de pente**.
+Macros VBA pour **MicroStation V8i SS3** dediees aux leves topographiques :
+interpolation d'altitude, chemin de pente et rayonnement ponctuel.
 
-Pensee pour les leves topographiques : gisement en **gon** (0 = nord, sens horaire),
+Pensees pour les leves topographiques : gisement en **gon** (0 = nord, sens horaire),
 pente en **%**, separateur decimal et nombre de decimales repris automatiquement des
 textes source, cercles placables sur un niveau distinct des textes.
 
-## Fonctionnalites
+## Deux commandes
+
+| Commande | Key-in | Description |
+|---|---|---|
+| **Interpolation** | `vba run [InterpolationTopoV2]InterpolerPoint` | Interpole l'altitude sur la droite P1-P2, avec pente transversale, DZ et indicateur de pente |
+| **Interpol. Ponctuelle** | `vba run [InterpolationTopoV2]InterpolPonctuelle` | Chemin principal depuis P1 (pente/DZ cumulatifs) + rayonnement lateral depuis chaque point du chemin |
+
+## Fonctionnalites communes
 
 - **Sources d'altitude multiples** : textes simples, tags et cellules contenant des tags
   d'altitude (les elements non numeriques sont ignores automatiquement)
@@ -19,8 +25,16 @@ textes source, cercles placables sur un niveau distinct des textes.
 - **Snap terrain optionnel** : apres selection du texte altitude, un second clic permet de
   positionner P1/P2 sur le point terrain reel (Reset = garder l'ancrage du texte)
 - **Formulaire modeless** (Tool Settings) : parametres modifiables en temps reel
-  pendant la commande — diametre, couleur et niveau du cercle ; couleur et niveau du
-  texte ; pente transversale ; decalage fixe DZ ; indicateur de pente
+  pendant la commande
+- **Apercu dynamique** avec 3 decimales pour le controle visuel
+- **Nombre de decimales** des points crees configurable (0 a 6)
+- **Positionnement 3D** : les elements crees sont places a l'altitude calculee (Z)
+
+## Interpolation (P1-P2)
+
+- **Projection + perpendiculaire en un seul clic** : le curseur calcule simultanement
+  la projection sur P1-P2 et le decalage perpendiculaire, affichant le Z sur la droite
+  (vert) et le Z final au point deporte
 - **Pente transversale** : applique un delta Z proportionnel a la distance au segment
   P1-P2 (meme pente des deux cotes de la ligne de reference). Bouton **+/-** pour
   inverser la pente
@@ -34,9 +48,21 @@ textes source, cercles placables sur un niveau distinct des textes.
   - barre d'etat : altitude interpolee, abscisse `t` (0 = P1, 1 = P2), pente %,
     gisement gon
   - avertissement en cas d'extrapolation hors du segment
-- **Positionnement 3D** : les elements crees sont places a l'altitude interpolee (Z)
 - Creation **repetable** : plusieurs points sur la meme droite (Data = creer,
   Reset = nouvelle selection)
+
+## Interpolation Ponctuelle (chemin + rayonnement)
+
+- **P2 optionnel** : si selectionne, la pente P1-P2 est calculee automatiquement et
+  affectee au chemin principal. Sinon, la pente est saisie manuellement dans le formulaire
+- **Chemin principal** : ligne dynamique depuis le dernier point, altitude calculee avec
+  pente (%) et/ou DZ cumulatifs. Ligne verte
+- **Rayonnement** : apres chaque point du chemin, possibilite de placer des points
+  lateraux avec pente/DZ propres au rayonnement. Ligne jaune
+- **Retour au chemin** : clic droit en mode rayonnement revient au chemin depuis le
+  dernier point chemin
+- **Formulaire dedie** : cadres Chemin principal (pente/DZ), Rayonnement (pente/DZ),
+  decimales partagees, cercle, texte, etat
 
 ## Installation automatique (recommandee)
 
@@ -62,21 +88,29 @@ son chargement automatique au demarrage dans le `.ucf` utilisateur. Il ne touche
 
    | Fichier | Type apres import |
    |---|---|
-   | `InterpolationTopoV2.bas` | Module |
+   | `InterpolationTopoV2.bas` | Module (Interpolation) |
+   | `InterpolPonctuelle.bas` | Module (Ponctuelle) |
    | `CMstSettings.cls` | Module de classe |
    | `CSymboTexte.cls` | Module de classe |
    | `CSymboCercle.cls` | Module de classe |
    | `CPointRef.cls` | Module de classe |
    | `CInterpolation.cls` | Module de classe |
    | `CMoteurGraphique.cls` | Module de classe |
-   | `CSelectP1.cls` | Module de classe |
-   | `CSnapP1.cls` | Module de classe |
-   | `CSelectP2.cls` | Module de classe |
-   | `CSnapP2.cls` | Module de classe |
-   | `CPlacerPoint.cls` | Module de classe |
-   | `CPlacerPente.cls` | Module de classe |
    | `CAltitudeSelection.cls` | Module de classe |
-   | `frmInterpolation.frm` + `.frx` | UserForm |
+   | `CSelectP1.cls` | Module de classe (Interpolation) |
+   | `CSnapP1.cls` | Module de classe (Interpolation) |
+   | `CSelectP2.cls` | Module de classe (Interpolation) |
+   | `CSnapP2.cls` | Module de classe (Interpolation) |
+   | `CPlacerPoint.cls` | Module de classe (Interpolation) |
+   | `CPlacerChemin.cls` | Module de classe (Interpolation) |
+   | `CPlacerPente.cls` | Module de classe (Interpolation) |
+   | `CSelectP1Ponct.cls` | Module de classe (Ponctuelle) |
+   | `CSnapP1Ponct.cls` | Module de classe (Ponctuelle) |
+   | `CSelectP2Ponct.cls` | Module de classe (Ponctuelle) |
+   | `CSnapP2Ponct.cls` | Module de classe (Ponctuelle) |
+   | `CPlacerPonctuel.cls` | Module de classe (Ponctuelle) |
+   | `frmInterpolation.frm` + `.frx` | UserForm (Interpolation) |
+   | `frmInterpolPonct.frm` + `.frx` | UserForm (Ponctuelle) |
 
 3. *Debogage > Compiler*, puis enregistrer
 
@@ -84,8 +118,8 @@ son chargement automatique au demarrage dans le `.ucf` utilisateur. Il ne touche
 > `.gitattributes` du depot s'en charge. Avec des fins de ligne Unix (LF), l'editeur
 > VBA importe les `.cls` comme modules standard et la compilation echoue.
 
-> Le fichier `frmInterpolation.frx` doit etre dans le **meme dossier** que le
-> `.frm` lors de l'import. Sans lui, l'import echoue avec "Impossible de charger...".
+> Les fichiers `frmInterpolation.frx` et `frmInterpolPonct.frx` doivent etre dans
+> le **meme dossier** que leur `.frm` respectif lors de l'import.
 
 ## Lancement
 
@@ -93,27 +127,48 @@ Key-in (le projet `Interpolation.mvba` etant charge automatiquement) :
 
 ```
 vba run [InterpolationTopoV2]InterpolerPoint
+vba run [InterpolationTopoV2]InterpolPonctuelle
 ```
 
-Le key-in peut etre associe a une **touche de fonction** (*Utilitaires > Touches de
-fonction*) ou a un **bouton de boite a outils** -- la ToolBox `MesMacros.dgnlib`
-installee par le script contient deja ce bouton.
+## Affectation a des touches de fonction
+
+Menu *Utilitaires > Touches de fonction*, par exemple :
+
+| Touche | Key-in |
+|---|---|
+| `F6` | `vba run [InterpolationTopoV2]InterpolerPoint` |
+| `F7` | `vba run [InterpolationTopoV2]InterpolPonctuelle` |
+
+Les key-in peuvent aussi etre associes a des **boutons de boite a outils** -- la ToolBox
+`MesMacros.dgnlib` installee par le script contient deja ces boutons.
 
 Guide detaille pas a pas (installation, utilisation, touche de fonction, boite a
 outils, depannage) : **[Mode_Emploi_InterpolationTopo.html](Mode_Emploi_InterpolationTopo.html)**
 (a ouvrir dans un navigateur).
 
-## Utilisation en bref
+## Utilisation en bref — Interpolation
 
 1. Lancer la commande -- le formulaire **Interpolation Topo** s'ouvre (Tool Settings)
 2. Cliquer pres du texte/tag altitude du **point 1** (modele de mise en forme)
 3. **Snap terrain P1** : cliquer sur le point terrain reel (Reset = garder l'ancrage du texte)
 4. Cliquer pres du texte/tag altitude du **point 2** -- pente et gisement s'affichent
 5. **Snap terrain P2** : idem
-6. Deplacer le curseur : la position est projetee sur la droite P1-P2, l'altitude
-   interpolee s'affiche en dynamique
+6. Deplacer le curseur : projection sur P1-P2 + perpendiculaire calculees simultanement,
+   Z sur la droite (vert) et Z final affiches en dynamique
 7. **Data** = creer le point (repetable) -- **Reset** = nouvelle selection de points
    (retour a l'etape 2, memes parametres) -- **Reset** au choix du point 1 = quitter
+
+## Utilisation en bref — Interpolation Ponctuelle
+
+1. Lancer la commande -- le formulaire **Interpol. Ponctuelle** s'ouvre
+2. Cliquer pres du texte/tag altitude du **point 1** (modele)
+3. **Snap terrain P1**
+4. **P2 optionnel** : Data = selectionner P2 (pente auto), Reset = pente manuelle
+5. **Mode chemin** : ligne verte depuis P1, Z = Z precedent + pente*distance + DZ.
+   Data = creer un point, Reset = nouvelle selection
+6. Apres chaque point chemin : **mode rayonnement** (ligne jaune).
+   Data = creer un point rayon, Reset = retour au chemin
+7. Le chemin repart du dernier point chemin cree
 
 ### Indicateur de pente
 

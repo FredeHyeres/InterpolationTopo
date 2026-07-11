@@ -149,15 +149,17 @@
 
 <header>
   <h1>&#128207; Interpolation Topo V2</h1>
-  <p>Macro VBA pour MicroStation V8i SS3 — interpolation d'altitude entre deux points topo</p>
+  <p>Macros VBA pour MicroStation V8i SS3 — interpolation, chemin de pente et rayonnement</p>
 </header>
 
 <nav>
   <a href="#presentation">Pr&eacute;sentation</a>
   <a href="#installation">Installation</a>
-  <a href="#formulaire">Formulaire</a>
-  <a href="#utilisation">Utilisation</a>
+  <a href="#formulaire">Formulaire Interpol.</a>
+  <a href="#utilisation">Utilisation Interpol.</a>
   <a href="#pente">Indicateur pente</a>
+  <a href="#ponctuelle">Ponctuelle</a>
+  <a href="#formulaire-ponct">Formulaire Ponct.</a>
   <a href="#keyin">Key-in</a>
   <a href="#fonction">Touche F</a>
   <a href="#boite">ToolBox</a>
@@ -170,16 +172,34 @@
 <section id="presentation">
   <h2>1. Pr&eacute;sentation</h2>
   <p>
-    <strong>Interpolation Topo V2</strong> calcule et place l'altitude d'un point situ&eacute; sur la droite
-    reliant deux points d'altitude existants. La macro accepte comme sources d'altitude :
+    <strong>Interpolation Topo V2</strong> propose <strong>deux commandes</strong> pour le calcul et le
+    placement d'altitudes topographiques :
   </p>
+
+  <table>
+    <tr><th>Commande</th><th>Key-in</th><th>Description</th></tr>
+    <tr>
+      <td><strong>Interpolation</strong></td>
+      <td><code>vba run [InterpolationTopoV2]InterpolerPoint</code></td>
+      <td>Interpole l'altitude sur la droite P1&ndash;P2, avec pente transversale, DZ et indicateur de pente</td>
+    </tr>
+    <tr>
+      <td><strong>Interpol. Ponctuelle</strong></td>
+      <td><code>vba run [InterpolationTopoV2]InterpolPonctuelle</code></td>
+      <td>Chemin principal depuis P1 (pente/DZ cumulatifs) + rayonnement lat&eacute;ral depuis chaque point</td>
+    </tr>
+  </table>
+
+  <h3>Sources d'altitude (communes aux deux commandes)</h3>
   <ul>
     <li>des <strong>textes simples</strong> contenant une valeur num&eacute;rique ;</li>
     <li>des <strong>tags</strong> et <strong>cellules contenant des tags</strong> d'altitude ;</li>
     <li>des &eacute;l&eacute;ments provenant de <strong>fichiers de r&eacute;f&eacute;rence</strong> attach&eacute;s
         (les coordonn&eacute;es sont converties automatiquement dans le rep&egrave;re du mod&egrave;le actif).</li>
   </ul>
-  <p>Elle cr&eacute;e :</p>
+
+  <h3>Interpolation (P1&ndash;P2)</h3>
+  <p>Calcule et place l'altitude d'un point sur la droite reliant deux points existants. Elle cr&eacute;e :</p>
   <ul>
     <li>un <strong>texte altitude</strong> reprenant automatiquement la mise en forme
         (police, taille, niveau, couleur) du texte du point&nbsp;1 pris comme mod&egrave;le ;</li>
@@ -190,18 +210,33 @@
   </ul>
   <p>Pendant le placement, un <strong>aper&ccedil;u dynamique</strong> affiche :</p>
   <ul>
-    <li>la ligne support P1&ndash;P2 (verte, &eacute;tendue de 20&nbsp;% de part et d'autre) ;</li>
+    <li>la ligne support P1&ndash;P2 (&eacute;tendue de 20&nbsp;% de part et d'autre) ;</li>
     <li>des croix sur P1 et P2 ;</li>
-    <li>le cercle et le texte altitude provisoires qui suivent le curseur ;</li>
+    <li>le <strong>Z sur la droite</strong> (en vert, au point projet&eacute;) et le <strong>Z final</strong>
+        (avec pente/DZ appliqu&eacute;s, au point d&eacute;port&eacute;) ;</li>
     <li>dans la barre d'&eacute;tat : l'altitude interpol&eacute;e <code>Z</code>, l'abscisse <code>t</code>
         (0&nbsp;=&nbsp;P1, 1&nbsp;=&nbsp;P2), la <strong>pente en&nbsp;%</strong> et le
         <strong>gisement en gon</strong> (0&nbsp;=&nbsp;nord, sens horaire).</li>
   </ul>
+
+  <h3>Interpolation Ponctuelle (chemin + rayonnement)</h3>
+  <p>Construit un chemin principal depuis P1, puis permet des rayonnements lat&eacute;raux :</p>
+  <ul>
+    <li><strong>P2 optionnel</strong> : s'il est s&eacute;lectionn&eacute;, la pente P1&ndash;P2 est calcul&eacute;e
+        automatiquement ; sinon, saisie manuelle dans le formulaire ;</li>
+    <li><strong>Chemin principal</strong> : ligne verte dynamique, Z = Z pr&eacute;c&eacute;dent + pente &times; distance + DZ ;</li>
+    <li><strong>Rayonnement</strong> : apr&egrave;s chaque point chemin, ligne jaune dynamique
+        avec pente/DZ propres au rayonnement ;</li>
+    <li><strong>Retour au chemin</strong> : clic droit en mode rayonnement reprend le chemin
+        depuis le dernier point cr&eacute;&eacute;.</li>
+  </ul>
+
   <p>Les &eacute;l&eacute;ments cr&eacute;&eacute;s sont positionn&eacute;s en <strong>3D</strong> &agrave; l'altitude
-     interpol&eacute;e (coordonn&eacute;e Z).</p>
+     calcul&eacute;e (coordonn&eacute;e Z). L'aper&ccedil;u dynamique affiche 3 d&eacute;cimales pour le
+     contr&ocirc;le visuel ; le nombre de d&eacute;cimales des points cr&eacute;&eacute;s est configurable (0&ndash;6).</p>
   <div class="astuce">
     &#9989; Le s&eacute;parateur d&eacute;cimal (point ou virgule) et le nombre de d&eacute;cimales du texte cr&eacute;&eacute;
-    sont repris automatiquement des textes source.
+    sont repris automatiquement des textes source (modifiables dans le formulaire).
   </div>
 </section>
 
@@ -236,22 +271,30 @@
     <li>Dans l'&eacute;diteur VBA : <strong>Fichier &gt; Importer un fichier</strong> (<kbd>Ctrl</kbd>+<kbd>M</kbd>)</li>
     <li>Importez, un par un, depuis le dossier <code>src\</code> :
       <table>
-        <tr><th>Fichier</th><th>Type attendu apr&egrave;s import</th></tr>
-        <tr><td><code>InterpolationTopoV2.bas</code></td><td>Modules</td></tr>
-        <tr><td><code>CMstSettings.cls</code></td><td>Modules de classe</td></tr>
-        <tr><td><code>CSymboTexte.cls</code></td><td>Modules de classe</td></tr>
-        <tr><td><code>CSymboCercle.cls</code></td><td>Modules de classe</td></tr>
-        <tr><td><code>CPointRef.cls</code></td><td>Modules de classe</td></tr>
-        <tr><td><code>CInterpolation.cls</code></td><td>Modules de classe</td></tr>
-        <tr><td><code>CMoteurGraphique.cls</code></td><td>Modules de classe</td></tr>
-        <tr><td><code>CAltitudeSelection.cls</code></td><td>Modules de classe</td></tr>
-        <tr><td><code>CSelectP1.cls</code></td><td>Modules de classe</td></tr>
-        <tr><td><code>CSnapP1.cls</code></td><td>Modules de classe</td></tr>
-        <tr><td><code>CSelectP2.cls</code></td><td>Modules de classe</td></tr>
-        <tr><td><code>CSnapP2.cls</code></td><td>Modules de classe</td></tr>
-        <tr><td><code>CPlacerPoint.cls</code></td><td>Modules de classe</td></tr>
-        <tr><td><code>CPlacerPente.cls</code></td><td>Modules de classe</td></tr>
-        <tr><td><code>frmInterpolation.frm</code> + <code>.frx</code></td><td>UserForm</td></tr>
+        <tr><th>Fichier</th><th>Type attendu apr&egrave;s import</th><th>Fonction</th></tr>
+        <tr><td><code>InterpolationTopoV2.bas</code></td><td>Modules</td><td>Interpolation</td></tr>
+        <tr><td><code>InterpolPonctuelle.bas</code></td><td>Modules</td><td>Ponctuelle</td></tr>
+        <tr><td><code>CMstSettings.cls</code></td><td>Modules de classe</td><td>Commun</td></tr>
+        <tr><td><code>CSymboTexte.cls</code></td><td>Modules de classe</td><td>Commun</td></tr>
+        <tr><td><code>CSymboCercle.cls</code></td><td>Modules de classe</td><td>Commun</td></tr>
+        <tr><td><code>CPointRef.cls</code></td><td>Modules de classe</td><td>Commun</td></tr>
+        <tr><td><code>CInterpolation.cls</code></td><td>Modules de classe</td><td>Commun</td></tr>
+        <tr><td><code>CMoteurGraphique.cls</code></td><td>Modules de classe</td><td>Commun</td></tr>
+        <tr><td><code>CAltitudeSelection.cls</code></td><td>Modules de classe</td><td>Commun</td></tr>
+        <tr><td><code>CSelectP1.cls</code></td><td>Modules de classe</td><td>Interpolation</td></tr>
+        <tr><td><code>CSnapP1.cls</code></td><td>Modules de classe</td><td>Interpolation</td></tr>
+        <tr><td><code>CSelectP2.cls</code></td><td>Modules de classe</td><td>Interpolation</td></tr>
+        <tr><td><code>CSnapP2.cls</code></td><td>Modules de classe</td><td>Interpolation</td></tr>
+        <tr><td><code>CPlacerPoint.cls</code></td><td>Modules de classe</td><td>Interpolation</td></tr>
+        <tr><td><code>CPlacerChemin.cls</code></td><td>Modules de classe</td><td>Interpolation</td></tr>
+        <tr><td><code>CPlacerPente.cls</code></td><td>Modules de classe</td><td>Interpolation</td></tr>
+        <tr><td><code>CSelectP1Ponct.cls</code></td><td>Modules de classe</td><td>Ponctuelle</td></tr>
+        <tr><td><code>CSnapP1Ponct.cls</code></td><td>Modules de classe</td><td>Ponctuelle</td></tr>
+        <tr><td><code>CSelectP2Ponct.cls</code></td><td>Modules de classe</td><td>Ponctuelle</td></tr>
+        <tr><td><code>CSnapP2Ponct.cls</code></td><td>Modules de classe</td><td>Ponctuelle</td></tr>
+        <tr><td><code>CPlacerPonctuel.cls</code></td><td>Modules de classe</td><td>Ponctuelle</td></tr>
+        <tr><td><code>frmInterpolation.frm</code> + <code>.frx</code></td><td>UserForm</td><td>Interpolation</td></tr>
+        <tr><td><code>frmInterpolPonct.frm</code> + <code>.frx</code></td><td>UserForm</td><td>Ponctuelle</td></tr>
       </table>
     </li>
     <li><strong>D&eacute;bogage &gt; Compiler</strong> : aucune erreur ne doit appara&icirc;tre</li>
@@ -265,8 +308,9 @@
     convertissez-les en fins de ligne Windows (CRLF) puis r&eacute;importez.
   </div>
   <div class="attention">
-    &#9888;&#65039; Le fichier <code>frmInterpolation.frx</code> doit &ecirc;tre dans le <strong>m&ecirc;me dossier</strong>
-    que le <code>.frm</code> lors de l'import. Sans lui, l'import &eacute;choue avec
+    &#9888;&#65039; Les fichiers <code>.frx</code> (<code>frmInterpolation.frx</code> et
+    <code>frmInterpolPonct.frx</code>) doivent &ecirc;tre dans le <strong>m&ecirc;me dossier</strong>
+    que leur <code>.frm</code> respectif lors de l'import. Sans eux, l'import &eacute;choue avec
     &laquo; Impossible de charger... &raquo;.
   </div>
 
@@ -279,7 +323,7 @@
 
 <!-- ==================== FORMULAIRE ==================== -->
 <section id="formulaire">
-  <h2>3. Formulaire (Tool Settings)</h2>
+  <h2>3. Formulaire Interpolation (Tool Settings)</h2>
   <p>
     Au lancement de la commande, le formulaire <strong>Interpolation Topo</strong> s'ouvre
     et reste visible pendant toute la dur&eacute;e de la commande. Les param&egrave;tres sont
@@ -432,13 +476,113 @@
   </div>
 </section>
 
+<!-- ==================== PONCTUELLE ==================== -->
+<section id="ponctuelle">
+  <h2>6. Utilisation &mdash; Interpolation Ponctuelle</h2>
+  <p>
+    La commande <strong>Interpol. Ponctuelle</strong> permet de construire un <strong>chemin
+    principal</strong> depuis un point de d&eacute;part P1, puis de placer des <strong>points de
+    rayonnement</strong> lat&eacute;raux depuis chaque point du chemin.
+  </p>
+
+  <div class="etapes">
+    <div class="etape"><span class="num">1</span><br>S&eacute;lection<br><strong>P1</strong></div>
+    <div class="etape"><span class="num">2</span><br>Snap<br><strong>P1</strong></div>
+    <div class="etape"><span class="num">3</span><br>P2 optionnel<br><small>ou pente manuelle</small></div>
+    <div class="etape"><span class="num">4</span><br>Chemin<br><small>ligne verte</small></div>
+    <div class="etape"><span class="num">5</span><br>Rayonnement<br><small>ligne jaune</small></div>
+  </div>
+
+  <ol>
+    <li><strong>Lancement</strong> : le formulaire <strong>Interpol. Ponctuelle</strong> s'ouvre.
+        R&eacute;glez les param&egrave;tres chemin et rayonnement avant ou pendant l'utilisation.</li>
+    <li><strong>S&eacute;lection P1</strong> : cliquez pr&egrave;s d'un texte/tag/cellule d'altitude.
+        Ce texte sert de mod&egrave;le de mise en forme. <strong>Reset</strong> = quitter.</li>
+    <li><strong>Snap terrain P1</strong> : cliquez sur le point terrain r&eacute;el.
+        <strong>Reset</strong> = garder l'ancrage du texte.</li>
+    <li><strong>P2 optionnel</strong> :
+      <ul>
+        <li><strong>Data</strong> = s&eacute;lectionner un texte P2 (la pente P1&ndash;P2 est calcul&eacute;e
+            automatiquement et report&eacute;e comme pente du chemin principal)</li>
+        <li><strong>Reset</strong> = sauter P2, utiliser la pente saisie manuellement dans le formulaire,
+            d&eacute;marrer le chemin directement</li>
+      </ul>
+    </li>
+    <li><strong>Mode Chemin</strong> (ligne <span style="color:#27ae60;font-weight:bold">verte</span>) :
+      <ul>
+        <li>Une ligne dynamique relie le dernier point au curseur</li>
+        <li>L'altitude affich&eacute;e = Z pr&eacute;c&eacute;dent + pente &times; distance + DZ</li>
+        <li><strong>Data</strong> = cr&eacute;er le point (cercle + texte)</li>
+        <li>Apr&egrave;s cr&eacute;ation, passage automatique en mode <strong>Rayonnement</strong></li>
+        <li><strong>Reset</strong> = nouvelle s&eacute;lection P1</li>
+      </ul>
+    </li>
+    <li><strong>Mode Rayonnement</strong> (ligne <span style="color:#f1c40f;font-weight:bold">jaune</span>) :
+      <ul>
+        <li>Une ligne dynamique relie le point chemin (centre) au curseur</li>
+        <li>L'altitude = Z du centre + pente rayon &times; distance + DZ rayon</li>
+        <li><strong>Data</strong> = cr&eacute;er un point rayon (r&eacute;p&eacute;table : autant de rayons que souhait&eacute;)</li>
+        <li><strong>Reset</strong> = terminer le rayonnement, <strong>repartir en chemin</strong>
+            depuis le dernier point chemin cr&eacute;&eacute;</li>
+      </ul>
+    </li>
+  </ol>
+
+  <div class="astuce">
+    &#9989; Pour les cellules/tags int&eacute;gr&eacute;s (source P1), le texte est plac&eacute; automatiquement
+    dans la cellule &mdash; les &eacute;tapes de placement libre du texte sont saut&eacute;es.
+  </div>
+  <div class="astuce">
+    &#9989; L'aper&ccedil;u dynamique affiche <strong>3 d&eacute;cimales</strong> pour le contr&ocirc;le visuel.
+    Les points cr&eacute;&eacute;s utilisent le nombre de d&eacute;cimales configur&eacute; dans le formulaire.
+  </div>
+</section>
+
+<!-- ==================== FORMULAIRE PONCTUELLE ==================== -->
+<section id="formulaire-ponct">
+  <h2>7. Formulaire Interpol. Ponctuelle</h2>
+  <p>
+    Au lancement de la commande Ponctuelle, le formulaire <strong>Interpol. Ponctuelle</strong>
+    s'ouvre. Les param&egrave;tres sont modifiables &agrave; tout moment.
+  </p>
+
+  <h3>Chemin principal</h3>
+  <ul>
+    <li><strong>Pente (%)</strong> : cocher la case pour activer. Valeur cumulative appliqu&eacute;e
+        proportionnellement &agrave; la distance parcourue. Bouton <strong>+/-</strong> pour inverser</li>
+    <li><strong>DZ</strong> : cocher la case pour activer. D&eacute;calage fixe ajout&eacute; &agrave; chaque point</li>
+    <li>Si P2 est s&eacute;lectionn&eacute;, la pente P1&ndash;P2 est calcul&eacute;e automatiquement
+        et report&eacute;e ici</li>
+  </ul>
+
+  <h3>Rayonnement</h3>
+  <ul>
+    <li><strong>Pente (%)</strong> : pente propre au rayonnement (ind&eacute;pendante du chemin).
+        Bouton <strong>+/-</strong> pour inverser</li>
+    <li><strong>DZ</strong> : d&eacute;calage fixe propre au rayonnement</li>
+  </ul>
+
+  <h3>D&eacute;cimales</h3>
+  <ul>
+    <li>Nombre de d&eacute;cimales (0&ndash;6) pour les points cr&eacute;&eacute;s, <strong>commun</strong>
+        au chemin et au rayonnement</li>
+  </ul>
+
+  <h3>Cercle / Texte altitude / &Eacute;tat</h3>
+  <p>Identiques &agrave; la commande Interpolation (voir &sect;&nbsp;3).</p>
+</section>
+
 <!-- ==================== KEY-IN ==================== -->
 <section id="keyin">
-  <h2>6. Lancement par key-in</h2>
+  <h2>8. Lancement par key-in</h2>
   <ol>
     <li>Ouvrez la fen&ecirc;tre de saisie : <strong>Utilitaires &gt; Saisie au clavier</strong> (Key-in)</li>
-    <li>Tapez :
-      <pre>vba run [InterpolationTopoV2]InterpolerPoint</pre>
+    <li>Tapez l'un des key-in suivants :
+      <table>
+        <tr><th>Commande</th><th>Key-in</th></tr>
+        <tr><td>Interpolation</td><td><code>vba run [InterpolationTopoV2]InterpolerPoint</code></td></tr>
+        <tr><td>Interpol. Ponctuelle</td><td><code>vba run [InterpolationTopoV2]InterpolPonctuelle</code></td></tr>
+      </table>
     </li>
     <li>Validez par <kbd>Entr&eacute;e</kbd></li>
   </ol>
@@ -450,23 +594,27 @@
 
 <!-- ==================== TOUCHE DE FONCTION ==================== -->
 <section id="fonction">
-  <h2>7. Lancement par touche de fonction</h2>
+  <h2>9. Lancement par touche de fonction</h2>
   <ol>
     <li>Menu <strong>Utilitaires &gt; Touches de fonction</strong></li>
-    <li>S&eacute;lectionnez une touche libre, par exemple <kbd>F6</kbd>
+    <li>S&eacute;lectionnez deux touches libres, par exemple <kbd>F6</kbd> et <kbd>F7</kbd>
         (les combinaisons <kbd>Ctrl</kbd>/<kbd>Alt</kbd>/<kbd>Maj</kbd>+F sont aussi possibles)</li>
-    <li>Dans le champ <strong>Action</strong>, saisissez :
-      <pre>vba run [InterpolationTopoV2]InterpolerPoint</pre>
+    <li>Dans le champ <strong>Action</strong>, saisissez pour chaque touche :
+      <table>
+        <tr><th>Touche</th><th>Key-in</th></tr>
+        <tr><td><kbd>F6</kbd></td><td><code>vba run [InterpolationTopoV2]InterpolerPoint</code></td></tr>
+        <tr><td><kbd>F7</kbd></td><td><code>vba run [InterpolationTopoV2]InterpolPonctuelle</code></td></tr>
+      </table>
     </li>
     <li>Cliquez <strong>OK</strong> &mdash; le menu de touches de fonction est enregistr&eacute;
         (fichier <code>.mnu</code> du workspace)</li>
   </ol>
-  <p>Un appui sur <kbd>F6</kbd> lance d&eacute;sormais directement la commande.</p>
+  <p>Un appui sur <kbd>F6</kbd> lance l'Interpolation, <kbd>F7</kbd> lance l'Interpol. Ponctuelle.</p>
 </section>
 
 <!-- ==================== BOITE A OUTILS ==================== -->
 <section id="boite">
-  <h2>8. Bouton dans une bo&icirc;te &agrave; outils personnalis&eacute;e</h2>
+  <h2>10. Boutons dans une bo&icirc;te &agrave; outils personnalis&eacute;e</h2>
   <p>La m&eacute;thode la plus confortable pour un usage quotidien.
      <em>Proc&eacute;dure test&eacute;e et valid&eacute;e sur V8i SS3 (08.11.09.578).</em></p>
 
@@ -512,15 +660,24 @@
         <strong>New Tool Box</strong>, nommer (ex. <code>MesMacros</code>)</li>
   </ol>
 
-  <h3>&Eacute;tape 5 &mdash; Cr&eacute;er le bouton</h3>
+  <h3>&Eacute;tape 5 &mdash; Cr&eacute;er les boutons</h3>
+  <p>R&eacute;p&eacute;ter l'op&eacute;ration pour chaque commande :</p>
   <ol>
     <li>S&eacute;lectionner la ToolBox, panneau de droite &gt; clic droit &gt;
         <strong>New Tool</strong></li>
-    <li>Remplir :
+    <li>Remplir pour le <strong>premier bouton</strong> :
       <table>
         <tr><th>Propri&eacute;t&eacute;</th><th>Valeur</th></tr>
         <tr><td>Key-in</td><td><code>vba run [InterpolationTopoV2]InterpolerPoint</code></td></tr>
         <tr><td>Balloon text</td><td>Interpoler un point (V2)</td></tr>
+        <tr><td>Icon</td><td>laisser vide ou choisir une ic&ocirc;ne</td></tr>
+      </table>
+    </li>
+    <li>Clic droit &gt; <strong>New Tool</strong> pour le <strong>second bouton</strong> :
+      <table>
+        <tr><th>Propri&eacute;t&eacute;</th><th>Valeur</th></tr>
+        <tr><td>Key-in</td><td><code>vba run [InterpolationTopoV2]InterpolPonctuelle</code></td></tr>
+        <tr><td>Balloon text</td><td>Interpol. Ponctuelle (chemin + rayon)</td></tr>
         <tr><td>Icon</td><td>laisser vide ou choisir une ic&ocirc;ne</td></tr>
       </table>
     </li>
@@ -544,7 +701,7 @@
 
 <!-- ==================== DEPANNAGE ==================== -->
 <section id="depannage">
-  <h2>9. D&eacute;pannage rapide</h2>
+  <h2>11. D&eacute;pannage rapide</h2>
   <table>
     <tr><th>Sympt&ocirc;me</th><th>Cause / rem&egrave;de</th></tr>
     <tr>
@@ -578,9 +735,10 @@
     </tr>
     <tr>
       <td>Import du <code>.frm</code> &eacute;choue</td>
-      <td>Le fichier <code>frmInterpolation.frx</code> doit &ecirc;tre dans le m&ecirc;me dossier
-          que le <code>.frm</code>. En dernier recours : Insertion &gt; UserForm, nommer
-          <code>frmInterpolation</code>, puis coller le code &agrave; partir de
+      <td>Le fichier <code>.frx</code> correspondant doit &ecirc;tre dans le m&ecirc;me dossier
+          que le <code>.frm</code> (<code>frmInterpolation.frx</code> ou
+          <code>frmInterpolPonct.frx</code>). En dernier recours : Insertion &gt; UserForm,
+          nommer le formulaire, puis coller le code &agrave; partir de
           <code>Option Explicit</code> &mdash; les contr&ocirc;les sont cr&eacute;&eacute;s au runtime.</td>
     </tr>
     <tr>
