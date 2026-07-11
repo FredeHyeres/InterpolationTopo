@@ -88,8 +88,7 @@ Private Sub IPrimitiveCommandEvents_Dynamics(Point As Point3d, ByVal View As Vie
 
         DessinCroixLocal DrawMode, oPtB, dTailleCroix
 
-        sAltI = g_oCalc.FormatAltitude(dZi, g_oSettings.oTexte.Decimales, _
-                                        g_oSettings.oTexte.SepDecimal)
+        sAltI = g_oCalc.FormatAltitude(dZi, 3, g_oSettings.oTexte.SepDecimal)
         DessinTexteProvLocal DrawMode, oPtB, sAltI
 
         dPrevX = m_dPtsX(i): dPrevY = m_dPtsY(i): dPrevZ = dZi
@@ -123,8 +122,7 @@ Private Sub IPrimitiveCommandEvents_Dynamics(Point As Point3d, ByVal View As Vie
     oCercle.Color = g_oSettings.oCercle.Couleur
     oCercle.Redraw DrawMode
 
-    sAltCur = g_oCalc.FormatAltitude(dZCursor, g_oSettings.oTexte.Decimales, _
-                                      g_oSettings.oTexte.SepDecimal)
+    sAltCur = g_oCalc.FormatAltitude(dZCursor, 3, g_oSettings.oTexte.SepDecimal)
     DessinTexteProvLocal DrawMode, oPtCur, sAltCur
 
     ' --- Barre d'etat ---

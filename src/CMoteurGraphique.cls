@@ -106,7 +106,7 @@ Sub DessinTexteLibre(ByVal DrawMode As MsdDrawingMode, _
                      oPtTexte As Point3d, dZ As Double, _
                      oSettings As CMstSettings, oCalc As CInterpolation)
     Dim sAlt As String
-    sAlt = oCalc.FormatAltitude(dZ, oSettings.oTexte.Decimales, oSettings.oTexte.SepDecimal)
+    sAlt = oCalc.FormatAltitude(dZ, 3, oSettings.oTexte.SepDecimal)
 
     Dim oRot As Matrix3d
     oRot = Matrix3dIdentity()
@@ -421,8 +421,7 @@ Sub DessinDynamique(ByVal DrawMode As MsdDrawingMode, _
 
     ' Texte altitude provisoire (meme position que la creation definitive)
     Dim sAlt As String
-    sAlt = oCalc.FormatAltitude(dZInterp, oSettings.oTexte.Decimales, _
-                                oSettings.oTexte.SepDecimal)
+    sAlt = oCalc.FormatAltitude(dZInterp, 3, oSettings.oTexte.SepDecimal)
     Dim oRot As Matrix3d
     oRot = Matrix3dIdentity()
     On Error Resume Next
@@ -446,7 +445,7 @@ End Sub
 Sub DessinDecalage(ByVal DrawMode As MsdDrawingMode, _
                    oP1 As CPointRef, oP2 As CPointRef, _
                    oProj As Point3d, oPtDecale As Point3d, _
-                   dZInterp As Double, _
+                   dZFinal As Double, dZSurDroite As Double, _
                    oSettings As CMstSettings, oCalc As CInterpolation)
 
     Dim oPt1 As Point3d, oPt2 As Point3d
@@ -486,25 +485,39 @@ Sub DessinDecalage(ByVal DrawMode As MsdDrawingMode, _
     oCercle.Color = oSettings.oCercle.Couleur
     oCercle.Redraw DrawMode
 
-    ' Texte altitude provisoire au point decale
-    Dim sAlt As String
-    sAlt = oCalc.FormatAltitude(dZInterp, oSettings.oTexte.Decimales, _
-                                oSettings.oTexte.SepDecimal)
     Dim oRot As Matrix3d
     oRot = Matrix3dIdentity()
     On Error Resume Next
     oRot = oSettings.oTextModele.Rotation
     On Error GoTo 0
+
+    ' Texte altitude au point decale (Z final)
+    Dim sAltFinal As String
+    sAltFinal = oCalc.FormatAltitude(dZFinal, 3, oSettings.oTexte.SepDecimal)
     Dim oTxt As TextElement
     On Error Resume Next
-    Set oTxt = CreateTextElement1(oSettings.oTextModele, sAlt, oPtDecale, oRot)
+    Set oTxt = CreateTextElement1(oSettings.oTextModele, sAltFinal, oPtDecale, oRot)
     If oTxt Is Nothing Then
         Err.Clear
-        Set oTxt = CreateTextElement1(Nothing, sAlt, oPtDecale, oRot)
+        Set oTxt = CreateTextElement1(Nothing, sAltFinal, oPtDecale, oRot)
     End If
     On Error GoTo 0
     If Not oSettings.oTexte.CommeModele Then oTxt.Color = oSettings.oTexte.Couleur
     oTxt.Redraw DrawMode
+
+    ' Texte altitude au point projete sur la droite (Z interpole)
+    Dim sAltDroite As String
+    sAltDroite = oCalc.FormatAltitude(dZSurDroite, 3, oSettings.oTexte.SepDecimal)
+    Dim oTxtDroite As TextElement
+    On Error Resume Next
+    Set oTxtDroite = CreateTextElement1(oSettings.oTextModele, sAltDroite, oProj, oRot)
+    If oTxtDroite Is Nothing Then
+        Err.Clear
+        Set oTxtDroite = CreateTextElement1(Nothing, sAltDroite, oProj, oRot)
+    End If
+    On Error GoTo 0
+    oTxtDroite.Color = 2
+    oTxtDroite.Redraw DrawMode
 End Sub
 
 '==============================================================================

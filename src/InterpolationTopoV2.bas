@@ -66,6 +66,9 @@ Sub InterpolerPoint()
     ' Afficher le formulaire modeless (Tool Settings)
     ' Le formulaire lit g_oSettings pour pre-remplir les champs
     frmInterpolation.Initialiser g_oSettings
+    frmInterpolation.StartUpPosition = 0
+    frmInterpolation.Left = Application.Width * 0.6
+    frmInterpolation.Top = Application.Height * 0.05
     frmInterpolation.Show vbModeless
 
     ' Demarrer la commande

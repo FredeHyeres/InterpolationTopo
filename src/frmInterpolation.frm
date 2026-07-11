@@ -6,7 +6,7 @@ Begin {C62A69F0-16DC-11CE-9E98-00AA00574A4F} frmInterpolation
    ClientTop       =   390
    ClientWidth     =   4710
    OleObjectBlob   =   "frmInterpolation.frx":0000
-   StartUpPosition =   1  'CenterOwner
+   StartUpPosition =   0  'Manual
 End
 Attribute VB_Name = "frmInterpolation"
 Attribute VB_GlobalNameSpace = False
@@ -67,6 +67,8 @@ Private WithEvents txtCouleurTexte As MSForms.TextBox
 Attribute txtCouleurTexte.VB_VarHelpID = -1
 Private WithEvents cmbNiveauTexte As MSForms.ComboBox
 Attribute cmbNiveauTexte.VB_VarHelpID = -1
+Private WithEvents txtDecimales As MSForms.TextBox
+Attribute txtDecimales.VB_VarHelpID = -1
 Private WithEvents chkPente As MSForms.CheckBox
 Attribute chkPente.VB_VarHelpID = -1
 Private WithEvents txtPente As MSForms.TextBox
@@ -117,7 +119,7 @@ Private Sub ConstruireControles()
 
     Me.Caption = "Interpolation Topo"
     Me.Width = 212
-    Me.Height = 602
+    Me.Height = 652
 
     ' --- Cadre Cercle -------------------------------------------------------
     Dim fraCercle As MSForms.Frame
@@ -151,7 +153,7 @@ Private Sub ConstruireControles()
     Set fraTexte = Me.Controls.Add("Forms.Frame.1", "fraTexte")
     fraTexte.Caption = "Texte altitude si alti est un texte"
     fraTexte.Left = 6: fraTexte.Top = 138
-    fraTexte.Width = 192: fraTexte.Height = 104
+    fraTexte.Width = 192: fraTexte.Height = 126
 
     Set chkTexteModele = fraTexte.Controls.Add("Forms.CheckBox.1", "chkTexteModele")
     chkTexteModele.Caption = "Memes attributs que le texte P1"
@@ -169,11 +171,17 @@ Private Sub ConstruireControles()
     cmbNiveauTexte.Left = 6: cmbNiveauTexte.Top = 78
     cmbNiveauTexte.Width = 180: cmbNiveauTexte.Height = 16
 
+    CreerLabel fraTexte, "lblDecimales", "Decimales :", 6, 100, 54
+    Set txtDecimales = fraTexte.Controls.Add("Forms.TextBox.1", "txtDecimales")
+    txtDecimales.Left = 62: txtDecimales.Top = 98
+    txtDecimales.Width = 24: txtDecimales.Height = 16
+    txtDecimales.Text = "2"
+
     ' --- Cadre Pente decalage -----------------------------------------------
     Dim fraPente As MSForms.Frame
     Set fraPente = Me.Controls.Add("Forms.Frame.1", "fraPente")
     fraPente.Caption = "Pente decalage"
-    fraPente.Left = 6: fraPente.Top = 248
+    fraPente.Left = 6: fraPente.Top = 270
     fraPente.Width = 192: fraPente.Height = 96
 
     Set chkPente = fraPente.Controls.Add("Forms.CheckBox.1", "chkPente")
@@ -212,7 +220,7 @@ Private Sub ConstruireControles()
     Dim fraIndPente As MSForms.Frame
     Set fraIndPente = Me.Controls.Add("Forms.Frame.1", "fraIndPente")
     fraIndPente.Caption = "Indicateur pente"
-    fraIndPente.Left = 6: fraIndPente.Top = 350
+    fraIndPente.Left = 6: fraIndPente.Top = 372
     fraIndPente.Width = 192: fraIndPente.Height = 90
 
     Set chkPentePerso = fraIndPente.Controls.Add("Forms.CheckBox.1", "chkPentePerso")
@@ -259,7 +267,7 @@ Private Sub ConstruireControles()
     Dim fraEtat As MSForms.Frame
     Set fraEtat = Me.Controls.Add("Forms.Frame.1", "fraEtat")
     fraEtat.Caption = "Etat"
-    fraEtat.Left = 6: fraEtat.Top = 446
+    fraEtat.Left = 6: fraEtat.Top = 468
     fraEtat.Width = 192: fraEtat.Height = 64
 
     Set lblP1 = CreerLabel(fraEtat, "lblP1", "P1 : -", 6, 12, 180)
@@ -270,8 +278,8 @@ Private Sub ConstruireControles()
     Dim fraActions As MSForms.Frame
     Set fraActions = Me.Controls.Add("Forms.Frame.1", "fraActions")
     fraActions.Caption = "Actions"
-    fraActions.Left = 6: fraActions.Top = 516
-    fraActions.Width = 192: fraActions.Height = 68
+    fraActions.Left = 6: fraActions.Top = 538
+    fraActions.Width = 192: fraActions.Height = 72
 
     Set btnRetourInterp = fraActions.Controls.Add("Forms.CommandButton.1", "btnRetourInterp")
     btnRetourInterp.Caption = "Interpolation"
@@ -324,6 +332,7 @@ Sub Initialiser(oSettings As CMstSettings)
     ' Texte altitude : case + champs selon le mode
     chkTexteModele.Value = m_oSettings.oTexte.CommeModele
     txtCouleurTexte.Text = CStr(m_oSettings.oTexte.Couleur)
+    txtDecimales.Text = CStr(m_oSettings.oTexte.Decimales)
     ActiverChampsTexte
 
     ' Indicateur pente
@@ -403,6 +412,7 @@ Sub RafraichirTexte()
     m_bInit = True
     txtCouleurTexte.Text = CStr(m_oSettings.oTexte.Couleur)
     cmbNiveauTexte.Text = m_oSettings.oTexte.NomNiveau
+    txtDecimales.Text = CStr(m_oSettings.oTexte.Decimales)
     m_bInit = False
 End Sub
 
@@ -518,6 +528,20 @@ Private Sub cmbNiveauTexte_Change()
     If m_bInit Then Exit Sub
     If m_oSettings Is Nothing Then Exit Sub
     m_oSettings.oTexte.NomNiveau = ExtraireNiveau(cmbNiveauTexte.Text)
+End Sub
+
+Private Sub txtDecimales_Change()
+    If m_bInit Then Exit Sub
+    If m_oSettings Is Nothing Then Exit Sub
+    Dim nDec As Integer
+    nDec = CInt(Val(Trim$(txtDecimales.Text)))
+    If nDec >= 0 And nDec <= 6 Then m_oSettings.oTexte.Decimales = nDec
+End Sub
+
+Private Sub txtDecimales_KeyDown(ByVal KeyCode As MSForms.ReturnInteger, _
+                                  ByVal Shift As Integer)
+    If KeyCode = vbKeyReturn And Not m_oSettings Is Nothing Then _
+        txtDecimales.Text = CStr(m_oSettings.oTexte.Decimales)
 End Sub
 
 '------------------------------------------------------------------------------
