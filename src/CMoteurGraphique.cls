@@ -174,7 +174,9 @@ Private Sub ClonerCellule(oSrc As CAltitudeSelection, oProj As Point3d, _
     Dim oVec As Point3d
     oVec.X = oProj.X - oSrc.oCellule.Origin.X
     oVec.Y = oProj.Y - oSrc.oCellule.Origin.Y
-    oVec.Z = 0
+    ' Z aussi : le clone doit etre a l'altitude interpolee, pas a celle du
+    ' point d'origine (oProj.Z porte le Z calcule).
+    oVec.Z = oProj.Z - oSrc.oCellule.Origin.Z
     oCopy.Move oVec
     oCopy.Rewrite
 
@@ -242,7 +244,9 @@ Private Sub ClonerTag(oSrc As CAltitudeSelection, oProj As Point3d, sAlt As Stri
     Dim oVec As Point3d
     oVec.X = oProj.X - oSrc.oTag.Origin.X
     oVec.Y = oProj.Y - oSrc.oTag.Origin.Y
-    oVec.Z = 0
+    ' Z aussi : l'hote clone et son tag doivent etre a l'altitude interpolee,
+    ' pas a celle du point d'origine (oProj.Z porte le Z calcule).
+    oVec.Z = oProj.Z - oSrc.oTag.Origin.Z
 
     ' 2) Copier l'hote et le deplacer
     Dim oCopyHost As Element
@@ -285,7 +289,7 @@ Private Sub ClonerTag(oSrc As CAltitudeSelection, oProj As Point3d, sAlt As Stri
         Dim oVecTag As Point3d
         oVecTag.X = (oOrig.X + oVec.X) - oNewTag.Origin.X
         oVecTag.Y = (oOrig.Y + oVec.Y) - oNewTag.Origin.Y
-        oVecTag.Z = 0
+        oVecTag.Z = (oOrig.Z + oVec.Z) - oNewTag.Origin.Z
         oNewTag.Move oVecTag
 
         ' Reprendre la symbologie et les attributs texte du tag source
@@ -763,7 +767,12 @@ End Function
 Private Sub DirectionP1P2(oP1 As CPointRef, oP2 As CPointRef, _
                            dDirX As Double, dDirY As Double)
     Dim dx As Double, dy As Double, dLen As Double
-    dx = oP2.X - oP1.X: dy = oP2.Y - oP1.Y
+    ' Fleche dans le sens de la descente (du plus haut vers le plus bas)
+    If oP1.Altitude >= oP2.Altitude Then
+        dx = oP2.X - oP1.X: dy = oP2.Y - oP1.Y
+    Else
+        dx = oP1.X - oP2.X: dy = oP1.Y - oP2.Y
+    End If
     dLen = Sqr(dx * dx + dy * dy)
     If dLen < 0.0000001 Then
         dDirX = 1#: dDirY = 0#
