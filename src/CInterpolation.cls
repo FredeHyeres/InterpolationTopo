@@ -203,13 +203,11 @@ Function FormatAltitude(dZ As Double, nDec As Integer, sSep As String) As String
 End Function
 
 '------------------------------------------------------------------------------
-' Formate une pente en pourcentage avec signe (+montee / -descente).
+' Formate une pente en pourcentage en valeur absolue (la fleche indique le sens).
 Function FormatPente(dPente As Double, sSep As String) As String
     Dim sRes As String
     sRes = Format$(Abs(dPente), "0.00")
     sRes = Replace(sRes, ",", ".")
     If sSep = "," Then sRes = Replace(sRes, ".", ",")
-    Dim sSign As String
-    If dPente >= 0 Then sSign = "+" Else sSign = "-"
-    FormatPente = sSign & sRes & "%"
+    FormatPente = sRes & "%"
 End Function

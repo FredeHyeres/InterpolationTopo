@@ -54,6 +54,9 @@ Private WithEvents chkRayonDZ As MSForms.CheckBox
 Attribute chkRayonDZ.VB_VarHelpID = -1
 Private WithEvents txtRayonDZ As MSForms.TextBox
 Attribute txtRayonDZ.VB_VarHelpID = -1
+' --- Rayonnement indicateur pente ---
+Private WithEvents chkRayonIndPente As MSForms.CheckBox
+Attribute chkRayonIndPente.VB_VarHelpID = -1
 ' --- Decimales ---
 Private WithEvents txtDecimales As MSForms.TextBox
 Attribute txtDecimales.VB_VarHelpID = -1
@@ -89,7 +92,7 @@ Private Sub ConstruireControles()
 
     Me.Caption = "Interpol. Ponctuelle"
     Me.Width = 212
-    Me.Height = 480
+    Me.Height = 496
 
     Dim dY As Double
     dY = 6
@@ -137,7 +140,7 @@ Private Sub ConstruireControles()
     Set fraRayon = Me.Controls.Add("Forms.Frame.1", "fraRayon")
     fraRayon.Caption = "Rayonnement (Jaune)"
     fraRayon.Left = 6: fraRayon.Top = dY
-    fraRayon.Width = 192: fraRayon.Height = 56
+    fraRayon.Width = 192: fraRayon.Height = 72
 
     Set chkRayonPente = fraRayon.Controls.Add("Forms.CheckBox.1", "chkRayonPente")
     chkRayonPente.Caption = "Pente (%)"
@@ -165,7 +168,12 @@ Private Sub ConstruireControles()
     txtRayonDZ.Width = 48: txtRayonDZ.Height = 16
     txtRayonDZ.Text = "0": txtRayonDZ.Enabled = False
 
-    dY = dY + 62
+    Set chkRayonIndPente = fraRayon.Controls.Add("Forms.CheckBox.1", "chkRayonIndPente")
+    chkRayonIndPente.Caption = "Pente + fleche"
+    chkRayonIndPente.Left = 6: chkRayonIndPente.Top = 52
+    chkRayonIndPente.Width = 100: chkRayonIndPente.Height = 14
+
+    dY = dY + 78
 
     ' --- Decimales ------------------------------------------------------------
     Dim fraDec As MSForms.Frame
@@ -278,6 +286,7 @@ Sub Initialiser(oSettings As CMstSettings)
     chkRayonDZ.Value = m_oSettings.oRayon.DZActive
     txtRayonDZ.Text = Format$(m_oSettings.oRayon.DZ, "0.00")
     txtRayonDZ.Enabled = m_oSettings.oRayon.DZActive
+    chkRayonIndPente.Value = m_oSettings.bRayonIndicPente
 
     ' Decimales
     txtDecimales.Text = CStr(m_oSettings.nPonctDecimales)
@@ -446,6 +455,12 @@ Private Sub txtRayonDZ_KeyDown(ByVal KeyCode As MSForms.ReturnInteger, _
                                 ByVal Shift As Integer)
     If KeyCode = vbKeyReturn And Not m_oSettings Is Nothing Then _
         txtRayonDZ.Text = Format$(m_oSettings.oRayon.DZ, "0.00")
+End Sub
+
+Private Sub chkRayonIndPente_Change()
+    If m_bInit Then Exit Sub
+    If m_oSettings Is Nothing Then Exit Sub
+    m_oSettings.bRayonIndicPente = (chkRayonIndPente.Value = True)
 End Sub
 
 '==============================================================================

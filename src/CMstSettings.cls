@@ -34,6 +34,7 @@ Public oTextModele      As TextElement      ' element P1 : modele pour CreateTex
 Public oTagModele       As TagElement       ' tag P1 : modele quand la source est un tag
 Public dModeleHauteur   As Double           ' hauteur du texte source (0 = non defini)
 Public nPonctDecimales  As Integer          ' ponctuelle : decimales des points crees (chemin + rayon)
+Public bRayonIndicPente As Boolean          ' ponctuelle : placer pente+fleche apres chaque rayon
 
 '------------------------------------------------------------------------------
 Sub Init()

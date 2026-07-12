@@ -19,7 +19,10 @@ Attribute VB_Exposed = False
 '   Data  = creer un point rayon (Z = centre Z + pente*dist + DZ rayon)
 '   Reset = terminer rayonnement, repartir en chemin depuis ce point
 ' Etape 4 (TEXTE RAYON) : placement libre du texte altitude rayon
-'   Data  = poser le texte, revenir en rayonnement
+'   Data  = poser le texte, revenir en rayonnement (ou etape 5)
+' Etape 5 (PENTE RAYON) : placement pente + fleche du rayon
+'   Data  = placer l'indicateur, revenir en rayonnement
+'   Reset = sauter l'indicateur, revenir en rayonnement
 '
 ' Pour les cellules/tags, les etapes texte (2 et 4) sont sautees.
 '==============================================================================
@@ -27,7 +30,7 @@ Option Explicit
 
 Implements IPrimitiveCommandEvents
 
-Private m_nEtape        As Integer      ' 1=chemin, 2=texte chemin, 3=rayon, 4=texte rayon
+Private m_nEtape        As Integer      ' 1..5
 Private m_dLastX        As Double       ' position du dernier point chemin (X)
 Private m_dLastY        As Double       ' position du dernier point chemin (Y)
 Private m_dLastZ        As Double       ' altitude du dernier point chemin
@@ -35,6 +38,9 @@ Private m_dCentreX      As Double       ' centre rayonnement (X) = dernier point
 Private m_dCentreY      As Double       ' centre rayonnement (Y)
 Private m_dCentreZ      As Double       ' centre rayonnement (Z)
 Private m_dZFinal       As Double       ' altitude figee pour le placement texte
+Private m_dRayonX       As Double       ' position du dernier rayon (X)
+Private m_dRayonY       As Double       ' position du dernier rayon (Y)
+Private m_dRayonZ       As Double       ' altitude du dernier rayon
 
 Private Sub IPrimitiveCommandEvents_Start()
     ShowCommand "Interpol. Ponctuelle"
@@ -74,6 +80,14 @@ Private Sub IPrimitiveCommandEvents_Dynamics(Point As Point3d, ByVal View As Vie
         sA4 = g_oCalc.FormatAltitude(m_dZFinal, 3, g_oSettings.oTexte.SepDecimal)
         ShowPrompt "Placez le texte rayon Z=" & sA4 & _
                    "  (Data=poser  Reset=nouv. selection)"
+
+    Case 5
+        Dim oRefC As New CPointRef, oRefR As New CPointRef
+        InitRefPente oRefC, oRefR
+        On Error Resume Next
+        g_oMoteur.DessinPenteDynamique DrawMode, Point, oRefC, oRefR, g_oSettings, g_oCalc
+        On Error GoTo 0
+        ShowPrompt "Placez la pente + fleche  (Data=poser  Reset=sauter)"
     End Select
 End Sub
 
@@ -128,13 +142,21 @@ Private Sub IPrimitiveCommandEvents_DataPoint(Point As Point3d, ByVal View As Vi
         Dim oPtRay As Point3d
         oPtRay.X = Point.X: oPtRay.Y = Point.Y: oPtRay.Z = dZRay
 
+        m_dRayonX = oPtRay.X: m_dRayonY = oPtRay.Y: m_dRayonZ = dZRay
+
         If SourceP1Integree() Then
             g_oMoteur.CreerPointTopo oPtRay, dZRay, g_oSettings, g_oCalc
             Dim sAR1 As String
             sAR1 = g_oCalc.FormatAltitude(dZRay, g_oSettings.nPonctDecimales, _
                                             g_oSettings.oTexte.SepDecimal)
-            ShowPrompt "Rayon cree Z=" & sAR1 & _
-                       "  |  Data=autre rayon  Reset=continuer chemin"
+            If g_oSettings.bRayonIndicPente Then
+                ShowPrompt "Rayon Z=" & sAR1 & _
+                           "  |  Placez la pente + fleche  (Data=poser  Reset=sauter)"
+                m_nEtape = 5
+            Else
+                ShowPrompt "Rayon cree Z=" & sAR1 & _
+                           "  |  Data=autre rayon  Reset=continuer chemin"
+            End If
         Else
             g_oMoteur.CreerCercleSeul oPtRay, g_oSettings
             m_dZFinal = dZRay
@@ -150,11 +172,24 @@ Private Sub IPrimitiveCommandEvents_DataPoint(Point As Point3d, ByVal View As Vi
         ' --- Poser le texte rayonnement ---
         Point.Z = m_dZFinal
         g_oMoteur.CreerTexteSeul Point, m_dZFinal, g_oSettings, g_oCalc
-        Dim sAR3 As String
-        sAR3 = g_oCalc.FormatAltitude(m_dZFinal, g_oSettings.nPonctDecimales, _
-                                        g_oSettings.oTexte.SepDecimal)
-        ShowPrompt "Rayon cree Z=" & sAR3 & _
-                   "  |  Data=autre rayon  Reset=continuer chemin"
+        If g_oSettings.bRayonIndicPente Then
+            ShowPrompt "Placez la pente + fleche  (Data=poser  Reset=sauter)"
+            m_nEtape = 5
+        Else
+            Dim sAR3 As String
+            sAR3 = g_oCalc.FormatAltitude(m_dZFinal, g_oSettings.nPonctDecimales, _
+                                            g_oSettings.oTexte.SepDecimal)
+            ShowPrompt "Rayon cree Z=" & sAR3 & _
+                       "  |  Data=autre rayon  Reset=continuer chemin"
+            m_nEtape = 3
+        End If
+
+    Case 5
+        ' --- Placer l'indicateur pente + fleche du rayon ---
+        Dim oRefC5 As New CPointRef, oRefR5 As New CPointRef
+        InitRefPente oRefC5, oRefR5
+        g_oMoteur.CreerPente Point, oRefC5, oRefR5, g_oSettings, g_oCalc
+        ShowPrompt "Pente placee  |  Data=autre rayon  Reset=continuer chemin"
         m_nEtape = 3
     End Select
 End Sub
@@ -178,6 +213,11 @@ Private Sub IPrimitiveCommandEvents_Reset()
         m_nEtape = 1
         ShowPrompt "CHEMIN depuis Z=" & Format$(m_dLastZ, "0.000") & _
                    "  Data=placer un point  Reset=nouv. selection"
+
+    Case 5
+        ' Reset en pente = sauter l'indicateur, revenir en rayonnement
+        ShowPrompt "Data=autre rayon  Reset=continuer chemin"
+        m_nEtape = 3
     End Select
 End Sub
 
@@ -328,3 +368,12 @@ Private Function SourceP1Integree() As Boolean
     SourceP1Integree = (Not g_oSelectionP1.oCellule Is Nothing) Or _
                        (Not g_oSelectionP1.oTag Is Nothing)
 End Function
+
+Private Sub InitRefPente(oRefCentre As CPointRef, oRefRayon As CPointRef)
+    oRefCentre.X = m_dCentreX: oRefCentre.Y = m_dCentreY
+    oRefCentre.Z = m_dCentreZ: oRefCentre.Altitude = m_dCentreZ
+    oRefCentre.Valide = True
+    oRefRayon.X = m_dRayonX: oRefRayon.Y = m_dRayonY
+    oRefRayon.Z = m_dRayonZ: oRefRayon.Altitude = m_dRayonZ
+    oRefRayon.Valide = True
+End Sub
