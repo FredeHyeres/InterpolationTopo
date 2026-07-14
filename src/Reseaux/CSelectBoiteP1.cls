@@ -28,6 +28,8 @@ Private Sub IPrimitiveCommandEvents_Start()
 End Sub
 
 Private Sub IPrimitiveCommandEvents_DataPoint(Point As Point3d, ByVal View As View)
+    If g_bDebugClic Then DebugAfficherClicEtDistances Point
+
     Dim oInfo As New CBoiteEPInfo
     If Not TrouverBoiteEPProche(Point, TolReseau(), oInfo) Then
         ShowPrompt "Aucune cellule regard/grille (avec Fe:) a moins de " & _

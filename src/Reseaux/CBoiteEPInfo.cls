@@ -31,6 +31,8 @@ Public Profondeur           As Double
 
 Public oCellule             As CellElement
 Public NomCellule           As String
+Public EstReference         As Boolean       ' True si la cellule vient d'un fichier attache
+Public oAttachment          As Object        ' Attachment source (Nothing si modele actif)
 
 Private m_dX                As Double
 Private m_dY                As Double
@@ -43,6 +45,8 @@ Sub Vider()
     TrouveProfondeur = False:  Profondeur = 0#
     Set oCellule = Nothing
     NomCellule = ""
+    EstReference = False
+    Set oAttachment = Nothing
     m_dX = 0#: m_dY = 0#: m_dZ = 0#
 End Sub
 
@@ -74,6 +78,8 @@ Sub CopierDepuis(oSrc As CBoiteEPInfo)
     TrouveProfondeur = oSrc.TrouveProfondeur: Profondeur = oSrc.Profondeur
     Set oCellule = oSrc.oCellule
     NomCellule = oSrc.NomCellule
+    EstReference = oSrc.EstReference
+    Set oAttachment = oSrc.oAttachment
     Dim oPt As Point3d
     oSrc.CopierOrigine oPt
     DefinirOrigine oPt
