@@ -539,7 +539,8 @@ Sub DessinPenteDynamique(ByVal DrawMode As MsdDrawingMode, _
     dPente = oCalc.PentePct(oP1, oP2)
 
     Dim sPente As String
-    sPente = oCalc.FormatPente(dPente, oSettings.oTexte.SepDecimal)
+    sPente = oCalc.FormatPente(dPente, oSettings.oTexte.SepDecimal, _
+                               oSettings.oIndicPente.Decimales)
 
     Dim dDesX As Double, dDesY As Double
     DirectionP1P2 oP1, oP2, dDesX, dDesY
@@ -624,7 +625,8 @@ Sub CreerPente(oPtPlace As Point3d, _
     dPente = oCalc.PentePct(oP1, oP2)
 
     Dim sPente As String
-    sPente = oCalc.FormatPente(dPente, oSettings.oTexte.SepDecimal)
+    sPente = oCalc.FormatPente(dPente, oSettings.oTexte.SepDecimal, _
+                               oSettings.oIndicPente.Decimales)
 
     Dim dDesX As Double, dDesY As Double
     DirectionP1P2 oP1, oP2, dDesX, dDesY

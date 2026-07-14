@@ -204,9 +204,13 @@ End Function
 
 '------------------------------------------------------------------------------
 ' Formate une pente en pourcentage en valeur absolue (la fleche indique le sens).
-Function FormatPente(dPente As Double, sSep As String) As String
+' nDec facultatif : nombre de decimales, defaut 2 (compat V2 existant).
+Function FormatPente(dPente As Double, sSep As String, _
+                     Optional nDec As Integer = 2) As String
+    Dim sFmt As String
+    If nDec <= 0 Then sFmt = "0" Else sFmt = "0." & String$(nDec, "0")
     Dim sRes As String
-    sRes = Format$(Abs(dPente), "0.00")
+    sRes = Format$(Abs(dPente), sFmt)
     sRes = Replace(sRes, ",", ".")
     If sSep = "," Then sRes = Replace(sRes, ".", ",")
     FormatPente = sRes & "%"

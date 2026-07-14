@@ -24,6 +24,7 @@ Public Couleur          As Long      ' couleur du texte pente (index 0-255)
 Public NomNiveau        As String    ' niveau du texte pente ("" = niveau actif)
 Public FlecheLongueur   As Double    ' longueur de la fleche (u.m.)
 Public FlecheCouleur    As Long      ' couleur de la fleche (index 0-255)
+Public Decimales        As Integer   ' decimales du texte pente (defaut 2)
 
 '------------------------------------------------------------------------------
 Sub InitDefauts()
@@ -34,4 +35,5 @@ Sub InitDefauts()
     NomNiveau = ""
     FlecheLongueur = 1#
     FlecheCouleur = 3
+    Decimales = 2
 End Sub

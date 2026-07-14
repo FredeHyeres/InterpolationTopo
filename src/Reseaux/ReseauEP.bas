@@ -1,22 +1,25 @@
 Attribute VB_Name = "ReseauEP"
 '==============================================================================
-' ReseauEP - Module reseau EU/EP : pente entre deux cellules regard/grille
+' ReseauEP - Module reseau EU/EP : pente entre deux regards/grilles
 '
-' Flux :
-'   1) L'utilisateur clique/snappe le P1 (axe d'un tampon ou d'une grille)
-'      -> scan des CellHeader dans le rayon, on garde la plus proche dont le
-'         parsing T:/Fe:/Prof: renvoie au moins un Fe (fil d'eau).
-'   2) Ligne provisoire P1 -> curseur pendant le choix de P2 (dynamics).
-'   3) Meme detection pour P2. Si P1 et P2 valides :
-'      -> ligne definitive P1-P2 ajoutee au modele
-'      -> calcul pente entre les Fe :  P = (Fe2 - Fe1) / d2D * 100
-'      -> passage a CPlacerPenteReseau qui pose texte pente + fleche
-'         (dans le sens de la descente) au point clique.
+' Flux en 4 clics + 1 (5 etapes) :
+'   1) CSnapBoiteP1   : snap sur l'axe P1 (tampon/grille)  -> g_ptSnapP1
+'   2) CSelectBoiteP1 : clic pres de la cellule qui donne le Fe de P1
+'                       -> g_oBoiteP1 (T:/Fe:/Prof:), g_oRefFeP1 = (P1 snap, Fe)
+'   3) CSnapBoiteP2   : snap sur l'axe P2 (dynamics : ligne P1_snap -> curseur)
+'                       -> g_ptSnapP2
+'   4) CSelectBoiteP2 : clic pres de la cellule Fe de P2
+'                       -> ligne definitive P1_snap -> P2_snap au niveau Fe
+'   5) CPlacerPenteReseau : texte pente + fleche (comme V2 PlacerPente)
+'
+' Le point du trace et du calcul est le point SNAPPE, pas l'origine de la
+' cellule (des reseaux proches peuvent rendre la cellule la plus proche
+' ambigue : le clic explicite sur la cellule leve l'ambiguite).
 '
 ' Le module s'appuie sur g_oCalc/g_oMoteur/g_oSettings deja fournis par
-' InterpolationTopoV2 (fonction InitialiserContexte) : on ne duplique pas les
-' calculs de pente ni le rendu de la fleche. On complete avec g_oBoiteP1/P2
-' (nos donnees reseau) et deux CPointRef alimentes par les Fe pour reutiliser
+' InterpolationTopoV2 (fonction InitialiserContexte) : on ne duplique ni le
+' calcul de pente ni le rendu de la fleche. On complete avec g_oBoiteP1/P2
+' (donnees reseau) et deux CPointRef alimentes par les Fe pour reutiliser
 ' g_oMoteur.CreerPente / DessinPenteDynamique.
 '
 ' LANCEMENT :
@@ -28,10 +31,15 @@ Option Explicit
 Public g_oBoiteP1        As CBoiteEPInfo
 Public g_oBoiteP2        As CBoiteEPInfo
 Public g_oParserBoite    As CBoiteEPParser
-Public g_oRefFeP1        As CPointRef   ' alimente avec Fe pour reutiliser g_oMoteur
+Public g_oRefFeP1        As CPointRef   ' alimente avec (snap XY, Fe) pour g_oMoteur
 Public g_oRefFeP2        As CPointRef
+Public g_dTolReseau      As Double      ' rayon de recherche autour du clic (u.m.),
+                                        ' modifiable via frmReseauEP
 
-Private Const TOL_RESEAU As Double = 5#   ' rayon de recherche par defaut (u.m.)
+' --- Points snappes (positions exactes cliquees, servent au trace) ---
+' Publics dans un .bas : les UDT Point3d sont autorises hors modules de classe.
+Public g_ptSnapP1        As Point3d
+Public g_ptSnapP2        As Point3d
 
 '------------------------------------------------------------------------------
 ' Point d'entree de la commande Pente Reseau EU/EP
@@ -47,8 +55,14 @@ Sub PenteReseauEP()
     Set g_oBoiteP2 = New CBoiteEPInfo
     Set g_oRefFeP1 = New CPointRef
     Set g_oRefFeP2 = New CPointRef
+    g_dTolReseau = 5#
 
-    CommandState.StartPrimitive New CSelectBoiteP1
+    ' Pentes reseau : 1 seule decimale (pour V2 le defaut reste 2)
+    g_oSettings.oIndicPente.Decimales = 1
+
+    AfficherFormulaire frmReseauEP
+
+    CommandState.StartPrimitive New CSnapBoiteP1
 End Sub
 
 '==============================================================================
@@ -107,9 +121,10 @@ Suivant:
 End Function
 
 '------------------------------------------------------------------------------
-' Rayon de recherche par defaut (partage entre les etats snap).
+' Rayon de recherche courant (partage entre les etats, modifiable via UI).
 Public Function TolReseau() As Double
-    TolReseau = TOL_RESEAU
+    If g_dTolReseau <= 0 Then g_dTolReseau = 5#
+    TolReseau = g_dTolReseau
 End Function
 
 '------------------------------------------------------------------------------
@@ -122,12 +137,12 @@ End Function
 '==============================================================================
 
 '------------------------------------------------------------------------------
-' Charge un CPointRef depuis une CBoiteEPInfo : XY = origine cellule,
-' Altitude = Fe (fil d'eau).
-Public Sub AlimenterPointRefFe(oRef As CPointRef, oInfo As CBoiteEPInfo)
-    Dim pt As Point3d
-    oInfo.CopierOrigine pt
-    oRef.DefinirPosition pt
+' Charge un CPointRef avec les coordonnees XY du point snappe et l'altitude Fe
+' de la cellule associee. Le point de reference sert au calcul de pente et au
+' trace : c'est bien le snap qui compte, pas l'origine de la cellule.
+Public Sub AlimenterPointRefFeSnap(oRef As CPointRef, _
+                                    ptSnap As Point3d, oInfo As CBoiteEPInfo)
+    oRef.DefinirPosition ptSnap
     oRef.Altitude = oInfo.ZFilEau
     oRef.Valide = oInfo.TrouveFilEau
 End Sub
