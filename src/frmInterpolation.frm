@@ -93,6 +93,8 @@ Private WithEvents txtPenteCoulFl As MSForms.TextBox
 Attribute txtPenteCoulFl.VB_VarHelpID = -1
 Private WithEvents txtPenteFlLong As MSForms.TextBox
 Attribute txtPenteFlLong.VB_VarHelpID = -1
+Private WithEvents txtPenteDec As MSForms.TextBox
+Attribute txtPenteDec.VB_VarHelpID = -1
 Private WithEvents btnRetourInterp As MSForms.CommandButton
 Attribute btnRetourInterp.VB_VarHelpID = -1
 Private WithEvents btnPlacerPente As MSForms.CommandButton
@@ -239,6 +241,10 @@ Private Sub ConstruireControles()
     txtPenteL.Left = 82: txtPenteL.Top = 28: txtPenteL.Width = 40: txtPenteL.Height = 16
     txtPenteL.Enabled = False
 
+    CreerLabel fraIndPente, "lblPenteDec", "Dec:", 128, 30, 22
+    Set txtPenteDec = fraIndPente.Controls.Add("Forms.TextBox.1", "txtPenteDec")
+    txtPenteDec.Left = 152: txtPenteDec.Top = 28: txtPenteDec.Width = 34: txtPenteDec.Height = 16
+
     CreerLabel fraIndPente, "lblPenteNiv", "Niv:", 6, 50, 18
     Set cmbPenteNiveau = fraIndPente.Controls.Add("Forms.ComboBox.1", "cmbPenteNiveau")
     cmbPenteNiveau.Left = 28: cmbPenteNiveau.Top = 48
@@ -343,6 +349,7 @@ Sub Initialiser(oSettings As CMstSettings)
     txtPenteCoulTxt.Text = CStr(m_oSettings.oIndicPente.Couleur)
     txtPenteCoulFl.Text = CStr(m_oSettings.oIndicPente.FlecheCouleur)
     txtPenteFlLong.Text = Format$(m_oSettings.oIndicPente.FlecheLongueur, "0.00")
+    txtPenteDec.Text = CStr(m_oSettings.oIndicPente.Decimales)
     ActiverChampsPente
 
     ' Pente decalage
@@ -700,6 +707,20 @@ Private Sub txtPenteFlLong_KeyDown(ByVal KeyCode As MSForms.ReturnInteger, _
                                     ByVal Shift As Integer)
     If KeyCode = vbKeyReturn And Not m_oSettings Is Nothing Then _
         txtPenteFlLong.Text = Format$(m_oSettings.oIndicPente.FlecheLongueur, "0.00")
+End Sub
+
+Private Sub txtPenteDec_Change()
+    If m_bInit Then Exit Sub
+    If m_oSettings Is Nothing Then Exit Sub
+    Dim nDec As Integer
+    nDec = CInt(Val(Trim$(txtPenteDec.Text)))
+    If nDec >= 0 And nDec <= 6 Then m_oSettings.oIndicPente.Decimales = nDec
+End Sub
+
+Private Sub txtPenteDec_KeyDown(ByVal KeyCode As MSForms.ReturnInteger, _
+                                 ByVal Shift As Integer)
+    If KeyCode = vbKeyReturn And Not m_oSettings Is Nothing Then _
+        txtPenteDec.Text = CStr(m_oSettings.oIndicPente.Decimales)
 End Sub
 
 '==============================================================================

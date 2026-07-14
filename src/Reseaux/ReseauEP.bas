@@ -41,12 +41,6 @@ Public g_dTolReseau      As Double      ' rayon de recherche autour du clic (u.m
 Public g_ptSnapP1        As Point3d
 Public g_ptSnapP2        As Point3d
 
-' --- Debug : voir Point recu au clic + distances aux cellules ref ---
-Public g_bDebugClic      As Boolean
-
-Sub DebugClicOn():  g_bDebugClic = True:  MsgBox "Debug clic ACTIF - lance PenteReseauEP":  End Sub
-Sub DebugClicOff(): g_bDebugClic = False: MsgBox "Debug clic desactive":                   End Sub
-
 '------------------------------------------------------------------------------
 ' Point d'entree de la commande Pente Reseau EU/EP
 Sub PenteReseauEP()
@@ -286,79 +280,6 @@ Public Function DecrireBoite(oInfo As CBoiteEPInfo) As String
     If oInfo.TrouveProfondeur Then s = s & "  Prof=" & Format$(oInfo.Profondeur, "0.00")
     If oInfo.EstReference Then s = s & "  [ref]"
     DecrireBoite = s
-End Function
-
-'------------------------------------------------------------------------------
-' Debug : affiche Point recu + distance aux 5 cellules ref les plus proches.
-' Appele depuis CSelectBoiteP1.DataPoint quand g_bDebugClic est actif.
-Public Sub DebugAfficherClicEtDistances(oPtClic As Point3d)
-    Dim s As String
-    s = "=== Click recu ===" & vbCrLf & _
-        "Point.X = " & Format$(oPtClic.X, "0.000000") & vbCrLf & _
-        "Point.Y = " & Format$(oPtClic.Y, "0.000000") & vbCrLf & vbCrLf & _
-        "TolReseau = " & TolReseau() & vbCrLf & vbCrLf & _
-        "=== Distances aux cellules ==="
-
-    ' Scanner comme TrouverBoiteEPProche mais tout logger
-    Dim oScan As New ElementScanCriteria
-    oScan.ExcludeAllTypes
-    oScan.IncludeType msdElementTypeCellHeader
-
-    Dim oAttachments As Object: Set oAttachments = ObtenirAttachments()
-    Dim nCount As Long: nCount = 0
-    On Error Resume Next
-    nCount = oAttachments.Count
-    On Error GoTo 0
-
-    s = s & vbCrLf & AfficherDistancesModele(ActiveModelReference, Nothing, oPtClic, oScan, "actif")
-
-    Dim i As Long
-    For i = 1 To nCount
-        Dim oAtt As Object: Set oAtt = Nothing
-        On Error Resume Next
-        Set oAtt = oAttachments(i)
-        On Error GoTo 0
-        If Not oAtt Is Nothing Then
-            s = s & AfficherDistancesModele(oAtt, oAtt, oPtClic, oScan, "ref#" & i)
-        End If
-    Next i
-
-    MsgBox s, vbInformation, "Debug clic BoiteEP"
-End Sub
-
-Private Function AfficherDistancesModele(oModel As Object, oAtt As Object, _
-        oPtClic As Point3d, oScan As ElementScanCriteria, sTag As String) As String
-
-    Dim oEnum As ElementEnumerator
-    On Error Resume Next
-    Set oEnum = oModel.Scan(oScan)
-    On Error GoTo 0
-    If oEnum Is Nothing Then AfficherDistancesModele = "": Exit Function
-
-    Dim s As String: s = vbCrLf & "[" & sTag & "]"
-    Dim n As Long: n = 0
-    Do While oEnum.MoveNext
-        Dim oElem As Element: Set oElem = oEnum.Current
-        If oElem.Type = msdElementTypeCellHeader Then
-            Dim oInfo As CBoiteEPInfo
-            Set oInfo = g_oParserBoite.Lire(oElem)
-            If oInfo.Valide Then
-                Dim pt As Point3d, ptM As Point3d
-                oInfo.CopierOrigine pt
-                TransformerPointVersMaitre oAtt, pt, ptM
-                Dim dD As Double
-                dD = Sqr((oPtClic.X - ptM.X) ^ 2 + (oPtClic.Y - ptM.Y) ^ 2)
-                If n < 8 Then
-                    s = s & vbCrLf & "  Fe=" & Format$(oInfo.ZFilEau, "0.00") & _
-                        "  master=(" & Format$(ptM.X, "0.00") & "," & _
-                                       Format$(ptM.Y, "0.00") & ")" & _
-                        "  dist=" & Format$(dD, "0.00")
-                    n = n + 1
-                End If
-            End If
-        End If
-    Loop
-    AfficherDistancesModele = s
 End Function
 
 '==============================================================================

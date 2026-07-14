@@ -57,6 +57,8 @@ Attribute txtRayonDZ.VB_VarHelpID = -1
 ' --- Rayonnement indicateur pente ---
 Private WithEvents chkRayonIndPente As MSForms.CheckBox
 Attribute chkRayonIndPente.VB_VarHelpID = -1
+Private WithEvents txtPenteDec As MSForms.TextBox
+Attribute txtPenteDec.VB_VarHelpID = -1
 ' --- Decimales ---
 Private WithEvents txtDecimales As MSForms.TextBox
 Attribute txtDecimales.VB_VarHelpID = -1
@@ -173,6 +175,11 @@ Private Sub ConstruireControles()
     chkRayonIndPente.Left = 6: chkRayonIndPente.Top = 52
     chkRayonIndPente.Width = 100: chkRayonIndPente.Height = 14
 
+    CreerLabel fraRayon, "lblPenteDec", "Dec.pente:", 108, 54, 44
+    Set txtPenteDec = fraRayon.Controls.Add("Forms.TextBox.1", "txtPenteDec")
+    txtPenteDec.Left = 154: txtPenteDec.Top = 51
+    txtPenteDec.Width = 30: txtPenteDec.Height = 16
+
     dY = dY + 78
 
     ' --- Decimales ------------------------------------------------------------
@@ -287,6 +294,7 @@ Sub Initialiser(oSettings As CMstSettings)
     txtRayonDZ.Text = Format$(m_oSettings.oRayon.DZ, "0.00")
     txtRayonDZ.Enabled = m_oSettings.oRayon.DZActive
     chkRayonIndPente.Value = m_oSettings.bRayonIndicPente
+    txtPenteDec.Text = CStr(m_oSettings.oIndicPente.Decimales)
 
     ' Decimales
     txtDecimales.Text = CStr(m_oSettings.nPonctDecimales)
@@ -461,6 +469,20 @@ Private Sub chkRayonIndPente_Change()
     If m_bInit Then Exit Sub
     If m_oSettings Is Nothing Then Exit Sub
     m_oSettings.bRayonIndicPente = (chkRayonIndPente.Value = True)
+End Sub
+
+Private Sub txtPenteDec_Change()
+    If m_bInit Then Exit Sub
+    If m_oSettings Is Nothing Then Exit Sub
+    Dim nDec As Integer
+    nDec = CInt(Val(Trim$(txtPenteDec.Text)))
+    If nDec >= 0 And nDec <= 6 Then m_oSettings.oIndicPente.Decimales = nDec
+End Sub
+
+Private Sub txtPenteDec_KeyDown(ByVal KeyCode As MSForms.ReturnInteger, _
+                                 ByVal Shift As Integer)
+    If KeyCode = vbKeyReturn And Not m_oSettings Is Nothing Then _
+        txtPenteDec.Text = CStr(m_oSettings.oIndicPente.Decimales)
 End Sub
 
 '==============================================================================
