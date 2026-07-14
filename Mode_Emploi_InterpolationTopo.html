@@ -160,6 +160,8 @@
   <a href="#pente">Indicateur pente</a>
   <a href="#ponctuelle">Ponctuelle</a>
   <a href="#formulaire-ponct">Formulaire Ponct.</a>
+  <a href="#utilisation-reseau">R&eacute;seau EU/EP</a>
+  <a href="#formulaire-reseau">Formulaire R&eacute;seau</a>
   <a href="#keyin">Key-in</a>
   <a href="#fonction">Touche F</a>
   <a href="#boite">ToolBox</a>
@@ -172,7 +174,7 @@
 <section id="presentation">
   <h2>1. Pr&eacute;sentation</h2>
   <p>
-    <strong>Interpolation Topo V2</strong> propose <strong>deux commandes</strong> pour le calcul et le
+    <strong>Interpolation Topo V2</strong> propose <strong>trois commandes</strong> pour le calcul et le
     placement d'altitudes topographiques :
   </p>
 
@@ -187,6 +189,13 @@
       <td><strong>Interpol. Ponctuelle</strong></td>
       <td><code>vba run [InterpolationTopoV2]InterpolPonctuelle</code></td>
       <td>Chemin principal depuis P1 (pente/DZ cumulatifs) + rayonnement lat&eacute;ral depuis chaque point</td>
+    </tr>
+    <tr>
+      <td><strong>Pente R&eacute;seau EU/EP</strong></td>
+      <td><code>vba run [InterpolationTopoV2]PenteReseauEP</code></td>
+      <td>Pente entre deux regards/grilles : parse les cellules <code>T:</code>/<code>Fe:</code>/<code>Prof:</code>,
+          trace la ligne provisoire P1&ndash;P2, place texte pente + fl&egrave;che et encha&icirc;ne sur le
+          regard suivant</td>
     </tr>
   </table>
 
@@ -237,6 +246,45 @@
   <div class="astuce">
     &#9989; Le s&eacute;parateur d&eacute;cimal (point ou virgule) et le nombre de d&eacute;cimales du texte cr&eacute;&eacute;
     sont repris automatiquement des textes source (modifiables dans le formulaire).
+  </div>
+
+  <h3>Pente R&eacute;seau EU/EP (deux regards)</h3>
+  <p>Calcule la pente entre deux regards ou grilles &agrave; partir de cellules qui
+     contiennent les altitudes lues sous forme de textes ou de tags :</p>
+  <ul>
+    <li><strong>T:</strong> altitude du tampon (facultatif) ;</li>
+    <li><strong>Fe:</strong> altitude du fil d'eau (<em>obligatoire</em> pour le calcul) ;</li>
+    <li><strong>Prof:</strong> profondeur du regard (facultatif).</li>
+  </ul>
+  <p>La commande enchaine <strong>5 &eacute;tapes</strong> :</p>
+  <ol>
+    <li><strong>Snap</strong> sur l'axe du POINT 1 (tampon/grille) ;</li>
+    <li><strong>Clic</strong> pr&egrave;s de la cellule qui donne le Fe de P1 (rayon
+        configurable dans le formulaire) ;</li>
+    <li><strong>Snap</strong> sur l'axe du POINT 2 (ligne provisoire P1&nbsp;&rarr;&nbsp;curseur
+        dessin&eacute;e en dynamique) ;</li>
+    <li><strong>Clic</strong> pr&egrave;s de la cellule Fe de P2 ;</li>
+    <li><strong>Clic</strong> pour placer texte pente + fl&egrave;che.</li>
+  </ol>
+  <p>Les <strong>points snapp&eacute;s</strong> sont les points utilis&eacute;s pour la ligne et le
+     calcul de pente. Le clic sur cellule ne sert qu'&agrave; identifier la source altitude,
+     jamais &agrave; positionner la ligne : deux r&eacute;seaux proches ne se g&ecirc;nent donc pas.</p>
+  <ul>
+    <li><strong>Support fichiers en r&eacute;f&eacute;rence</strong> : les cellules regard/grille
+        peuvent &ecirc;tre dans le mod&egrave;le actif ou dans un fichier attach&eacute;. Les origines
+        sont converties automatiquement dans le rep&egrave;re du mod&egrave;le actif ;</li>
+    <li><strong>Auto-cha&icirc;nage</strong> : apr&egrave;s placement pente, P2 devient P1 et on
+        repart directement au snap du regard suivant. <strong>Reset</strong> pour
+        interrompre la cha&icirc;ne (retour snap P1) ou terminer ;</li>
+    <li><strong>Formulaire d&eacute;di&eacute;</strong> : &eacute;tat (P1/P2 avec Fe/T/Prof, distance,
+        pente), rayon de recherche, hauteur/couleur du texte pente et de la fl&egrave;che.</li>
+  </ul>
+  <div class="astuce">
+    &#9989; En cas de doute (unit&eacute;s diff&eacute;rentes entre fichiers, cellules non
+    d&eacute;tect&eacute;es), lancer
+    <code>vba run [InterpolationTopoV2]DebugScanRefsBoiteEP</code> :
+    une bo&icirc;te affiche les attachements, leurs propri&eacute;t&eacute;s et les cellules
+    <code>BoiteEP</code> valides trouv&eacute;es avec leurs coordonn&eacute;es.
   </div>
 </section>
 
@@ -295,6 +343,15 @@
         <tr><td><code>CPlacerPonctuel.cls</code></td><td>Modules de classe</td><td>Ponctuelle</td></tr>
         <tr><td><code>frmInterpolation.frm</code> + <code>.frx</code></td><td>UserForm</td><td>Interpolation</td></tr>
         <tr><td><code>frmInterpolPonct.frm</code> + <code>.frx</code></td><td>UserForm</td><td>Ponctuelle</td></tr>
+        <tr><td><code>Reseaux/ReseauEP.bas</code></td><td>Modules</td><td>R&eacute;seau</td></tr>
+        <tr><td><code>Reseaux/CBoiteEPInfo.cls</code></td><td>Modules de classe</td><td>R&eacute;seau</td></tr>
+        <tr><td><code>Reseaux/CBoiteEPParser.cls</code></td><td>Modules de classe</td><td>R&eacute;seau</td></tr>
+        <tr><td><code>Reseaux/CSnapBoiteP1.cls</code></td><td>Modules de classe</td><td>R&eacute;seau</td></tr>
+        <tr><td><code>Reseaux/CSelectBoiteP1.cls</code></td><td>Modules de classe</td><td>R&eacute;seau</td></tr>
+        <tr><td><code>Reseaux/CSnapBoiteP2.cls</code></td><td>Modules de classe</td><td>R&eacute;seau</td></tr>
+        <tr><td><code>Reseaux/CSelectBoiteP2.cls</code></td><td>Modules de classe</td><td>R&eacute;seau</td></tr>
+        <tr><td><code>Reseaux/CPlacerPenteReseau.cls</code></td><td>Modules de classe</td><td>R&eacute;seau</td></tr>
+        <tr><td><code>Reseaux/frmReseauEP.frm</code> + <code>.frx</code></td><td>UserForm</td><td>R&eacute;seau</td></tr>
       </table>
     </li>
     <li><strong>D&eacute;bogage &gt; Compiler</strong> : aucune erreur ne doit appara&icirc;tre</li>
@@ -319,6 +376,28 @@
      MicroStation &agrave; chaque d&eacute;marrage.</p>
   <p>Avec un <code>.mvba</code> d&eacute;di&eacute; seulement : <em>Utilities &gt; Macros &gt;
      Project Manager</em>, clic droit sur le projet &gt; <strong>Autoload</strong>.</p>
+
+  <h3>2.4 Mise &agrave; jour</h3>
+  <p>Pour r&eacute;cup&eacute;rer une nouvelle version du d&eacute;p&ocirc;t, la m&eacute;thode la plus
+     rapide et la moins sujette &agrave; erreur est de <strong>rejouer
+     <code>install.cmd</code></strong> :</p>
+  <ol>
+    <li>Ret&eacute;l&eacute;charger le ZIP (ou <code>git pull</code> si vous avez clon&eacute;)</li>
+    <li>Fermer MicroStation</li>
+    <li>Double-cliquer sur <code>install.cmd</code></li>
+    <li>Relancer MicroStation</li>
+  </ol>
+  <p>Le script remplace <code>Interpolation.mvba</code> dans le workspace :
+     <strong>tous les modules, classes et formulaires sont mis &agrave; jour en un
+     seul geste</strong>, sans risque d'oublier un fichier.</p>
+  <div class="attention">
+    &#9888;&#65039; <strong>D&eacute;conseill&eacute;</strong> : r&eacute;importer manuellement chaque
+    <code>.cls</code>/<code>.bas</code>/<code>.frm</code> modifi&eacute; dans l'&eacute;diteur VBA.
+    C'est long, il faut conna&icirc;tre la liste exacte des fichiers modifi&eacute;s, et une
+    classe non mise &agrave; jour provoque une erreur de compilation qui bloque tout le
+    projet. R&eacute;server cette m&eacute;thode aux d&eacute;veloppeurs qui it&egrave;rent sur le code
+    source.
+  </div>
 </section>
 
 <!-- ==================== FORMULAIRE ==================== -->
@@ -572,9 +651,93 @@
   <p>Identiques &agrave; la commande Interpolation (voir &sect;&nbsp;3).</p>
 </section>
 
+<!-- ==================== UTILISATION RESEAU ==================== -->
+<section id="utilisation-reseau">
+  <h2>8. Utilisation &mdash; Pente R&eacute;seau EU/EP</h2>
+
+  <div class="etapes">
+    <div class="etape"><span class="num">1</span><br>Snap P1<br><small>axe tampon/grille</small></div>
+    <div class="etape"><span class="num">2</span><br>Clic cellule P1<br><small>identifie Fe</small></div>
+    <div class="etape"><span class="num">3</span><br>Snap P2<br><small>ligne provisoire</small></div>
+    <div class="etape"><span class="num">4</span><br>Clic cellule P2<br><small>identifie Fe</small></div>
+    <div class="etape"><span class="num">5</span><br>Data<br><small>pente + fl&egrave;che</small></div>
+  </div>
+
+  <ol>
+    <li><strong>Lancement</strong> : <em>vba run [InterpolationTopoV2]PenteReseauEP</em> &mdash;
+        le formulaire <strong>Pente R&eacute;seau EU/EP</strong> s'ouvre (Tool Settings)</li>
+    <li><strong>Snap P1</strong> : cliquez/snappez pr&eacute;cis&eacute;ment sur l'axe du premier
+        tampon ou grille. C'est ce point (et pas l'origine de la cellule) qui d&eacute;finit
+        l'extr&eacute;mit&eacute; P1 de la ligne et du calcul de pente</li>
+    <li><strong>Clic pr&egrave;s de la cellule P1</strong> : le parser cherche dans un rayon
+        (configurable dans le formulaire) une cellule contenant les textes
+        <code>T:</code>, <code>Fe:</code>, <code>Prof:</code>. Seul <code>Fe:</code> est
+        indispensable. La MsgBox d'&eacute;tat affiche
+        <code>Fe=x.xx&nbsp;&nbsp;T=x.xx&nbsp;&nbsp;Prof=x.xx</code>
+        (avec <code>[ref]</code> si la cellule vient d'un fichier attach&eacute;)</li>
+    <li><strong>Snap P2</strong> : une ligne provisoire (couleur 3) suit le curseur depuis
+        P1. Snappez sur l'axe du second tampon/grille</li>
+    <li><strong>Clic pr&egrave;s de la cellule P2</strong> : m&ecirc;me d&eacute;tection. Aussit&ocirc;t P2
+        identifi&eacute;, la pente est calcul&eacute;e :
+        <code>P&nbsp;=&nbsp;(Fe<sub>2</sub>&nbsp;&minus;&nbsp;Fe<sub>1</sub>)&nbsp;/&nbsp;d<sub>2D</sub>&nbsp;&times;&nbsp;100</code></li>
+    <li><strong>Placer texte pente + fl&egrave;che</strong> : ligne provisoire P1&ndash;P2 dessin&eacute;e
+        en dynamique + aper&ccedil;u texte et fl&egrave;che &agrave; la position curseur.
+        <strong>Data</strong> = placer, <strong>Reset</strong> = revenir au snap P1</li>
+    <li><strong>Auto-cha&icirc;nage</strong> : apr&egrave;s placement, P2 devient P1 et la commande
+        repart directement au snap du regard suivant. Pratique pour tracer un
+        r&eacute;seau complet sans relancer entre chaque tron&ccedil;on</li>
+  </ol>
+
+  <div class="astuce">
+    &#9989; La ligne P1&ndash;P2 dessin&eacute;e pendant le placement est <strong>provisoire</strong>
+    et dispara&icirc;t au click final : seuls le texte pente et la fl&egrave;che restent dans le
+    DGN. Vous pouvez donc placer la pente sur n'importe quel r&eacute;seau (existant ou &agrave;
+    tracer par ailleurs) sans polluer le dessin.
+  </div>
+  <div class="astuce">
+    &#9989; <strong>Fichiers en r&eacute;f&eacute;rence</strong> support&eacute;s : les cellules regard/grille
+    peuvent &ecirc;tre dans un fichier attach&eacute;. Les origines sont automatiquement converties
+    dans le rep&egrave;re du mod&egrave;le actif. En cas d'unit&eacute;s diff&eacute;rentes entre fichiers,
+    lancer <code>vba run [InterpolationTopoV2]DebugScanRefsBoiteEP</code> pour
+    diagnostiquer.
+  </div>
+</section>
+
+<!-- ==================== FORMULAIRE RESEAU ==================== -->
+<section id="formulaire-reseau">
+  <h2>9. Formulaire Pente R&eacute;seau EU/EP</h2>
+
+  <h3>&Eacute;tat</h3>
+  <ul>
+    <li><strong>P1</strong> / <strong>P2</strong> : altitudes lues dans les cellules
+        (Fe, T, Prof) avec indication <code>[ref]</code> si la source vient d'un attachement</li>
+    <li><strong>Distance</strong> : distance 2D entre les deux snaps (u.m.)</li>
+    <li><strong>Pente</strong> : pourcentage calcul&eacute; entre les Fe (mis &agrave; jour d&egrave;s le
+        clic cellule P2)</li>
+  </ul>
+
+  <h3>Recherche</h3>
+  <ul>
+    <li><strong>Rayon (u.m.)</strong> : tol&eacute;rance de recherche autour du clic pour
+        identifier la cellule regard/grille. Valeur par d&eacute;faut : 5. Augmenter si la
+        cellule n'est pas trouv&eacute;e, r&eacute;duire s'il y a plusieurs cellules proches &agrave;
+        d&eacute;partager</li>
+  </ul>
+
+  <h3>Indicateur pente (texte + fl&egrave;che)</h3>
+  <ul>
+    <li><strong>R&eacute;glages personnalis&eacute;s</strong> : coch&eacute; par d&eacute;faut (aucun texte
+        mod&egrave;le n'&eacute;tant disponible dans ce flux)</li>
+    <li><strong>Hauteur texte</strong> / <strong>Couleur texte</strong> : mise en forme
+        du texte pente pos&eacute;</li>
+    <li><strong>Longueur fl&egrave;che</strong> / <strong>Couleur fl&egrave;che</strong> : g&eacute;om&eacute;trie
+        et symbologie de la fl&egrave;che pos&eacute;e (dirig&eacute;e dans le sens de la descente)</li>
+  </ul>
+</section>
+
 <!-- ==================== KEY-IN ==================== -->
 <section id="keyin">
-  <h2>8. Lancement par key-in</h2>
+  <h2>10. Lancement par key-in</h2>
   <ol>
     <li>Ouvrez la fen&ecirc;tre de saisie : <strong>Utilitaires &gt; Saisie au clavier</strong> (Key-in)</li>
     <li>Tapez l'un des key-in suivants :
@@ -582,6 +745,7 @@
         <tr><th>Commande</th><th>Key-in</th></tr>
         <tr><td>Interpolation</td><td><code>vba run [InterpolationTopoV2]InterpolerPoint</code></td></tr>
         <tr><td>Interpol. Ponctuelle</td><td><code>vba run [InterpolationTopoV2]InterpolPonctuelle</code></td></tr>
+        <tr><td>Pente R&eacute;seau EU/EP</td><td><code>vba run [InterpolationTopoV2]PenteReseauEP</code></td></tr>
       </table>
     </li>
     <li>Validez par <kbd>Entr&eacute;e</kbd></li>
@@ -594,27 +758,30 @@
 
 <!-- ==================== TOUCHE DE FONCTION ==================== -->
 <section id="fonction">
-  <h2>9. Lancement par touche de fonction</h2>
+  <h2>11. Lancement par touche de fonction</h2>
   <ol>
     <li>Menu <strong>Utilitaires &gt; Touches de fonction</strong></li>
-    <li>S&eacute;lectionnez deux touches libres, par exemple <kbd>F6</kbd> et <kbd>F7</kbd>
-        (les combinaisons <kbd>Ctrl</kbd>/<kbd>Alt</kbd>/<kbd>Maj</kbd>+F sont aussi possibles)</li>
+    <li>S&eacute;lectionnez trois touches libres, par exemple <kbd>F6</kbd>, <kbd>F7</kbd>
+        et <kbd>F8</kbd> (les combinaisons <kbd>Ctrl</kbd>/<kbd>Alt</kbd>/<kbd>Maj</kbd>+F
+        sont aussi possibles)</li>
     <li>Dans le champ <strong>Action</strong>, saisissez pour chaque touche :
       <table>
         <tr><th>Touche</th><th>Key-in</th></tr>
         <tr><td><kbd>F6</kbd></td><td><code>vba run [InterpolationTopoV2]InterpolerPoint</code></td></tr>
         <tr><td><kbd>F7</kbd></td><td><code>vba run [InterpolationTopoV2]InterpolPonctuelle</code></td></tr>
+        <tr><td><kbd>F8</kbd></td><td><code>vba run [InterpolationTopoV2]PenteReseauEP</code></td></tr>
       </table>
     </li>
     <li>Cliquez <strong>OK</strong> &mdash; le menu de touches de fonction est enregistr&eacute;
         (fichier <code>.mnu</code> du workspace)</li>
   </ol>
-  <p>Un appui sur <kbd>F6</kbd> lance l'Interpolation, <kbd>F7</kbd> lance l'Interpol. Ponctuelle.</p>
+  <p>Un appui sur <kbd>F6</kbd> lance l'Interpolation, <kbd>F7</kbd> lance l'Interpol. Ponctuelle,
+     <kbd>F8</kbd> lance la Pente R&eacute;seau EU/EP.</p>
 </section>
 
 <!-- ==================== BOITE A OUTILS ==================== -->
 <section id="boite">
-  <h2>10. Boutons dans une bo&icirc;te &agrave; outils personnalis&eacute;e</h2>
+  <h2>12. Boutons dans une bo&icirc;te &agrave; outils personnalis&eacute;e</h2>
   <p>La m&eacute;thode la plus confortable pour un usage quotidien.
      <em>Proc&eacute;dure test&eacute;e et valid&eacute;e sur V8i SS3 (08.11.09.578).</em></p>
 
@@ -701,7 +868,7 @@
 
 <!-- ==================== DEPANNAGE ==================== -->
 <section id="depannage">
-  <h2>11. D&eacute;pannage rapide</h2>
+  <h2>13. D&eacute;pannage rapide</h2>
   <table>
     <tr><th>Sympt&ocirc;me</th><th>Cause / rem&egrave;de</th></tr>
     <tr>

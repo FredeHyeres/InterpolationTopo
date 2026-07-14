@@ -7,12 +7,13 @@ Pensees pour les leves topographiques : gisement en **gon** (0 = nord, sens hora
 pente en **%**, separateur decimal et nombre de decimales repris automatiquement des
 textes source, cercles placables sur un niveau distinct des textes.
 
-## Deux commandes
+## Trois commandes
 
 | Commande | Key-in | Description |
 |---|---|---|
 | **Interpolation** | `vba run [InterpolationTopoV2]InterpolerPoint` | Interpole l'altitude sur la droite P1-P2, avec pente transversale, DZ et indicateur de pente |
 | **Interpol. Ponctuelle** | `vba run [InterpolationTopoV2]InterpolPonctuelle` | Chemin principal depuis P1 (pente/DZ cumulatifs) + rayonnement lateral depuis chaque point du chemin |
+| **Pente Reseau EU/EP** | `vba run [InterpolationTopoV2]PenteReseauEP` | Pente entre deux regards/grilles : parse les cellules `T:`/`Fe:`/`Prof:`, trace la ligne provisoire P1-P2, place texte pente + fleche et enchaine sur le regard suivant |
 
 ## Fonctionnalites communes
 
@@ -64,6 +65,30 @@ textes source, cercles placables sur un niveau distinct des textes.
 - **Formulaire dedie** : cadres Chemin principal (pente/DZ), Rayonnement (pente/DZ),
   decimales partagees, cercle, texte, etat
 
+## Pente Reseau EU/EP (deux regards)
+
+- **Analyse automatique des cellules regard/grille** : le parser detecte dans la cellule
+  les textes ou tags `T:` (altitude tampon), `Fe:` (fil d'eau) et `Prof:` (profondeur).
+  Seul `Fe:` est indispensable pour le calcul de pente
+- **Flux en 4 clics + 1** :
+  1. Snap sur l'axe du POINT 1 (tampon/grille)
+  2. Clic pres de la cellule qui donne le Fe de P1 (rayon de recherche configurable)
+  3. Snap sur l'axe du POINT 2 (ligne provisoire P1 -> curseur dessinee en dynamique)
+  4. Clic pres de la cellule Fe de P2
+  5. Clic pour placer texte pente + fleche
+- **Points snappes** = points de la ligne et du calcul de pente (le clic cellule ne
+  sert qu'a identifier la source altitude, jamais a positionner la ligne)
+- **Support fichiers en reference** : les cellules regard/grille peuvent etre dans le
+  modele actif ou dans un fichier attache. Les origines sont converties dans le repere
+  du modele actif
+- **Auto-chainage** : apres placement pente, P2 devient P1 et on repart directement au
+  snap du regard suivant. Reset pour interrompre la chaine ou terminer
+- **Formulaire dedie** : etat (P1/P2 avec Fe/T/Prof, distance, pente), rayon de
+  recherche, hauteur/couleur du texte pente et de la fleche
+- **Diagnostic references** : `vba run [InterpolationTopoV2]DebugScanRefsBoiteEP`
+  liste les attachements, leurs proprietes et les cellules `BoiteEP` valides trouvees
+  (utile en cas d'ecart d'unites entre fichiers)
+
 ## Installation automatique (recommandee)
 
 1. Telecharger le depot :
@@ -78,6 +103,26 @@ son chargement automatique au demarrage dans le `.ucf` utilisateur. Il ne touche
 
 > Le script suppose le workspace dans `Documents\MicroStV8i\WorkSpace`
 > (sinon, modifier la variable `$Workspace` en tete de `install.ps1`).
+
+## Mise a jour
+
+Pour recuperer une nouvelle version du depot, la methode la plus rapide et la
+moins sujette a erreur est de **rejouer `install.cmd`** :
+
+1. Retelecharger le ZIP (ou `git pull` si vous avez clone)
+2. Fermer MicroStation
+3. Double-cliquer sur `install.cmd`
+4. Relancer MicroStation
+
+Le script remplace `Interpolation.mvba` dans le workspace : **tous les modules,
+classes et formulaires sont mis a jour en un seul geste**, sans risque
+d'oublier un fichier.
+
+> Deconseille : reimporter manuellement chaque `.cls`/`.bas`/`.frm` modifie
+> dans l'editeur VBA. C'est long, il faut connaitre la liste exacte des
+> fichiers modifies, et une classe non mise a jour provoque une erreur de
+> compilation qui bloque tout le projet. Reserver cette methode aux
+> developpeurs qui iterent sur le code source.
 
 ## Installation manuelle
 
@@ -110,6 +155,15 @@ son chargement automatique au demarrage dans le `.ucf` utilisateur. Il ne touche
    | `CPlacerPonctuel.cls` | Module de classe (Ponctuelle) |
    | `frmInterpolation.frm` + `.frx` | UserForm (Interpolation) |
    | `frmInterpolPonct.frm` + `.frx` | UserForm (Ponctuelle) |
+   | `Reseaux/ReseauEP.bas` | Module (entree PenteReseauEP + scan cellules) |
+   | `Reseaux/CBoiteEPInfo.cls` | Module de classe (Reseau) |
+   | `Reseaux/CBoiteEPParser.cls` | Module de classe (Reseau) |
+   | `Reseaux/CSnapBoiteP1.cls` | Module de classe (Reseau) |
+   | `Reseaux/CSelectBoiteP1.cls` | Module de classe (Reseau) |
+   | `Reseaux/CSnapBoiteP2.cls` | Module de classe (Reseau) |
+   | `Reseaux/CSelectBoiteP2.cls` | Module de classe (Reseau) |
+   | `Reseaux/CPlacerPenteReseau.cls` | Module de classe (Reseau) |
+   | `Reseaux/frmReseauEP.frm` + `.frx` | UserForm (Reseau) |
 
 3. *Debogage > Compiler*, puis enregistrer
 
@@ -127,6 +181,7 @@ Key-in (le projet `Interpolation.mvba` etant charge automatiquement) :
 ```
 vba run [InterpolationTopoV2]InterpolerPoint
 vba run [InterpolationTopoV2]InterpolPonctuelle
+vba run [InterpolationTopoV2]PenteReseauEP
 ```
 
 ## Affectation a des touches de fonction
@@ -137,6 +192,7 @@ Menu *Utilitaires > Touches de fonction*, par exemple :
 |---|---|
 | `F6` | `vba run [InterpolationTopoV2]InterpolerPoint` |
 | `F7` | `vba run [InterpolationTopoV2]InterpolPonctuelle` |
+| `F8` | `vba run [InterpolationTopoV2]PenteReseauEP` |
 
 Les key-in peuvent aussi etre associes a des **boutons de boite a outils** -- la ToolBox
 `MesMacros.dgnlib` installee par le script contient deja ces boutons.
