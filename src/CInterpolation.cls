@@ -168,7 +168,7 @@ End Function
 
 '------------------------------------------------------------------------------
 Function InfoSegment(oP1 As CPointRef, oP2 As CPointRef) As String
-    InfoSegment = "Pente=" & Format$(PentePct(oP1, oP2), "0.00") & "%" & _
+    InfoSegment = "Pente=" & Format$(PentePct(oP1, oP2), "0.0") & "%" & _
                   "  Gisement=" & Format$(GisementGon(oP1, oP2), "0.00") & " gon"
 End Function
 
@@ -204,9 +204,9 @@ End Function
 
 '------------------------------------------------------------------------------
 ' Formate une pente en pourcentage en valeur absolue (la fleche indique le sens).
-' nDec facultatif : nombre de decimales, defaut 2 (compat V2 existant).
+' nDec facultatif : nombre de decimales, defaut 1.
 Function FormatPente(dPente As Double, sSep As String, _
-                     Optional nDec As Integer = 2) As String
+                     Optional nDec As Integer = 1) As String
     Dim sFmt As String
     If nDec <= 0 Then sFmt = "0" Else sFmt = "0." & String$(nDec, "0")
     Dim sRes As String

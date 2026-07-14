@@ -63,7 +63,7 @@ Sub PenteReseauEP()
     Set g_oRefFeP2 = New CPointRef
     g_dTolReseau = 5#
 
-    ' Pentes reseau : 1 seule decimale (pour V2 le defaut reste 2)
+    ' Pentes : 1 decimale (defaut CSymboPente.InitDefauts, ligne explicite pour trace)
     g_oSettings.oIndicPente.Decimales = 1
 
     AfficherFormulaire frmReseauEP

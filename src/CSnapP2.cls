@@ -85,7 +85,7 @@ Private Sub DemarrerPlacement(sPrefixe As String)
         AppliquerPenteP1P2
         frmInterpolPonct.AfficherP2 g_oP2
         frmInterpolPonct.RafraichirChemin
-        ShowPrompt sPrefixe & "Pente=" & Format$(g_oSettings.oChemin.Pente, "0.00") & _
+        ShowPrompt sPrefixe & "Pente=" & Format$(g_oSettings.oChemin.Pente, "0.0") & _
                    "%  ->  CHEMIN : Data=placer un point  Reset=nouv. selection"
         CommandState.StartPrimitive New CPlacerPonctuel
     Else
