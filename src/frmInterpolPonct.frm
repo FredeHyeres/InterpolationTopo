@@ -43,6 +43,8 @@ Private WithEvents chkCheminDZ As MSForms.CheckBox
 Attribute chkCheminDZ.VB_VarHelpID = -1
 Private WithEvents txtCheminDZ As MSForms.TextBox
 Attribute txtCheminDZ.VB_VarHelpID = -1
+Private WithEvents chkCheminIndPente As MSForms.CheckBox
+Attribute chkCheminIndPente.VB_VarHelpID = -1
 ' --- Rayonnement ---
 Private WithEvents chkRayonPente As MSForms.CheckBox
 Attribute chkRayonPente.VB_VarHelpID = -1
@@ -94,7 +96,7 @@ Private Sub ConstruireControles()
 
     Me.Caption = "Interpol. Ponctuelle"
     Me.Width = 212
-    Me.Height = 496
+    Me.Height = 514
 
     Dim dY As Double
     dY = 6
@@ -104,7 +106,7 @@ Private Sub ConstruireControles()
     Set fraChemin = Me.Controls.Add("Forms.Frame.1", "fraChemin")
     fraChemin.Caption = "Chemin principal (Vert)"
     fraChemin.Left = 6: fraChemin.Top = dY
-    fraChemin.Width = 192: fraChemin.Height = 76
+    fraChemin.Width = 192: fraChemin.Height = 94
 
     Set chkCheminPente = fraChemin.Controls.Add("Forms.CheckBox.1", "chkCheminPente")
     chkCheminPente.Caption = "Pente (%)"
@@ -132,10 +134,15 @@ Private Sub ConstruireControles()
     txtCheminDZ.Width = 48: txtCheminDZ.Height = 16
     txtCheminDZ.Text = "0": txtCheminDZ.Enabled = False
 
-    CreerLabel fraChemin, "lblInfoChem", _
-        "Pente auto si P2 selectionne", 6, 54, 180
+    Set chkCheminIndPente = fraChemin.Controls.Add("Forms.CheckBox.1", "chkCheminIndPente")
+    chkCheminIndPente.Caption = "Pente + fleche"
+    chkCheminIndPente.Left = 6: chkCheminIndPente.Top = 52
+    chkCheminIndPente.Width = 100: chkCheminIndPente.Height = 14
 
-    dY = dY + 82
+    CreerLabel fraChemin, "lblInfoChem", _
+        "Pente auto si P2 selectionne", 6, 72, 180
+
+    dY = dY + 100
 
     ' --- Cadre Rayonnement ----------------------------------------------------
     Dim fraRayon As MSForms.Frame
@@ -284,6 +291,7 @@ Sub Initialiser(oSettings As CMstSettings)
     chkCheminDZ.Value = m_oSettings.oChemin.DZActive
     txtCheminDZ.Text = Format$(m_oSettings.oChemin.DZ, "0.00")
     txtCheminDZ.Enabled = m_oSettings.oChemin.DZActive
+    chkCheminIndPente.Value = m_oSettings.bCheminIndicPente
 
     ' Rayonnement
     chkRayonPente.Value = m_oSettings.oRayon.PenteActive
@@ -402,6 +410,12 @@ Private Sub chkCheminDZ_Change()
     If m_oSettings Is Nothing Then Exit Sub
     m_oSettings.oChemin.DZActive = (chkCheminDZ.Value = True)
     txtCheminDZ.Enabled = m_oSettings.oChemin.DZActive
+End Sub
+
+Private Sub chkCheminIndPente_Change()
+    If m_bInit Then Exit Sub
+    If m_oSettings Is Nothing Then Exit Sub
+    m_oSettings.bCheminIndicPente = (chkCheminIndPente.Value = True)
 End Sub
 
 Private Sub txtCheminDZ_Change()

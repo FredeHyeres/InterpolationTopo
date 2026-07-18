@@ -38,7 +38,9 @@ textes source, cercles placables sur un niveau distinct des textes.
   (vert) et le Z final au point deporte
 - **Pente transversale** : applique un delta Z proportionnel a la distance au segment
   P1-P2 (meme pente des deux cotes de la ligne de reference). Bouton **+/-** pour
-  inverser la pente
+  inverser la pente. Option **Pente + fleche** : apres chaque point decale, placement
+  de l'indicateur de pente sur le segment transversal (projection -> point).
+  Clic droit = sauter l'indicateur
 - **Decalage fixe DZ** : ajoute une valeur constante a l'altitude interpolee
 - **Indicateur de pente** : place un texte affichant la pente signee (+/-) et une fleche
   dirigee de P1 vers P2. Proprietes personnalisables : hauteur, largeur, couleur du texte,
@@ -60,6 +62,9 @@ textes source, cercles placables sur un niveau distinct des textes.
   pente (%) et/ou DZ cumulatifs. Ligne verte
 - **Rayonnement** : apres chaque point du chemin, possibilite de placer des points
   lateraux avec pente/DZ propres au rayonnement. Ligne jaune
+- **Pente + fleche** : option disponible pour le chemin principal (indicateur place
+  apres chaque point chemin, sur le segment precedent) et pour le rayonnement
+  (indicateur place apres chaque point rayon). Clic droit = sauter l'indicateur
 - **Retour au chemin** : clic droit en mode rayonnement revient au chemin depuis le
   dernier point chemin
 - **Formulaire dedie** : cadres Chemin principal (pente/DZ), Rayonnement (pente/DZ),

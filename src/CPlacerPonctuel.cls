@@ -23,6 +23,9 @@ Attribute VB_Exposed = False
 ' Etape 5 (PENTE RAYON) : placement pente + fleche du rayon
 '   Data  = placer l'indicateur, revenir en rayonnement
 '   Reset = sauter l'indicateur, revenir en rayonnement
+' Etape 6 (PENTE CHEMIN) : placement pente + fleche du segment chemin
+'   Data  = placer l'indicateur, passer en rayonnement
+'   Reset = sauter l'indicateur, passer en rayonnement
 '
 ' Pour les cellules/tags, les etapes texte (2 et 4) sont sautees.
 '==============================================================================
@@ -30,10 +33,13 @@ Option Explicit
 
 Implements IPrimitiveCommandEvents
 
-Private m_nEtape        As Integer      ' 1..5
+Private m_nEtape        As Integer      ' 1..6
 Private m_dLastX        As Double       ' position du dernier point chemin (X)
 Private m_dLastY        As Double       ' position du dernier point chemin (Y)
 Private m_dLastZ        As Double       ' altitude du dernier point chemin
+Private m_dPrevX        As Double       ' point chemin precedent (X) pour la pente
+Private m_dPrevY        As Double       ' point chemin precedent (Y)
+Private m_dPrevZ        As Double       ' altitude du point chemin precedent
 Private m_dCentreX      As Double       ' centre rayonnement (X) = dernier point chemin
 Private m_dCentreY      As Double       ' centre rayonnement (Y)
 Private m_dCentreZ      As Double       ' centre rayonnement (Z)
@@ -88,6 +94,14 @@ Private Sub IPrimitiveCommandEvents_Dynamics(Point As Point3d, ByVal View As Vie
         g_oMoteur.DessinPenteDynamique DrawMode, Point, oRefC, oRefR, g_oSettings, g_oCalc
         On Error GoTo 0
         ShowPrompt "Placez la pente + fleche  (Data=poser  Reset=sauter)"
+
+    Case 6
+        Dim oRefA As New CPointRef, oRefB As New CPointRef
+        InitRefPenteChemin oRefA, oRefB
+        On Error Resume Next
+        g_oMoteur.DessinPenteDynamique DrawMode, Point, oRefA, oRefB, g_oSettings, g_oCalc
+        On Error GoTo 0
+        ShowPrompt "Placez la pente + fleche du chemin  (Data=poser  Reset=sauter)"
     End Select
 End Sub
 
@@ -109,7 +123,11 @@ Private Sub IPrimitiveCommandEvents_DataPoint(Point As Point3d, ByVal View As Vi
         If SourceP1Integree() Then
             g_oMoteur.CreerPointTopo oPtChem, dZNew, g_oSettings, g_oCalc
             AvancerChemin oPtChem.X, oPtChem.Y, dZNew
-            EntrerRayonnement dZNew
+            If g_oSettings.bCheminIndicPente Then
+                EntrerPenteChemin
+            Else
+                EntrerRayonnement dZNew
+            End If
         Else
             g_oMoteur.CreerCercleSeul oPtChem, g_oSettings
             m_dZFinal = dZNew
@@ -127,7 +145,11 @@ Private Sub IPrimitiveCommandEvents_DataPoint(Point As Point3d, ByVal View As Vi
         Point.Z = m_dZFinal
         g_oMoteur.CreerTexteSeul Point, m_dZFinal, g_oSettings, g_oCalc
         AvancerChemin m_dCentreX, m_dCentreY, m_dZFinal
-        EntrerRayonnement m_dZFinal
+        If g_oSettings.bCheminIndicPente Then
+            EntrerPenteChemin
+        Else
+            EntrerRayonnement m_dZFinal
+        End If
 
     Case 3
         ' --- Creer un point rayonnement ---
@@ -191,6 +213,13 @@ Private Sub IPrimitiveCommandEvents_DataPoint(Point As Point3d, ByVal View As Vi
         g_oMoteur.CreerPente Point, oRefC5, oRefR5, g_oSettings, g_oCalc
         ShowPrompt "Pente placee  |  Data=autre rayon  Reset=continuer chemin"
         m_nEtape = 3
+
+    Case 6
+        ' --- Placer l'indicateur pente + fleche du segment chemin ---
+        Dim oRefA6 As New CPointRef, oRefB6 As New CPointRef
+        InitRefPenteChemin oRefA6, oRefB6
+        g_oMoteur.CreerPente Point, oRefA6, oRefB6, g_oSettings, g_oCalc
+        EntrerRayonnement m_dLastZ
     End Select
 End Sub
 
@@ -218,6 +247,10 @@ Private Sub IPrimitiveCommandEvents_Reset()
         ' Reset en pente = sauter l'indicateur, revenir en rayonnement
         ShowPrompt "Data=autre rayon  Reset=continuer chemin"
         m_nEtape = 3
+
+    Case 6
+        ' Reset en pente chemin = sauter l'indicateur, passer en rayonnement
+        EntrerRayonnement m_dLastZ
     End Select
 End Sub
 
@@ -311,7 +344,13 @@ End Sub
 '==============================================================================
 
 Private Sub AvancerChemin(dX As Double, dY As Double, dZ As Double)
+    m_dPrevX = m_dLastX: m_dPrevY = m_dLastY: m_dPrevZ = m_dLastZ
     m_dLastX = dX: m_dLastY = dY: m_dLastZ = dZ
+End Sub
+
+Private Sub EntrerPenteChemin()
+    m_nEtape = 6
+    ShowPrompt "Placez la pente + fleche du chemin  (Data=poser  Reset=sauter)"
 End Sub
 
 Private Sub EntrerRayonnement(dZ As Double)
@@ -368,6 +407,15 @@ Private Function SourceP1Integree() As Boolean
     SourceP1Integree = (Not g_oSelectionP1.oCellule Is Nothing) Or _
                        (Not g_oSelectionP1.oTag Is Nothing)
 End Function
+
+Private Sub InitRefPenteChemin(oRefPrev As CPointRef, oRefNew As CPointRef)
+    oRefPrev.X = m_dPrevX: oRefPrev.Y = m_dPrevY
+    oRefPrev.Z = m_dPrevZ: oRefPrev.Altitude = m_dPrevZ
+    oRefPrev.Valide = True
+    oRefNew.X = m_dLastX: oRefNew.Y = m_dLastY
+    oRefNew.Z = m_dLastZ: oRefNew.Altitude = m_dLastZ
+    oRefNew.Valide = True
+End Sub
 
 Private Sub InitRefPente(oRefCentre As CPointRef, oRefRayon As CPointRef)
     oRefCentre.X = m_dCentreX: oRefCentre.Y = m_dCentreY

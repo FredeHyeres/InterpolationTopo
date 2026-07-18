@@ -35,6 +35,8 @@ Public oTagModele       As TagElement       ' tag P1 : modele quand la source es
 Public dModeleHauteur   As Double           ' hauteur du texte source (0 = non defini)
 Public nPonctDecimales  As Integer          ' ponctuelle : decimales des points crees (chemin + rayon)
 Public bRayonIndicPente As Boolean          ' ponctuelle : placer pente+fleche apres chaque rayon
+Public bCheminIndicPente As Boolean         ' ponctuelle : placer pente+fleche apres chaque point chemin
+Public bDecalIndicPente As Boolean          ' interpolation : placer pente+fleche apres un point decale (pente transversale)
 
 '------------------------------------------------------------------------------
 Sub Init()

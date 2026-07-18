@@ -14,14 +14,23 @@ Attribute VB_Exposed = False
 '           => Data = creer le cercle (et texte si cellule/tag)
 ' Etape 2 : placement libre du texte altitude => Data = creer le texte
 '   (cellule/tag : etape 2 sautee, tout est cree en etape 1)
-' Reset = revenir a la selection de P1
+' Etape 3 : placement pente + fleche du segment transversal (projection -> point)
+'   si "Appliquer pente transversale" et "Pente + fleche" sont coches
+'   Data = placer l'indicateur, Reset = le sauter ; retour etape 1
+' Reset (etapes 1-2) = revenir a la selection de P1
 '==============================================================================
 Option Explicit
 
 Implements IPrimitiveCommandEvents
 
-Private m_nEtape        As Integer      ' 1=projection+perpendiculaire, 2=texte libre
+Private m_nEtape        As Integer      ' 1=projection+perpendiculaire, 2=texte libre, 3=pente+fleche
 Private m_dZFinal       As Double       ' altitude finale pour le texte (etape 2)
+Private m_dProjX        As Double       ' projection sur P1-P2 (X) du dernier point cree
+Private m_dProjY        As Double       ' projection sur P1-P2 (Y)
+Private m_dZInterp      As Double       ' altitude interpolee sur la droite (projection)
+Private m_dPtX          As Double       ' dernier point cree (X)
+Private m_dPtY          As Double       ' dernier point cree (Y)
+Private m_bPenteApres   As Boolean      ' True = placer pente+fleche apres le point/texte
 
 Private Sub IPrimitiveCommandEvents_Start()
     ShowCommand "Interpolation Topo"
@@ -99,6 +108,15 @@ Private Sub IPrimitiveCommandEvents_Dynamics(Point As Point3d, ByVal View As Vie
         sAlt3 = g_oCalc.FormatAltitude(m_dZFinal, 3, g_oSettings.oTexte.SepDecimal)
         ShowPrompt "Placez le texte Z=" & sAlt3 & _
                    "  (Data=poser le texte  Reset=nouv. selection)"
+
+    Case 3
+        ' --- Etape 3 : placement pente + fleche du segment transversal ---
+        Dim oRefP As New CPointRef, oRefD As New CPointRef
+        InitRefPenteTransv oRefP, oRefD
+        On Error Resume Next
+        g_oMoteur.DessinPenteDynamique DrawMode, Point, oRefP, oRefD, g_oSettings, g_oCalc
+        On Error GoTo 0
+        ShowPrompt "Placez la pente + fleche  (Data=poser  Reset=sauter)"
     End Select
 End Sub
 
@@ -139,17 +157,29 @@ Private Sub IPrimitiveCommandEvents_DataPoint(Point As Point3d, ByVal View As Vi
         If g_oSettings.oDecalage.DZActive Then dZFinal = dZFinal + g_oSettings.oDecalage.DZ
         oPtDecale.Z = dZFinal
 
+        ' Memoriser le segment transversal pour l'indicateur pente + fleche
+        m_dProjX = oProj.X: m_dProjY = oProj.Y: m_dZInterp = dZInterp
+        m_dPtX = oPtDecale.X: m_dPtY = oPtDecale.Y
+        m_dZFinal = dZFinal
+        m_bPenteApres = g_oSettings.oDecalage.PenteActive And _
+                        g_oSettings.bDecalIndicPente And Abs(dOffset) > 0.001
+
         If SourceP1Integree() Then
             g_oMoteur.CreerPointTopo oPtDecale, dZFinal, g_oSettings, g_oCalc
 
             Dim sAlt1 As String
             sAlt1 = g_oCalc.FormatAltitude(dZFinal, g_oSettings.oTexte.Decimales, _
                                              g_oSettings.oTexte.SepDecimal)
-            ShowPrompt "Point cree Z=" & sAlt1 & _
-                       "  |  Data = autre point, Reset = nouvelle selection"
+            If m_bPenteApres Then
+                ShowPrompt "Point cree Z=" & sAlt1 & _
+                           "  |  Placez la pente + fleche  (Data=poser  Reset=sauter)"
+                m_nEtape = 3
+            Else
+                ShowPrompt "Point cree Z=" & sAlt1 & _
+                           "  |  Data = autre point, Reset = nouvelle selection"
+            End If
         Else
             g_oMoteur.CreerCercleSeul oPtDecale, g_oSettings
-            m_dZFinal = dZFinal
 
             Dim sAlt2 As String
             sAlt2 = g_oCalc.FormatAltitude(dZFinal, g_oSettings.oTexte.Decimales, _
@@ -167,8 +197,22 @@ Private Sub IPrimitiveCommandEvents_DataPoint(Point As Point3d, ByVal View As Vi
         Dim sAlt3 As String
         sAlt3 = g_oCalc.FormatAltitude(m_dZFinal, g_oSettings.oTexte.Decimales, _
                                         g_oSettings.oTexte.SepDecimal)
-        ShowPrompt "Point cree Z=" & sAlt3 & _
-                   "  |  Data = autre point sur la meme droite, Reset = nouvelle selection"
+        If m_bPenteApres Then
+            ShowPrompt "Point cree Z=" & sAlt3 & _
+                       "  |  Placez la pente + fleche  (Data=poser  Reset=sauter)"
+            m_nEtape = 3
+        Else
+            ShowPrompt "Point cree Z=" & sAlt3 & _
+                       "  |  Data = autre point sur la meme droite, Reset = nouvelle selection"
+            m_nEtape = 1
+        End If
+
+    Case 3
+        ' --- Placer l'indicateur pente + fleche du segment transversal ---
+        Dim oRefP3 As New CPointRef, oRefD3 As New CPointRef
+        InitRefPenteTransv oRefP3, oRefD3
+        g_oMoteur.CreerPente Point, oRefP3, oRefD3, g_oSettings, g_oCalc
+        ShowPrompt "Pente placee  |  Data = autre point, Reset = nouvelle selection"
         m_nEtape = 1
     End Select
 End Sub
@@ -176,14 +220,30 @@ End Sub
 Private Sub IPrimitiveCommandEvents_Keyin(ByVal Keyin As String)
 End Sub
 
-' Reset = nouvelle selection de P1
+' Reset = nouvelle selection de P1 (etape 3 : sauter l'indicateur pente)
 Private Sub IPrimitiveCommandEvents_Reset()
+    If m_nEtape = 3 Then
+        ShowPrompt "Data = autre point, Reset = nouvelle selection"
+        m_nEtape = 1
+        Exit Sub
+    End If
     frmInterpolation.ReinitialiserEtat
     ShowPrompt "Nouvelle selection : cliquez pres du texte altitude du POINT 1  (Reset=quitter)"
     CommandState.StartPrimitive New CSelectP1
 End Sub
 
 Private Sub IPrimitiveCommandEvents_Cleanup()
+End Sub
+
+'------------------------------------------------------------------------------
+' Refs du segment transversal : projection sur P1-P2 -> point decale cree
+Private Sub InitRefPenteTransv(oRefProj As CPointRef, oRefPoint As CPointRef)
+    oRefProj.X = m_dProjX: oRefProj.Y = m_dProjY
+    oRefProj.Z = m_dZInterp: oRefProj.Altitude = m_dZInterp
+    oRefProj.Valide = True
+    oRefPoint.X = m_dPtX: oRefPoint.Y = m_dPtY
+    oRefPoint.Z = m_dZFinal: oRefPoint.Altitude = m_dZFinal
+    oRefPoint.Valide = True
 End Sub
 
 '------------------------------------------------------------------------------

@@ -79,6 +79,8 @@ Private WithEvents chkDecalageFixe As MSForms.CheckBox
 Attribute chkDecalageFixe.VB_VarHelpID = -1
 Private WithEvents txtDecalageDZ As MSForms.TextBox
 Attribute txtDecalageDZ.VB_VarHelpID = -1
+Private WithEvents chkDecalIndPente As MSForms.CheckBox
+Attribute chkDecalIndPente.VB_VarHelpID = -1
 Private WithEvents chkPentePerso As MSForms.CheckBox
 Attribute chkPentePerso.VB_VarHelpID = -1
 Private WithEvents txtPenteH As MSForms.TextBox
@@ -121,7 +123,7 @@ Private Sub ConstruireControles()
 
     Me.Caption = "Interpolation Topo"
     Me.Width = 212
-    Me.Height = 652
+    Me.Height = 670
 
     ' --- Cadre Cercle -------------------------------------------------------
     Dim fraCercle As MSForms.Frame
@@ -184,7 +186,7 @@ Private Sub ConstruireControles()
     Set fraPente = Me.Controls.Add("Forms.Frame.1", "fraPente")
     fraPente.Caption = "Pente decalage"
     fraPente.Left = 6: fraPente.Top = 270
-    fraPente.Width = 192: fraPente.Height = 96
+    fraPente.Width = 192: fraPente.Height = 114
 
     Set chkPente = fraPente.Controls.Add("Forms.CheckBox.1", "chkPente")
     chkPente.Caption = "Appliquer pente transversale"
@@ -218,11 +220,17 @@ Private Sub ConstruireControles()
     txtDecalageDZ.Text = "0"
     txtDecalageDZ.Enabled = False
 
+    Set chkDecalIndPente = fraPente.Controls.Add("Forms.CheckBox.1", "chkDecalIndPente")
+    chkDecalIndPente.Caption = "Pente + fleche"
+    chkDecalIndPente.Left = 6: chkDecalIndPente.Top = 90
+    chkDecalIndPente.Width = 180: chkDecalIndPente.Height = 14
+    chkDecalIndPente.Value = False
+
     ' --- Cadre Indicateur pente ---------------------------------------------
     Dim fraIndPente As MSForms.Frame
     Set fraIndPente = Me.Controls.Add("Forms.Frame.1", "fraIndPente")
     fraIndPente.Caption = "Indicateur pente"
-    fraIndPente.Left = 6: fraIndPente.Top = 372
+    fraIndPente.Left = 6: fraIndPente.Top = 390
     fraIndPente.Width = 192: fraIndPente.Height = 90
 
     Set chkPentePerso = fraIndPente.Controls.Add("Forms.CheckBox.1", "chkPentePerso")
@@ -273,7 +281,7 @@ Private Sub ConstruireControles()
     Dim fraEtat As MSForms.Frame
     Set fraEtat = Me.Controls.Add("Forms.Frame.1", "fraEtat")
     fraEtat.Caption = "Etat"
-    fraEtat.Left = 6: fraEtat.Top = 468
+    fraEtat.Left = 6: fraEtat.Top = 486
     fraEtat.Width = 192: fraEtat.Height = 64
 
     Set lblP1 = CreerLabel(fraEtat, "lblP1", "P1 : -", 6, 12, 180)
@@ -284,7 +292,7 @@ Private Sub ConstruireControles()
     Dim fraActions As MSForms.Frame
     Set fraActions = Me.Controls.Add("Forms.Frame.1", "fraActions")
     fraActions.Caption = "Actions"
-    fraActions.Left = 6: fraActions.Top = 538
+    fraActions.Left = 6: fraActions.Top = 556
     fraActions.Width = 192: fraActions.Height = 72
 
     Set btnRetourInterp = fraActions.Controls.Add("Forms.CommandButton.1", "btnRetourInterp")
@@ -362,6 +370,7 @@ Sub Initialiser(oSettings As CMstSettings)
     chkDecalageFixe.Value = m_oSettings.oDecalage.DZActive
     txtDecalageDZ.Text = Format$(m_oSettings.oDecalage.DZ, "0.00")
     txtDecalageDZ.Enabled = m_oSettings.oDecalage.DZActive
+    chkDecalIndPente.Value = m_oSettings.bDecalIndicPente
 
     ' Etat : reinitialiser
     ReinitialiserEtat
@@ -618,6 +627,12 @@ Private Sub txtDecalageDZ_KeyDown(ByVal KeyCode As MSForms.ReturnInteger, _
                                    ByVal Shift As Integer)
     If KeyCode = vbKeyReturn And Not m_oSettings Is Nothing Then _
         txtDecalageDZ.Text = Format$(m_oSettings.oDecalage.DZ, "0.00")
+End Sub
+
+Private Sub chkDecalIndPente_Change()
+    If m_bInit Then Exit Sub
+    If m_oSettings Is Nothing Then Exit Sub
+    m_oSettings.bDecalIndicPente = (chkDecalIndPente.Value = True)
 End Sub
 
 '==============================================================================
