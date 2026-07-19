@@ -84,6 +84,56 @@ Sub ChargerModeleTexte(oText As TextElement, sSep As String, nDec As Integer)
         oIndicPente.Hauteur = 0.1
         oIndicPente.Largeur = 0.1
     End If
+    SyncStyleTexteModele oText
+    Err.Clear
+    On Error GoTo 0
+End Sub
+
+'------------------------------------------------------------------------------
+' Cree le style de texte du modele dans le fichier actif s'il n'existe pas.
+' Le background est active en deux temps pour que MicroStation initialise
+' correctement la couleur de fond (comme un toggle manuel dans la UI).
+Private Sub SyncStyleTexteModele(oText As TextElement)
+    On Error Resume Next
+    Dim oSrcTS As TextStyle
+    Set oSrcTS = oText.TextStyle
+    If oSrcTS Is Nothing Then Exit Sub
+
+    Dim sNom As String
+    sNom = oSrcTS.Name
+    If Err.Number <> 0 Or Len(sNom) = 0 Then Err.Clear: Exit Sub
+
+    Dim oExist As TextStyle
+    Set oExist = Nothing
+    Set oExist = ActiveDesignFile.TextStyles(sNom)
+    If Not oExist Is Nothing Then Err.Clear: Exit Sub
+
+    Err.Clear
+    Dim oNew As TextStyle
+    Set oNew = ActiveDesignFile.TextStyles.Add(Nothing, sNom)
+    If oNew Is Nothing Then Err.Clear: Exit Sub
+
+    oNew.Height = oSrcTS.Height
+    oNew.Width = oSrcTS.Width
+    Set oNew.Font = oSrcTS.Font
+    oNew.Color = oSrcTS.Color
+
+    Dim oNewObj As Object, oSrcObj As Object
+    Set oNewObj = oNew
+    Set oSrcObj = oSrcTS
+
+    Dim bSrcBg As Boolean
+    bSrcBg = False
+    bSrcBg = CBool(oSrcObj.Background)
+    Err.Clear
+
+    If bSrcBg Then
+        oNewObj.Background = False
+        Err.Clear
+        oNewObj.Background = True
+        Err.Clear
+    End If
+
     Err.Clear
     On Error GoTo 0
 End Sub

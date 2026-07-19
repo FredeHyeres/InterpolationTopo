@@ -266,6 +266,8 @@ Private Sub DessinTexteProvLocal(ByVal DrawMode As MsdDrawingMode, _
         Set oTxt = CreateTextElement1(Nothing, sAlt, oPt, oRot)
     End If
     On Error GoTo 0
-    If Not g_oSettings.oTexte.CommeModele Then oTxt.Color = g_oSettings.oTexte.Couleur
+    If Not g_oSettings.oTexte.CommeModele Then
+        oTxt.Color = g_oSettings.oTexte.Couleur
+    End If
     oTxt.Redraw DrawMode
 End Sub
