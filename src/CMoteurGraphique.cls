@@ -96,6 +96,21 @@ Sub CreerTexteSeul(oPtTexte As Point3d, dZ As Double, _
     If bSansModele Or oSettings.oTextModele Is Nothing Or Not oSettings.oTexte.CommeModele Then
         oTxt.Color = oSettings.oTexte.Couleur
         Set oTxt.Level = ResolverNiveau(oSettings.oTexte.NomNiveau, oSettings)
+    Else
+        On Error Resume Next
+        Dim sStyleNom As String
+        sStyleNom = oSettings.oTextModele.TextStyle.Name
+        If Err.Number = 0 And Len(sStyleNom) > 0 Then
+            Dim oStyleLocal As TextStyle
+            Set oStyleLocal = ActiveDesignFile.TextStyles(sStyleNom)
+            If Not oStyleLocal Is Nothing Then
+                oTxt.TextStyle = oStyleLocal
+            End If
+        End If
+        Err.Clear
+        Set oTxt.Level = ResolverNiveau(oSettings.oTexte.NomNiveau, oSettings)
+        Err.Clear
+        On Error GoTo 0
     End If
     ActiveModelReference.AddElement oTxt
 End Sub
@@ -124,7 +139,9 @@ Sub DessinTexteLibre(ByVal DrawMode As MsdDrawingMode, _
         Set oTxt = CreateTextElement1(Nothing, sAlt, oPtTexte, oRot)
     End If
     On Error GoTo 0
-    If bSansModele Or Not oSettings.oTexte.CommeModele Then oTxt.Color = oSettings.oTexte.Couleur
+    If bSansModele Or Not oSettings.oTexte.CommeModele Then
+        oTxt.Color = oSettings.oTexte.Couleur
+    End If
     oTxt.Redraw DrawMode
 End Sub
 
@@ -152,6 +169,21 @@ Private Sub CreerTexteEtCercle(oProj As Point3d, sAlt As String, _
     If bSansModele Or oSettings.oTextModele Is Nothing Or Not oSettings.oTexte.CommeModele Then
         oTxt.Color = oSettings.oTexte.Couleur
         Set oTxt.Level = ResolverNiveau(oSettings.oTexte.NomNiveau, oSettings)
+    Else
+        On Error Resume Next
+        Dim sStyleC As String
+        sStyleC = oSettings.oTextModele.TextStyle.Name
+        If Err.Number = 0 And Len(sStyleC) > 0 Then
+            Dim oStyleC As TextStyle
+            Set oStyleC = ActiveDesignFile.TextStyles(sStyleC)
+            If Not oStyleC Is Nothing Then
+                oTxt.TextStyle = oStyleC
+            End If
+        End If
+        Err.Clear
+        Set oTxt.Level = ResolverNiveau(oSettings.oTexte.NomNiveau, oSettings)
+        Err.Clear
+        On Error GoTo 0
     End If
     ActiveModelReference.AddElement oTxt
 
@@ -439,7 +471,9 @@ Sub DessinDynamique(ByVal DrawMode As MsdDrawingMode, _
         Set oTxt = CreateTextElement1(Nothing, sAlt, oProj, oRot)
     End If
     On Error GoTo 0
-    If Not oSettings.oTexte.CommeModele Then oTxt.Color = oSettings.oTexte.Couleur
+    If Not oSettings.oTexte.CommeModele Then
+        oTxt.Color = oSettings.oTexte.Couleur
+    End If
     oTxt.Redraw DrawMode
 End Sub
 
@@ -506,7 +540,9 @@ Sub DessinDecalage(ByVal DrawMode As MsdDrawingMode, _
         Set oTxt = CreateTextElement1(Nothing, sAltFinal, oPtDecale, oRot)
     End If
     On Error GoTo 0
-    If Not oSettings.oTexte.CommeModele Then oTxt.Color = oSettings.oTexte.Couleur
+    If Not oSettings.oTexte.CommeModele Then
+        oTxt.Color = oSettings.oTexte.Couleur
+    End If
     oTxt.Redraw DrawMode
 
     ' Texte altitude au point projete sur la droite (Z interpole)
@@ -520,7 +556,9 @@ Sub DessinDecalage(ByVal DrawMode As MsdDrawingMode, _
         Set oTxtDroite = CreateTextElement1(Nothing, sAltDroite, oProj, oRot)
     End If
     On Error GoTo 0
-    oTxtDroite.Color = 2
+    If Not oSettings.oTexte.CommeModele Then
+        oTxtDroite.Color = oSettings.oTexte.Couleur
+    End If
     oTxtDroite.Redraw DrawMode
 End Sub
 
@@ -575,6 +613,8 @@ Sub DessinPenteDynamique(ByVal DrawMode As MsdDrawingMode, _
         Dim dWD As Double: dWD = oSettings.oIndicPente.Largeur
         If dWD > 0 Then oTSd.Width = dWD Else oTSd.Width = oSettings.oIndicPente.Hauteur
         oTSd.Justification = msdTextJustificationLeftBottom
+        Dim oTSdObj As Object: Set oTSdObj = oTSd
+        oTSdObj.Background = False: Err.Clear
         oTxt.TextStyle = oTSd
         oTxt.Color = oSettings.oIndicPente.Couleur
     Else
@@ -660,6 +700,8 @@ Sub CreerPente(oPtPlace As Point3d, _
         Dim dWC As Double: dWC = oSettings.oIndicPente.Largeur
         If dWC > 0 Then oTSc.Width = dWC Else oTSc.Width = oSettings.oIndicPente.Hauteur
         oTSc.Justification = msdTextJustificationLeftBottom
+        Dim oTScObj As Object: Set oTScObj = oTSc
+        oTScObj.Background = False: Err.Clear
         oTxt.TextStyle = oTSc
         oTxt.Color = oSettings.oIndicPente.Couleur
         Set oTxt.Level = ResolverNiveau(oSettings.oIndicPente.NomNiveau, oSettings)
@@ -669,13 +711,26 @@ Sub CreerPente(oPtPlace As Point3d, _
             Err.Clear
             Set oTxt = CreateTextElement1(Nothing, sPente, oPtTxt, oRot)
         End If
-        Dim oTSp As TextStyle: Set oTSp = oTxt.TextStyle
-        oTSp.Justification = msdTextJustificationLeftBottom
-        oTxt.TextStyle = oTSp
         If oSettings.oTextModele Is Nothing Or Not oSettings.oTexte.CommeModele Then
             oTxt.Color = oSettings.oTexte.Couleur
             Set oTxt.Level = ResolverNiveau(oSettings.oTexte.NomNiveau, oSettings)
+        Else
+            Dim sStyleP As String
+            sStyleP = oSettings.oTextModele.TextStyle.Name
+            If Err.Number = 0 And Len(sStyleP) > 0 Then
+                Dim oStyleP As TextStyle
+                Set oStyleP = ActiveDesignFile.TextStyles(sStyleP)
+                If Not oStyleP Is Nothing Then
+                    oTxt.TextStyle = oStyleP
+                End If
+            End If
+            Err.Clear
+            Set oTxt.Level = ResolverNiveau(oSettings.oTexte.NomNiveau, oSettings)
+            Err.Clear
         End If
+        Dim oTSp As TextStyle: Set oTSp = oTxt.TextStyle
+        oTSp.Justification = msdTextJustificationLeftBottom
+        oTxt.TextStyle = oTSp
     End If
     oTxt.Rotation = oRot
     Err.Clear
@@ -827,3 +882,4 @@ Private Function HauteurTexteModele(oSettings As CMstSettings) As Double
         HauteurTexteModele = 0.1
     End If
 End Function
+
