@@ -65,11 +65,19 @@ Private Sub IPrimitiveCommandEvents_Reset()
 End Sub
 
 Private Sub IPrimitiveCommandEvents_Cleanup()
+    If g_bTransitionInterne Then
+        g_bTransitionInterne = False
+    ElseIf Mode = modePonctuelle Then
+        frmInterpolPonct.Hide
+    Else
+        frmInterpolation.Hide
+    End If
 End Sub
 
 '------------------------------------------------------------------------------
 Private Sub PasserSelectionP2()
     Dim oSuivant As New CSelectP2
     oSuivant.Mode = Mode
+    g_bTransitionInterne = True
     CommandState.StartPrimitive oSuivant
 End Sub

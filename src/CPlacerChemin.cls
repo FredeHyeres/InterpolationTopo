@@ -158,6 +158,7 @@ Private Sub IPrimitiveCommandEvents_Reset()
     If m_nPts = 0 Then
         frmInterpolation.ReinitialiserEtat
         ShowPrompt "Nouvelle selection : cliquez pres du texte altitude du POINT 1  (Reset=quitter)"
+        g_bTransitionInterne = True
         CommandState.StartPrimitive New CSelectP1
         Exit Sub
     End If
@@ -223,6 +224,11 @@ Private Sub IPrimitiveCommandEvents_Reset()
 End Sub
 
 Private Sub IPrimitiveCommandEvents_Cleanup()
+    If g_bTransitionInterne Then
+        g_bTransitionInterne = False
+    Else
+        frmInterpolation.Hide
+    End If
 End Sub
 
 '==============================================================================

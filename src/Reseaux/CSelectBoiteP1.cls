@@ -41,6 +41,7 @@ Private Sub IPrimitiveCommandEvents_DataPoint(Point As Point3d, ByVal View As Vi
 
     ShowPrompt "P1 : " & DecrireBoite(g_oBoiteP1) & _
                "  |  snappez le POINT 2"
+    g_bTransitionInterne = True
     CommandState.StartPrimitive New CSnapBoiteP2
 End Sub
 
@@ -53,8 +54,14 @@ End Sub
 
 Private Sub IPrimitiveCommandEvents_Reset()
     ShowPrompt "Retour au snap P1 : snappez le POINT 1  (Reset = quitter)"
+    g_bTransitionInterne = True
     CommandState.StartPrimitive New CSnapBoiteP1
 End Sub
 
 Private Sub IPrimitiveCommandEvents_Cleanup()
+    If g_bTransitionInterne Then
+        g_bTransitionInterne = False
+    Else
+        frmReseauEP.Hide
+    End If
 End Sub

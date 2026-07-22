@@ -63,6 +63,7 @@ Private Sub IPrimitiveCommandEvents_Reset()
         ShowPrompt "P1 et P2 confondus - choisissez un autre texte (P2)"
         Dim oRetour As New CSelectP2
         oRetour.Mode = Mode
+        g_bTransitionInterne = True
         CommandState.StartPrimitive oRetour
         Exit Sub
     End If
@@ -75,11 +76,16 @@ Private Sub IPrimitiveCommandEvents_Reset()
 End Sub
 
 Private Sub IPrimitiveCommandEvents_Cleanup()
+    If g_bTransitionInterne Then
+        g_bTransitionInterne = False
+    ElseIf Mode = modePonctuelle Then
+        frmInterpolPonct.Hide
+    Else
+        frmInterpolation.Hide
+    End If
 End Sub
 
 '------------------------------------------------------------------------------
-' Segment P1-P2 valide : met a jour le formulaire et lance l'etat de placement
-' selon le mode. sPrefixe complete le message d'invite (origine du point P2).
 Private Sub DemarrerPlacement(sPrefixe As String)
     If Mode = modePonctuelle Then
         AppliquerPenteP1P2
@@ -87,6 +93,7 @@ Private Sub DemarrerPlacement(sPrefixe As String)
         frmInterpolPonct.RafraichirChemin
         ShowPrompt sPrefixe & "Pente=" & Format$(g_oSettings.oChemin.Pente, "0.0") & _
                    "%  ->  CHEMIN : Data=placer un point  Reset=nouv. selection"
+        g_bTransitionInterne = True
         CommandState.StartPrimitive New CPlacerPonctuel
     Else
         frmInterpolation.AfficherP2 g_oP2
@@ -94,6 +101,7 @@ Private Sub DemarrerPlacement(sPrefixe As String)
         frmInterpolation.ActiverBoutonsActions True
         ShowPrompt sPrefixe & g_oCalc.InfoSegment(g_oP1, g_oP2) & _
                    "  ->  deplacez le curseur. Data=figer altitude  Reset=nouv. selection"
+        g_bTransitionInterne = True
         CommandState.StartPrimitive New CPlacerPoint
     End If
 End Sub

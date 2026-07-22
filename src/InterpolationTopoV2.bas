@@ -38,6 +38,7 @@ Public g_oMoteur    As CMoteurGraphique  ' moteur de creation graphique
 Public g_oSelectionCourante As CAltitudeSelection ' dernier texte/tag/cellule trouve
 Public g_oSelectionP1       As CAltitudeSelection ' source modele de creation
 Public g_oSelectionP2       As CAltitudeSelection ' source altitude P2
+Public g_bTransitionInterne As Boolean            ' True = transition entre etats (ne pas cacher le frm)
 
 '------------------------------------------------------------------------------
 ' Point d'entree de la commande Interpolation
@@ -71,10 +72,15 @@ Public Function EnvironnementPret(sTitre As String) As Boolean
 End Function
 
 '------------------------------------------------------------------------------
-' Instanciation unique des objets partages par les classes de commande.
+' Instanciation des objets partages par les classes de commande.
+' g_oSettings persiste entre les appels tant que MicroStation tourne :
+' les reglages utilisateur (niveaux, couleurs, cases cochees) sont conserves.
 Public Sub InitialiserContexte()
-    Set g_oSettings = New CMstSettings
-    g_oSettings.Init
+    If g_oSettings Is Nothing Then
+        Set g_oSettings = New CMstSettings
+        g_oSettings.Init
+    End If
+    g_oSettings.ReinitTransitoires
 
     Set g_oP1 = New CPointRef
     Set g_oP2 = New CPointRef

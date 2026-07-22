@@ -68,6 +68,7 @@ Private Sub IPrimitiveCommandEvents_DataPoint(Point As Point3d, ByVal View As Vi
                "  |  Snappez le point terrain P1  (Reset = ancrage du texte)"
     Dim oSuivant As New CSnapP1
     oSuivant.Mode = Mode
+    g_bTransitionInterne = True
     CommandState.StartPrimitive oSuivant
 End Sub
 
@@ -91,4 +92,11 @@ Private Sub IPrimitiveCommandEvents_Reset()
 End Sub
 
 Private Sub IPrimitiveCommandEvents_Cleanup()
+    If g_bTransitionInterne Then
+        g_bTransitionInterne = False
+    ElseIf Mode = modePonctuelle Then
+        frmInterpolPonct.Hide
+    Else
+        frmInterpolation.Hide
+    End If
 End Sub

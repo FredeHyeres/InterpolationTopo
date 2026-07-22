@@ -339,9 +339,11 @@ Sub Initialiser(oSettings As CMstSettings)
     txtDiametre.Text = Format$(m_oSettings.oCercle.Diametre, "0.00")
     txtCouleur.Text = CStr(m_oSettings.oCercle.Couleur)
 
-    ' Niveaux : remplir les listes depuis le fichier DGN
+    ' Niveaux : remplir les listes depuis le fichier DGN puis repositionner
     RemplirNiveaux cmbNiveau
+    PositionnerNiveau cmbNiveau, m_oSettings.oCercle.NomNiveau
     RemplirNiveaux cmbNiveauTexte
+    PositionnerNiveau cmbNiveauTexte, m_oSettings.oTexte.NomNiveau
 
     ' Texte altitude : case + champs selon le mode
     chkTexteModele.Value = m_oSettings.oTexte.CommeModele
@@ -354,6 +356,7 @@ Sub Initialiser(oSettings As CMstSettings)
     txtPenteH.Text = Format$(m_oSettings.oIndicPente.Hauteur, "0.000")
     txtPenteL.Text = Format$(m_oSettings.oIndicPente.Largeur, "0.000")
     RemplirNiveaux cmbPenteNiveau
+    PositionnerNiveau cmbPenteNiveau, m_oSettings.oIndicPente.NomNiveau
     txtPenteCoulTxt.Text = CStr(m_oSettings.oIndicPente.Couleur)
     txtPenteCoulFl.Text = CStr(m_oSettings.oIndicPente.FlecheCouleur)
     txtPenteFlLong.Text = Format$(m_oSettings.oIndicPente.FlecheLongueur, "0.00")
@@ -387,6 +390,20 @@ Private Sub RemplirNiveaux(cmb As MSForms.ComboBox)
         cmb.AddItem oLvl.Number & " : " & oLvl.Name
     Next
     cmb.ListIndex = 0  ' vide selectionne par defaut
+End Sub
+
+'------------------------------------------------------------------------------
+' Repositionne une combo de niveaux sur le nom sauvegarde dans les settings.
+Private Sub PositionnerNiveau(cmb As MSForms.ComboBox, sNom As String)
+    If Len(sNom) = 0 Then cmb.ListIndex = 0: Exit Sub
+    Dim i As Long
+    For i = 0 To cmb.ListCount - 1
+        If ExtraireNiveau(cmb.List(i)) = sNom Then
+            cmb.ListIndex = i
+            Exit Sub
+        End If
+    Next
+    cmb.ListIndex = 0
 End Sub
 
 '------------------------------------------------------------------------------

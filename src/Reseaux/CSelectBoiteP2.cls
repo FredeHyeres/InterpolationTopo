@@ -47,6 +47,7 @@ Private Sub IPrimitiveCommandEvents_DataPoint(Point As Point3d, ByVal View As Vi
     ShowPrompt "P2 : " & DecrireBoite(g_oBoiteP2) & _
                "  |  Pente=" & Format$(dPente, "0.0") & _
                "%  ->  cliquez pour placer texte+fleche  (Reset=nouv. selection)"
+    g_bTransitionInterne = True
     CommandState.StartPrimitive New CPlacerPenteReseau
 End Sub
 
@@ -59,8 +60,14 @@ End Sub
 
 Private Sub IPrimitiveCommandEvents_Reset()
     ShowPrompt "Retour au snap P2  (Reset = re-clic cellule P1)"
+    g_bTransitionInterne = True
     CommandState.StartPrimitive New CSnapBoiteP2
 End Sub
 
 Private Sub IPrimitiveCommandEvents_Cleanup()
+    If g_bTransitionInterne Then
+        g_bTransitionInterne = False
+    Else
+        frmReseauEP.Hide
+    End If
 End Sub

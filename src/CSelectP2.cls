@@ -57,6 +57,7 @@ Private Sub IPrimitiveCommandEvents_DataPoint(Point As Point3d, ByVal View As Vi
                "  |  Snappez le point terrain P2  (Reset = ancrage du texte)"
     Dim oSuivant As New CSnapP2
     oSuivant.Mode = Mode
+    g_bTransitionInterne = True
     CommandState.StartPrimitive oSuivant
 End Sub
 
@@ -73,13 +74,22 @@ End Sub
 Private Sub IPrimitiveCommandEvents_Reset()
     If Mode = modePonctuelle Then
         ShowPrompt "Pente manuelle  ->  CHEMIN : Data=placer un point  Reset=nouv. selection"
+        g_bTransitionInterne = True
         CommandState.StartPrimitive New CPlacerPonctuel
     Else
         frmInterpolation.ReinitialiserEtat
         ShowPrompt "Retour au POINT 1 : cliquez pres du texte altitude  (Reset = quitter)"
+        g_bTransitionInterne = True
         CommandState.StartPrimitive New CSelectP1
     End If
 End Sub
 
 Private Sub IPrimitiveCommandEvents_Cleanup()
+    If g_bTransitionInterne Then
+        g_bTransitionInterne = False
+    ElseIf Mode = modePonctuelle Then
+        frmInterpolPonct.Hide
+    Else
+        frmInterpolation.Hide
+    End If
 End Sub

@@ -234,6 +234,7 @@ Private Sub IPrimitiveCommandEvents_Reset()
         ShowPrompt "Nouvelle selection : cliquez pres du texte altitude du POINT 1  (Reset=quitter)"
         Dim oEtat As New CSelectP1
         oEtat.Mode = modePonctuelle
+        g_bTransitionInterne = True
         CommandState.StartPrimitive oEtat
 
     Case 3, 4
@@ -255,6 +256,11 @@ Private Sub IPrimitiveCommandEvents_Reset()
 End Sub
 
 Private Sub IPrimitiveCommandEvents_Cleanup()
+    If g_bTransitionInterne Then
+        g_bTransitionInterne = False
+    Else
+        frmInterpolPonct.Hide
+    End If
 End Sub
 
 '==============================================================================

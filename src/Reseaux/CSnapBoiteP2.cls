@@ -52,6 +52,7 @@ Private Sub IPrimitiveCommandEvents_DataPoint(Point As Point3d, ByVal View As Vi
 
     g_ptSnapP2 = Point
     ShowPrompt "P2 snappe  ->  cliquez pres de la cellule regard/grille du P2"
+    g_bTransitionInterne = True
     CommandState.StartPrimitive New CSelectBoiteP2
 End Sub
 
@@ -60,8 +61,14 @@ End Sub
 
 Private Sub IPrimitiveCommandEvents_Reset()
     ShowPrompt "Retour au clic cellule P1  (Reset = re-snap P1)"
+    g_bTransitionInterne = True
     CommandState.StartPrimitive New CSelectBoiteP1
 End Sub
 
 Private Sub IPrimitiveCommandEvents_Cleanup()
+    If g_bTransitionInterne Then
+        g_bTransitionInterne = False
+    Else
+        frmReseauEP.Hide
+    End If
 End Sub

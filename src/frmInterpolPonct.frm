@@ -311,11 +311,13 @@ Sub Initialiser(oSettings As CMstSettings)
     txtDiametre.Text = Format$(m_oSettings.oCercle.Diametre, "0.00")
     txtCouleur.Text = CStr(m_oSettings.oCercle.Couleur)
     RemplirNiveaux cmbNiveau
+    PositionnerNiveau cmbNiveau, m_oSettings.oCercle.NomNiveau
 
     ' Texte
     chkTexteModele.Value = m_oSettings.oTexte.CommeModele
     txtCouleurTexte.Text = CStr(m_oSettings.oTexte.Couleur)
     RemplirNiveaux cmbNiveauTexte
+    PositionnerNiveau cmbNiveauTexte, m_oSettings.oTexte.NomNiveau
     ActiverChampsTexte
 
     ReinitialiserEtat
@@ -329,6 +331,19 @@ Private Sub RemplirNiveaux(cmb As MSForms.ComboBox)
     Dim oLvl As Level
     For Each oLvl In ActiveDesignFile.Levels
         cmb.AddItem oLvl.Number & " : " & oLvl.Name
+    Next
+    cmb.ListIndex = 0
+End Sub
+
+'------------------------------------------------------------------------------
+Private Sub PositionnerNiveau(cmb As MSForms.ComboBox, sNom As String)
+    If Len(sNom) = 0 Then cmb.ListIndex = 0: Exit Sub
+    Dim i As Long
+    For i = 0 To cmb.ListCount - 1
+        If ExtraireNiveau(cmb.List(i)) = sNom Then
+            cmb.ListIndex = i
+            Exit Sub
+        End If
     Next
     cmb.ListIndex = 0
 End Sub

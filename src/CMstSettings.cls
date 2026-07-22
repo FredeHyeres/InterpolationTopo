@@ -56,6 +56,15 @@ Sub Init()
 End Sub
 
 '------------------------------------------------------------------------------
+' Reinitialise les references transitoires (modeles texte/tag) qui deviennent
+' invalides si l'utilisateur change de fichier DGN entre deux lancements.
+Sub ReinitTransitoires()
+    Set oTextModele = Nothing
+    Set oTagModele = Nothing
+    dModeleHauteur = 0#
+End Sub
+
+'------------------------------------------------------------------------------
 ' Appele apres la selection de P1 : charge le texte-modele et ses attributs.
 ' L'indicateur de pente herite de la hauteur/largeur/couleur du texte P1.
 Sub ChargerModeleTexte(oText As TextElement, sSep As String, nDec As Integer)
