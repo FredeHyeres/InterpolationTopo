@@ -141,6 +141,8 @@ Sub DessinTexteLibre(ByVal DrawMode As MsdDrawingMode, _
     On Error GoTo 0
     If bSansModele Or Not oSettings.oTexte.CommeModele Then
         oTxt.Color = oSettings.oTexte.Couleur
+    Else
+        AppliquerStyleModeleTexte oTxt, oSettings
     End If
     oTxt.Redraw DrawMode
 End Sub
@@ -464,15 +466,19 @@ Sub DessinDynamique(ByVal DrawMode As MsdDrawingMode, _
     oRot = oSettings.oTextModele.Rotation
     On Error GoTo 0
     Dim oTxt As TextElement
+    Dim bSansModele As Boolean
     On Error Resume Next
     Set oTxt = CreateTextElement1(oSettings.oTextModele, sAlt, oProj, oRot)
     If oTxt Is Nothing Then
         Err.Clear
+        bSansModele = True
         Set oTxt = CreateTextElement1(Nothing, sAlt, oProj, oRot)
     End If
     On Error GoTo 0
-    If Not oSettings.oTexte.CommeModele Then
+    If bSansModele Or Not oSettings.oTexte.CommeModele Then
         oTxt.Color = oSettings.oTexte.Couleur
+    Else
+        AppliquerStyleModeleTexte oTxt, oSettings
     End If
     oTxt.Redraw DrawMode
 End Sub
@@ -533,15 +539,19 @@ Sub DessinDecalage(ByVal DrawMode As MsdDrawingMode, _
     Dim sAltFinal As String
     sAltFinal = oCalc.FormatAltitude(dZFinal, 3, oSettings.oTexte.SepDecimal)
     Dim oTxt As TextElement
+    Dim bSansModele As Boolean
     On Error Resume Next
     Set oTxt = CreateTextElement1(oSettings.oTextModele, sAltFinal, oPtDecale, oRot)
     If oTxt Is Nothing Then
         Err.Clear
+        bSansModele = True
         Set oTxt = CreateTextElement1(Nothing, sAltFinal, oPtDecale, oRot)
     End If
     On Error GoTo 0
-    If Not oSettings.oTexte.CommeModele Then
+    If bSansModele Or Not oSettings.oTexte.CommeModele Then
         oTxt.Color = oSettings.oTexte.Couleur
+    Else
+        AppliquerStyleModeleTexte oTxt, oSettings
     End If
     oTxt.Redraw DrawMode
 
@@ -549,15 +559,19 @@ Sub DessinDecalage(ByVal DrawMode As MsdDrawingMode, _
     Dim sAltDroite As String
     sAltDroite = oCalc.FormatAltitude(dZSurDroite, 3, oSettings.oTexte.SepDecimal)
     Dim oTxtDroite As TextElement
+    Dim bSansModeleDroite As Boolean
     On Error Resume Next
     Set oTxtDroite = CreateTextElement1(oSettings.oTextModele, sAltDroite, oProj, oRot)
     If oTxtDroite Is Nothing Then
         Err.Clear
+        bSansModeleDroite = True
         Set oTxtDroite = CreateTextElement1(Nothing, sAltDroite, oProj, oRot)
     End If
     On Error GoTo 0
-    If Not oSettings.oTexte.CommeModele Then
+    If bSansModeleDroite Or Not oSettings.oTexte.CommeModele Then
         oTxtDroite.Color = oSettings.oTexte.Couleur
+    Else
+        AppliquerStyleModeleTexte oTxtDroite, oSettings
     End If
     oTxtDroite.Redraw DrawMode
 End Sub
@@ -618,15 +632,20 @@ Sub DessinPenteDynamique(ByVal DrawMode As MsdDrawingMode, _
         oTxt.TextStyle = oTSd
         oTxt.Color = oSettings.oIndicPente.Couleur
     Else
+        Dim bSansModelePente As Boolean
         Set oTxt = CreateTextElement1(oSettings.oTextModele, sPente, oPtTxt, oRot)
         If oTxt Is Nothing Then
             Err.Clear
+            bSansModelePente = True
             Set oTxt = CreateTextElement1(Nothing, sPente, oPtTxt, oRot)
+        End If
+        If Not bSansModelePente And oSettings.oTexte.CommeModele Then
+            AppliquerStyleModeleTexte oTxt, oSettings
         End If
         Dim oTSm As TextStyle: Set oTSm = oTxt.TextStyle
         oTSm.Justification = msdTextJustificationLeftBottom
         oTxt.TextStyle = oTSm
-        If Not oSettings.oTexte.CommeModele Then
+        If bSansModelePente Or Not oSettings.oTexte.CommeModele Then
             oTxt.Color = oSettings.oTexte.Couleur
         End If
     End If
@@ -782,8 +801,34 @@ Private Sub DessinCroix(ByVal DrawMode As MsdDrawingMode, oPt As Point3d, dTaill
 End Sub
 
 '------------------------------------------------------------------------------
+' Reapplique le TextStyle NOMME du texte-modele P1 sur oTxt. Necessaire car
+' CreateTextElement1(oTextModele, ...) ne transfere pas fidelement le style
+' nomme quand oTextModele provient d'une reference attachee (fichier actif et
+' fichier reference ont chacun leur propre collection TextStyles) : l'apercu
+' dynamique doit refaire la meme resolution que la creation definitive
+' (cf. CreerTexteEtCercle / CreerTexteSeul / CreerPente).
+Private Sub AppliquerStyleModeleTexte(oTxt As TextElement, oSettings As CMstSettings)
+    If oSettings.oTextModele Is Nothing Then Exit Sub
+    On Error Resume Next
+    Dim sStyleNom As String
+    sStyleNom = oSettings.oTextModele.TextStyle.Name
+    If Err.Number = 0 And Len(sStyleNom) > 0 Then
+        Dim oStyleLocal As TextStyle
+        Set oStyleLocal = ActiveDesignFile.TextStyles(sStyleNom)
+        If Not oStyleLocal Is Nothing Then
+            oTxt.TextStyle = oStyleLocal
+        End If
+    End If
+    Err.Clear
+    On Error GoTo 0
+End Sub
+
+'------------------------------------------------------------------------------
 ' Resout un niveau par nom ou numero ; chaine vide ou niveau introuvable =
 ' niveau du texte-modele P1. Sert au cercle comme au texte personnalise.
+' Le niveau source peut venir d'une reference (P1 scanne dans un plan attache) :
+' s'il n'existe pas encore dans le fichier actif, il est cree (AddNewLevel),
+' meme logique que NiveauOuCreation/ResolverNiveau dans Trans3D (fonction Points).
 Private Function ResolverNiveau(sNiveau As String, oSettings As CMstSettings) As Level
     Set ResolverNiveau = ActiveSettings.Level
 
@@ -794,6 +839,10 @@ Private Function ResolverNiveau(sNiveau As String, oSettings As CMstSettings) As
         If Err.Number = 0 And Len(sModNiv) > 0 Then
             Dim oLvlMod As Level
             Set oLvlMod = ActiveDesignFile.Levels(sModNiv)
+            If oLvlMod Is Nothing Then
+                Err.Clear
+                Set oLvlMod = ActiveDesignFile.AddNewLevel(sModNiv)
+            End If
             If Err.Number = 0 And Not oLvlMod Is Nothing Then
                 Set ResolverNiveau = oLvlMod
             End If
@@ -815,6 +864,12 @@ Private Function ResolverNiveau(sNiveau As String, oSettings As CMstSettings) As
                 Set oLvl = oL: Exit For
             End If
         Next
+    End If
+    If oLvl Is Nothing Then
+        On Error Resume Next
+        Set oLvl = ActiveDesignFile.AddNewLevel(sNiveau)
+        Err.Clear
+        On Error GoTo 0
     End If
     If Not oLvl Is Nothing Then Set ResolverNiveau = oLvl
 End Function

@@ -395,15 +395,33 @@ Private Sub DessinTexteProvLocal(ByVal DrawMode As MsdDrawingMode, _
     If Not g_oSettings.oTextModele Is Nothing Then oRot = g_oSettings.oTextModele.Rotation
     On Error GoTo 0
     Dim oTxt As TextElement
+    Dim bSansModele As Boolean
     On Error Resume Next
     Set oTxt = CreateTextElement1(g_oSettings.oTextModele, sAlt, oPt, oRot)
     If oTxt Is Nothing Then
         Err.Clear
+        bSansModele = True
         Set oTxt = CreateTextElement1(Nothing, sAlt, oPt, oRot)
     End If
     On Error GoTo 0
-    If Not g_oSettings.oTexte.CommeModele Then
+    If bSansModele Or Not g_oSettings.oTexte.CommeModele Then
         oTxt.Color = g_oSettings.oTexte.Couleur
+    Else
+        ' Reapplique le TextStyle NOMME du texte-modele P1 : CreateTextElement1
+        ' ne le transfere pas fidelement quand le modele vient d'une reference
+        ' attachee (chaque fichier a sa propre collection TextStyles).
+        On Error Resume Next
+        Dim sStyleNom As String
+        sStyleNom = g_oSettings.oTextModele.TextStyle.Name
+        If Err.Number = 0 And Len(sStyleNom) > 0 Then
+            Dim oStyleLocal As TextStyle
+            Set oStyleLocal = ActiveDesignFile.TextStyles(sStyleNom)
+            If Not oStyleLocal Is Nothing Then
+                oTxt.TextStyle = oStyleLocal
+            End If
+        End If
+        Err.Clear
+        On Error GoTo 0
     End If
     oTxt.Redraw DrawMode
 End Sub
