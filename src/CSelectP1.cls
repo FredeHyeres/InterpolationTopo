@@ -61,7 +61,6 @@ Private Sub IPrimitiveCommandEvents_DataPoint(Point As Point3d, ByVal View As Vi
     Else
         frmInterpolation.AfficherP1 g_oP1
         frmInterpolation.RafraichirTexte
-        frmInterpolation.RafraichirPente
     End If
 
     ShowPrompt "P1 = " & g_oSelectionCourante.ValeurTexte & _

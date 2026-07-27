@@ -12,27 +12,24 @@ Attribute VB_Exposed = False
 '
 ' Meme role que CSymboTexte / CSymboCercle : simple sac de proprietes,
 ' sans dependance a l'API MicroStation.
-' Hauteur / Largeur / Couleur sont recalees sur le texte-modele P1 par
-' CMstSettings.ChargerModeleTexte, sauf si Perso est actif.
+'
+' Le texte pente n'a pas de reglages de taille/couleur dedies : sa taille et
+' sa couleur viennent du style de texte nomme (NomStyle), ou du style actif
+' si NomStyle est vide. Pour un rendu different, l'utilisateur cree un
+' nouveau style de texte plutot que de personnaliser au cas par cas.
 '==============================================================================
 Option Explicit
 
-Public Perso            As Boolean   ' True = parametres personnalises (sinon herites de P1)
-Public Hauteur          As Double    ' hauteur du texte pente
-Public Largeur          As Double    ' largeur du texte pente
-Public Couleur          As Long      ' couleur du texte pente (index 0-255)
-Public NomNiveau        As String    ' niveau du texte pente ("" = niveau actif)
+Public NomNiveau        As String    ' niveau du texte + fleche pente ("" = niveau actif/P1)
+Public NomStyle         As String    ' style de texte nomme du texte pente ("" = style actif)
 Public FlecheLongueur   As Double    ' longueur de la fleche (u.m.)
 Public FlecheCouleur    As Long      ' couleur de la fleche (index 0-255)
 Public Decimales        As Integer   ' decimales du texte pente (defaut 1)
 
 '------------------------------------------------------------------------------
 Sub InitDefauts()
-    Perso = False
-    Hauteur = 0.1
-    Largeur = 0.1
-    Couleur = 0
     NomNiveau = ""
+    NomStyle = ""
     FlecheLongueur = 1#
     FlecheCouleur = 3
     Decimales = 1

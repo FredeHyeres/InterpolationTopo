@@ -19,8 +19,10 @@ Attribute VB_Exposed = False
 ' Cadres :
 '   Etat        : lecture P1 et P2 (Fe / T / Prof), distance 2D, pente
 '   Recherche   : rayon de recherche autour du clic (u.m.)
-'   Indicateur  : parametres perso hauteur/couleur du texte pente et de la fleche,
-'                 independants des reglages Interpolation V2
+'   Indicateur  : niveau, style de texte, decimales, couleur/longueur fleche
+'                 (reglages toujours actifs, pas de mode "personnalise" :
+'                 la taille/couleur du texte pente vient du style de texte
+'                 nomme choisi, independants des reglages Interpolation V2)
 '
 ' Tous les controles sont crees au runtime dans ConstruireControles (le .frx
 ' n'est qu'un blob de formulaire vide, cf. CLAUDE.md).
@@ -42,12 +44,12 @@ Private WithEvents txtTol As MSForms.TextBox
 Attribute txtTol.VB_VarHelpID = -1
 
 ' --- Indicateur pente ---
-Private WithEvents chkPerso As MSForms.CheckBox
-Attribute chkPerso.VB_VarHelpID = -1
-Private WithEvents txtHauteur As MSForms.TextBox
-Attribute txtHauteur.VB_VarHelpID = -1
-Private WithEvents txtCoulTxt As MSForms.TextBox
-Attribute txtCoulTxt.VB_VarHelpID = -1
+Private WithEvents cmbNiveau As MSForms.ComboBox
+Attribute cmbNiveau.VB_VarHelpID = -1
+Private WithEvents cmbStyle As MSForms.ComboBox
+Attribute cmbStyle.VB_VarHelpID = -1
+Private WithEvents txtDec As MSForms.TextBox
+Attribute txtDec.VB_VarHelpID = -1
 Private WithEvents txtLongFleche As MSForms.TextBox
 Attribute txtLongFleche.VB_VarHelpID = -1
 Private WithEvents txtCoulFleche As MSForms.TextBox
@@ -67,7 +69,7 @@ Private Sub ConstruireControles()
 
     Me.Caption = "Pente Reseau EU/EP"
     Me.Width = 212
-    Me.Height = 340
+    Me.Height = 312
 
     Dim dY As Double
     dY = 6
@@ -102,39 +104,37 @@ Private Sub ConstruireControles()
     dY = dY + 44
 
     ' --- Cadre Indicateur pente ----------------------------------------------
+    ' Reglages toujours actifs (pas de mode "personnalise") : la taille et la
+    ' couleur du texte pente viennent du style de texte nomme choisi.
     Dim fraInd As MSForms.Frame
     Set fraInd = Me.Controls.Add("Forms.Frame.1", "fraInd")
     fraInd.Caption = "Indicateur pente (texte + fleche)"
     fraInd.Left = 6: fraInd.Top = dY
-    fraInd.Width = 192: fraInd.Height = 130
+    fraInd.Width = 192: fraInd.Height = 102
 
-    Set chkPerso = fraInd.Controls.Add("Forms.CheckBox.1", "chkPerso")
-    chkPerso.Caption = "Reglages personnalises"
-    chkPerso.Left = 6: chkPerso.Top = 10
-    chkPerso.Width = 180: chkPerso.Height = 14
-    chkPerso.Value = True
+    CreerLabel fraInd, "lblNiv", "Niveau (vide = niveau actif) :", 6, 10, 178
+    Set cmbNiveau = fraInd.Controls.Add("Forms.ComboBox.1", "cmbNiveau")
+    cmbNiveau.Left = 6: cmbNiveau.Top = 24
+    cmbNiveau.Width = 180: cmbNiveau.Height = 16
 
-    CreerLabel fraInd, "lblHt", "Hauteur texte :", 6, 32, 78
-    Set txtHauteur = fraInd.Controls.Add("Forms.TextBox.1", "txtHauteur")
-    txtHauteur.Left = 108: txtHauteur.Top = 30
-    txtHauteur.Width = 48: txtHauteur.Height = 16
+    CreerLabel fraInd, "lblStyle", "Style de texte (vide = style actif) :", 6, 46, 178
+    Set cmbStyle = fraInd.Controls.Add("Forms.ComboBox.1", "cmbStyle")
+    cmbStyle.Left = 6: cmbStyle.Top = 60
+    cmbStyle.Width = 180: cmbStyle.Height = 16
 
-    CreerLabel fraInd, "lblCTxt", "Couleur texte :", 6, 52, 78
-    Set txtCoulTxt = fraInd.Controls.Add("Forms.TextBox.1", "txtCoulTxt")
-    txtCoulTxt.Left = 108: txtCoulTxt.Top = 50
-    txtCoulTxt.Width = 30: txtCoulTxt.Height = 16
+    CreerLabel fraInd, "lblDec", "Dec:", 6, 82, 24
+    Set txtDec = fraInd.Controls.Add("Forms.TextBox.1", "txtDec")
+    txtDec.Left = 32: txtDec.Top = 80: txtDec.Width = 28: txtDec.Height = 16
 
-    CreerLabel fraInd, "lblLF", "Longueur fleche :", 6, 72, 90
-    Set txtLongFleche = fraInd.Controls.Add("Forms.TextBox.1", "txtLongFleche")
-    txtLongFleche.Left = 108: txtLongFleche.Top = 70
-    txtLongFleche.Width = 48: txtLongFleche.Height = 16
-
-    CreerLabel fraInd, "lblCF", "Couleur fleche :", 6, 92, 90
+    CreerLabel fraInd, "lblCF", "C.fl:", 68, 82, 24
     Set txtCoulFleche = fraInd.Controls.Add("Forms.TextBox.1", "txtCoulFleche")
-    txtCoulFleche.Left = 108: txtCoulFleche.Top = 90
-    txtCoulFleche.Width = 30: txtCoulFleche.Height = 16
+    txtCoulFleche.Left = 94: txtCoulFleche.Top = 80
+    txtCoulFleche.Width = 24: txtCoulFleche.Height = 16
 
-    CreerLabel fraInd, "lblAide", "(decoche = defauts V2)", 6, 112, 180
+    CreerLabel fraInd, "lblLF", "Long:", 126, 82, 24
+    Set txtLongFleche = fraInd.Controls.Add("Forms.TextBox.1", "txtLongFleche")
+    txtLongFleche.Left = 152: txtLongFleche.Top = 80
+    txtLongFleche.Width = 34: txtLongFleche.Height = 16
 End Sub
 
 '------------------------------------------------------------------------------
@@ -156,30 +156,79 @@ Sub Initialiser(oSettings As CMstSettings)
     Set m_oSettings = oSettings
     m_bInit = True
 
-    ' Par defaut, on active les reglages perso (sinon la V2 n'ayant pas de
-    ' texte-modele P1, les tailles heritees restent a la valeur par defaut 0.1).
-    m_oSettings.oIndicPente.Perso = (chkPerso.Value = True)
-
     txtTol.Text = Format$(g_dTolReseau, "0.00")
-    txtHauteur.Text = Format$(m_oSettings.oIndicPente.Hauteur, "0.000")
-    txtCoulTxt.Text = CStr(m_oSettings.oIndicPente.Couleur)
+
+    RemplirNiveaux cmbNiveau
+    PositionnerNiveau cmbNiveau, m_oSettings.oIndicPente.NomNiveau
+    RemplirStyles cmbStyle
+    PositionnerStyle cmbStyle, m_oSettings.oIndicPente.NomStyle
+    txtDec.Text = CStr(m_oSettings.oIndicPente.Decimales)
     txtLongFleche.Text = Format$(m_oSettings.oIndicPente.FlecheLongueur, "0.00")
     txtCoulFleche.Text = CStr(m_oSettings.oIndicPente.FlecheCouleur)
 
-    ActiverChampsPerso
     ReinitialiserEtat
 
     m_bInit = False
 End Sub
 
-Private Sub ActiverChampsPerso()
-    Dim b As Boolean
-    b = (chkPerso.Value = True)
-    txtHauteur.Enabled = b
-    txtCoulTxt.Enabled = b
-    txtLongFleche.Enabled = b
-    txtCoulFleche.Enabled = b
+'------------------------------------------------------------------------------
+Private Sub RemplirNiveaux(cmb As MSForms.ComboBox)
+    cmb.Clear
+    cmb.AddItem ""   ' premier element vide = niveau actif
+    Dim oLvl As Level
+    For Each oLvl In ActiveDesignFile.Levels
+        cmb.AddItem oLvl.Number & " : " & oLvl.Name
+    Next
+    cmb.ListIndex = 0
 End Sub
+
+'------------------------------------------------------------------------------
+Private Sub PositionnerNiveau(cmb As MSForms.ComboBox, sNom As String)
+    If Len(sNom) = 0 Then cmb.ListIndex = 0: Exit Sub
+    Dim i As Long
+    For i = 0 To cmb.ListCount - 1
+        If ExtraireNiveau(cmb.List(i)) = sNom Then
+            cmb.ListIndex = i
+            Exit Sub
+        End If
+    Next
+    cmb.ListIndex = 0
+End Sub
+
+'------------------------------------------------------------------------------
+Private Sub RemplirStyles(cmb As MSForms.ComboBox)
+    cmb.Clear
+    cmb.AddItem ""   ' premier element vide = style actif
+    Dim oTS As TextStyle
+    For Each oTS In ActiveDesignFile.TextStyles
+        cmb.AddItem oTS.Name
+    Next
+    cmb.ListIndex = 0
+End Sub
+
+'------------------------------------------------------------------------------
+Private Sub PositionnerStyle(cmb As MSForms.ComboBox, sNom As String)
+    If Len(sNom) = 0 Then cmb.ListIndex = 0: Exit Sub
+    Dim i As Long
+    For i = 0 To cmb.ListCount - 1
+        If cmb.List(i) = sNom Then
+            cmb.ListIndex = i
+            Exit Sub
+        End If
+    Next
+    cmb.ListIndex = 0
+End Sub
+
+'------------------------------------------------------------------------------
+' Extrait le niveau d'un item de combo "42 : Altimetrie" -> "42".
+Private Function ExtraireNiveau(ByVal sItem As String) As String
+    sItem = Trim$(sItem)
+    If InStr(sItem, " : ") > 0 Then
+        ExtraireNiveau = Trim$(Left$(sItem, InStr(sItem, " : ") - 1))
+    Else
+        ExtraireNiveau = sItem
+    End If
+End Function
 
 '==============================================================================
 ' Mise a jour depuis les classes de commande
@@ -234,31 +283,30 @@ End Sub
 ' Evenements Indicateur pente
 '==============================================================================
 
-Private Sub chkPerso_Change()
+Private Sub cmbNiveau_Change()
     If m_bInit Then Exit Sub
     If m_oSettings Is Nothing Then Exit Sub
-    m_oSettings.oIndicPente.Perso = (chkPerso.Value = True)
-    ActiverChampsPerso
+    m_oSettings.oIndicPente.NomNiveau = ExtraireNiveau(cmbNiveau.Text)
 End Sub
 
-Private Sub txtHauteur_Change()
+Private Sub cmbStyle_Change()
     If m_bInit Then Exit Sub
     If m_oSettings Is Nothing Then Exit Sub
-    Dim d As Double
-    d = Val(Replace(Trim$(txtHauteur.Text), ",", "."))
-    If d > 0 Then
-        m_oSettings.oIndicPente.Hauteur = d
-        m_oSettings.oIndicPente.Largeur = d
-    End If
+    m_oSettings.oIndicPente.NomStyle = Trim$(cmbStyle.Text)
 End Sub
 
-Private Sub txtCoulTxt_Change()
+Private Sub txtDec_Change()
     If m_bInit Then Exit Sub
     If m_oSettings Is Nothing Then Exit Sub
-    Dim sVal As String: sVal = Trim$(txtCoulTxt.Text)
-    If sVal = "" Then Exit Sub
-    Dim n As Long: n = CLng(Val(sVal))
-    If n >= 0 And n <= 255 Then m_oSettings.oIndicPente.Couleur = n
+    Dim nDec As Integer
+    nDec = CInt(Val(Trim$(txtDec.Text)))
+    If nDec >= 0 And nDec <= 6 Then m_oSettings.oIndicPente.Decimales = nDec
+End Sub
+
+Private Sub txtDec_KeyDown(ByVal KeyCode As MSForms.ReturnInteger, _
+                            ByVal Shift As Integer)
+    If KeyCode = vbKeyReturn And Not m_oSettings Is Nothing Then _
+        txtDec.Text = CStr(m_oSettings.oIndicPente.Decimales)
 End Sub
 
 Private Sub txtLongFleche_Change()

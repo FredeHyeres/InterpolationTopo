@@ -21,7 +21,7 @@ Attribute VB_Exposed = False
 '   Rayonnement      : pente (%), DZ, checkbox
 '   Decimales        : commun chemin + rayon
 '   Cercle           : diametre, couleur, niveau
-'   Texte            : comme modele, couleur, niveau
+'   Texte            : comme modele, couleur, niveau, style de texte
 '   Etat             : P1, P2 (optionnel)
 '
 ' Tous les controles sont crees au runtime dans ConstruireControles.
@@ -78,6 +78,8 @@ Private WithEvents txtCouleurTexte As MSForms.TextBox
 Attribute txtCouleurTexte.VB_VarHelpID = -1
 Private WithEvents cmbNiveauTexte As MSForms.ComboBox
 Attribute cmbNiveauTexte.VB_VarHelpID = -1
+Private WithEvents cmbStyleTexte As MSForms.ComboBox
+Attribute cmbStyleTexte.VB_VarHelpID = -1
 ' --- Etat ---
 Private lblP1       As MSForms.Label
 Private lblP2       As MSForms.Label
@@ -96,7 +98,7 @@ Private Sub ConstruireControles()
 
     Me.Caption = "Interpol. Ponctuelle"
     Me.Width = 212
-    Me.Height = 514
+    Me.Height = 530
 
     Dim dY As Double
     dY = 6
@@ -232,7 +234,7 @@ Private Sub ConstruireControles()
     Set fraTexte = Me.Controls.Add("Forms.Frame.1", "fraTexte")
     fraTexte.Caption = "Texte altitude"
     fraTexte.Left = 6: fraTexte.Top = dY
-    fraTexte.Width = 192: fraTexte.Height = 76
+    fraTexte.Width = 192: fraTexte.Height = 92
 
     Set chkTexteModele = fraTexte.Controls.Add("Forms.CheckBox.1", "chkTexteModele")
     chkTexteModele.Caption = "Memes attributs que P1"
@@ -250,7 +252,12 @@ Private Sub ConstruireControles()
     cmbNiveauTexte.Left = 56: cmbNiveauTexte.Top = 48
     cmbNiveauTexte.Width = 130: cmbNiveauTexte.Height = 16
 
-    dY = dY + 82
+    CreerLabel fraTexte, "lblStyleTxt", "Style :", 6, 70, 42
+    Set cmbStyleTexte = fraTexte.Controls.Add("Forms.ComboBox.1", "cmbStyleTexte")
+    cmbStyleTexte.Left = 56: cmbStyleTexte.Top = 68
+    cmbStyleTexte.Width = 130: cmbStyleTexte.Height = 16
+
+    dY = dY + 98
 
     ' --- Cadre Etat -----------------------------------------------------------
     Dim fraEtat As MSForms.Frame
@@ -318,6 +325,8 @@ Sub Initialiser(oSettings As CMstSettings)
     txtCouleurTexte.Text = CStr(m_oSettings.oTexte.Couleur)
     RemplirNiveaux cmbNiveauTexte
     PositionnerNiveau cmbNiveauTexte, m_oSettings.oTexte.NomNiveau
+    RemplirStyles cmbStyleTexte
+    PositionnerStyle cmbStyleTexte, m_oSettings.oTexte.NomStyle
     ActiverChampsTexte
 
     ReinitialiserEtat
@@ -353,6 +362,31 @@ Private Sub ActiverChampsTexte()
     bLibre = Not m_oSettings.oTexte.CommeModele
     txtCouleurTexte.Enabled = bLibre
     cmbNiveauTexte.Enabled = bLibre
+    cmbStyleTexte.Enabled = bLibre
+End Sub
+
+'------------------------------------------------------------------------------
+Private Sub RemplirStyles(cmb As MSForms.ComboBox)
+    cmb.Clear
+    cmb.AddItem ""
+    Dim oTS As TextStyle
+    For Each oTS In ActiveDesignFile.TextStyles
+        cmb.AddItem oTS.Name
+    Next
+    cmb.ListIndex = 0
+End Sub
+
+'------------------------------------------------------------------------------
+Private Sub PositionnerStyle(cmb As MSForms.ComboBox, sNom As String)
+    If Len(sNom) = 0 Then cmb.ListIndex = 0: Exit Sub
+    Dim i As Long
+    For i = 0 To cmb.ListCount - 1
+        If cmb.List(i) = sNom Then
+            cmb.ListIndex = i
+            Exit Sub
+        End If
+    Next
+    cmb.ListIndex = 0
 End Sub
 
 '==============================================================================
@@ -377,6 +411,7 @@ Sub RafraichirTexte()
     m_bInit = True
     txtCouleurTexte.Text = CStr(m_oSettings.oTexte.Couleur)
     cmbNiveauTexte.Text = m_oSettings.oTexte.NomNiveau
+    cmbStyleTexte.Text = m_oSettings.oTexte.NomStyle
     m_bInit = False
 End Sub
 
@@ -587,6 +622,12 @@ Private Sub cmbNiveauTexte_Change()
     If m_bInit Then Exit Sub
     If m_oSettings Is Nothing Then Exit Sub
     m_oSettings.oTexte.NomNiveau = ExtraireNiveau(cmbNiveauTexte.Text)
+End Sub
+
+Private Sub cmbStyleTexte_Change()
+    If m_bInit Then Exit Sub
+    If m_oSettings Is Nothing Then Exit Sub
+    m_oSettings.oTexte.NomStyle = Trim$(cmbStyleTexte.Text)
 End Sub
 
 '------------------------------------------------------------------------------

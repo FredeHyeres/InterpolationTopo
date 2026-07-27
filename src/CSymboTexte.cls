@@ -23,6 +23,7 @@ Option Explicit
 
 Public CommeModele  As Boolean  ' True = memes attributs que le texte P1
 Public NomNiveau    As String   ' niveau du texte cree (nom ou numero)
+Public NomStyle     As String   ' style de texte nomme applique ("" = style actif/modele)
 Public Couleur      As Long     ' index couleur MicroStation 0-255
 
 Public SepDecimal   As String   ' "." ou "," : separateur lu sur le texte source
@@ -34,13 +35,14 @@ Private Sub Class_Initialize()
 End Sub
 
 '------------------------------------------------------------------------------
-' Charge NomNiveau et Couleur depuis le TextElement P1 - uniquement en mode
-' modele, pour ne pas ecraser un choix utilisateur.
+' Charge NomNiveau, Couleur et NomStyle depuis le TextElement P1 - uniquement
+' en mode modele, pour ne pas ecraser un choix utilisateur.
 ' SepDecimal et Decimales sont renseignes par CInterpolation lors du parsing.
 Sub ChargerDepuisElement(oText As TextElement)
     If Not CommeModele Then Exit Sub
     On Error Resume Next
     NomNiveau = oText.Level.Name
     Couleur = oText.Color
+    NomStyle = oText.TextStyle.Name
     On Error GoTo 0
 End Sub

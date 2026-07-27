@@ -66,7 +66,9 @@ End Sub
 
 '------------------------------------------------------------------------------
 ' Appele apres la selection de P1 : charge le texte-modele et ses attributs.
-' L'indicateur de pente herite de la hauteur/largeur/couleur du texte P1.
+' dModeleHauteur (hauteur du texte P1) sert uniquement a positionner le texte
+' de l'indicateur de pente au-dessus de la fleche (cf. HauteurTexteModele) ;
+' la taille/couleur du texte pente lui-meme vient de son propre style nomme.
 Sub ChargerModeleTexte(oText As TextElement, sSep As String, nDec As Integer)
     Set oTextModele = oText
     Set oTagModele = Nothing
@@ -79,20 +81,11 @@ Sub ChargerModeleTexte(oText As TextElement, sSep As String, nDec As Integer)
     Set oTemp = CreateTextElement1(oText, "0", ptO, Matrix3dIdentity())
     If Not oTemp Is Nothing Then
         dModeleHauteur = CDbl(oTemp.TextStyle.Height)
-        oIndicPente.Largeur = CDbl(oTemp.TextStyle.Width)
     Else
         Err.Clear
         dModeleHauteur = CDbl(oText.TextStyle.Height)
-        oIndicPente.Largeur = CDbl(oText.TextStyle.Width)
     End If
-    oIndicPente.Hauteur = dModeleHauteur
-    If oIndicPente.Largeur <= 0 Then oIndicPente.Largeur = dModeleHauteur
-    oIndicPente.Couleur = oText.Color
-    If Err.Number <> 0 Then
-        dModeleHauteur = 0#
-        oIndicPente.Hauteur = 0.1
-        oIndicPente.Largeur = 0.1
-    End If
+    If Err.Number <> 0 Then dModeleHauteur = 0#
     SyncStyleTexteModele oText
     Err.Clear
     On Error GoTo 0
@@ -165,11 +158,6 @@ Sub ChargerModeleDepuisTag(oTag As TagElement, sSep As String, nDec As Integer)
     If dHY > 0 And dHX > 0 Then
         If dHX < dHY Then dModeleHauteur = dHX Else dModeleHauteur = dHY
     End If
-    If dModeleHauteur > 0 Then
-        oIndicPente.Hauteur = dModeleHauteur
-        oIndicPente.Largeur = dModeleHauteur
-    End If
-    oIndicPente.Couleur = oTag.Color
     Err.Clear
     On Error GoTo 0
 End Sub

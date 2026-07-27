@@ -38,6 +38,16 @@ Attribute VB_Exposed = False
 '     chkTexteModele CheckBox - True = memes attributs que le texte P1 (defaut)
 '     txtCouleurTexte TextBox - couleur du texte cree (si case decochee)
 '     cmbNiveauTexte ComboBox - niveau du texte cree (si case decochee)
+'     cmbStyleTexte  ComboBox - style de texte nomme applique (si case decochee)
+'   fraIndPente (reglages toujours actifs, pas de mode "personnalise") :
+'     cmbPenteNiveau ComboBox - niveau du texte + fleche pente
+'     cmbPenteStyle  ComboBox - style de texte nomme du texte pente
+'     txtPenteDec    TextBox  - decimales du texte pente
+'     txtPenteCoulFl TextBox  - couleur de la fleche
+'     txtPenteFlLong TextBox  - longueur de la fleche
+'     Pas de reglage de taille/couleur du texte pente : ils viennent du style
+'     de texte nomme choisi (cmbPenteStyle) ; pour un autre rendu, creer un
+'     nouveau style de texte plutot que de personnaliser au cas par cas.
 '   fraEtat
 '     lblP1          Label    - affiche "P1 : <altitude>" apres selection
 '     lblP2          Label    - affiche "P2 : <altitude>" apres selection
@@ -67,6 +77,8 @@ Private WithEvents txtCouleurTexte As MSForms.TextBox
 Attribute txtCouleurTexte.VB_VarHelpID = -1
 Private WithEvents cmbNiveauTexte As MSForms.ComboBox
 Attribute cmbNiveauTexte.VB_VarHelpID = -1
+Private WithEvents cmbStyleTexte As MSForms.ComboBox
+Attribute cmbStyleTexte.VB_VarHelpID = -1
 Private WithEvents txtDecimales As MSForms.TextBox
 Attribute txtDecimales.VB_VarHelpID = -1
 Private WithEvents chkPente As MSForms.CheckBox
@@ -81,16 +93,10 @@ Private WithEvents txtDecalageDZ As MSForms.TextBox
 Attribute txtDecalageDZ.VB_VarHelpID = -1
 Private WithEvents chkDecalIndPente As MSForms.CheckBox
 Attribute chkDecalIndPente.VB_VarHelpID = -1
-Private WithEvents chkPentePerso As MSForms.CheckBox
-Attribute chkPentePerso.VB_VarHelpID = -1
-Private WithEvents txtPenteH As MSForms.TextBox
-Attribute txtPenteH.VB_VarHelpID = -1
-Private WithEvents txtPenteL As MSForms.TextBox
-Attribute txtPenteL.VB_VarHelpID = -1
 Private WithEvents cmbPenteNiveau As MSForms.ComboBox
 Attribute cmbPenteNiveau.VB_VarHelpID = -1
-Private WithEvents txtPenteCoulTxt As MSForms.TextBox
-Attribute txtPenteCoulTxt.VB_VarHelpID = -1
+Private WithEvents cmbPenteStyle As MSForms.ComboBox
+Attribute cmbPenteStyle.VB_VarHelpID = -1
 Private WithEvents txtPenteCoulFl As MSForms.TextBox
 Attribute txtPenteCoulFl.VB_VarHelpID = -1
 Private WithEvents txtPenteFlLong As MSForms.TextBox
@@ -123,7 +129,7 @@ Private Sub ConstruireControles()
 
     Me.Caption = "Interpolation Topo"
     Me.Width = 212
-    Me.Height = 670
+    Me.Height = 714
 
     ' --- Cadre Cercle -------------------------------------------------------
     Dim fraCercle As MSForms.Frame
@@ -157,7 +163,7 @@ Private Sub ConstruireControles()
     Set fraTexte = Me.Controls.Add("Forms.Frame.1", "fraTexte")
     fraTexte.Caption = "Texte altitude si alti est un texte"
     fraTexte.Left = 6: fraTexte.Top = 138
-    fraTexte.Width = 192: fraTexte.Height = 126
+    fraTexte.Width = 192: fraTexte.Height = 158
 
     Set chkTexteModele = fraTexte.Controls.Add("Forms.CheckBox.1", "chkTexteModele")
     chkTexteModele.Caption = "Memes attributs que le texte P1"
@@ -175,9 +181,14 @@ Private Sub ConstruireControles()
     cmbNiveauTexte.Left = 6: cmbNiveauTexte.Top = 78
     cmbNiveauTexte.Width = 180: cmbNiveauTexte.Height = 16
 
-    CreerLabel fraTexte, "lblDecimales", "Decimales :", 6, 100, 54
+    CreerLabel fraTexte, "lblStyleTexte", "Style de texte (vide = style du texte P1) :", 6, 100, 178
+    Set cmbStyleTexte = fraTexte.Controls.Add("Forms.ComboBox.1", "cmbStyleTexte")
+    cmbStyleTexte.Left = 6: cmbStyleTexte.Top = 114
+    cmbStyleTexte.Width = 180: cmbStyleTexte.Height = 16
+
+    CreerLabel fraTexte, "lblDecimales", "Decimales :", 6, 136, 54
     Set txtDecimales = fraTexte.Controls.Add("Forms.TextBox.1", "txtDecimales")
-    txtDecimales.Left = 62: txtDecimales.Top = 98
+    txtDecimales.Left = 62: txtDecimales.Top = 134
     txtDecimales.Width = 24: txtDecimales.Height = 16
     txtDecimales.Text = "2"
 
@@ -185,7 +196,7 @@ Private Sub ConstruireControles()
     Dim fraPente As MSForms.Frame
     Set fraPente = Me.Controls.Add("Forms.Frame.1", "fraPente")
     fraPente.Caption = "Pente decalage"
-    fraPente.Left = 6: fraPente.Top = 270
+    fraPente.Left = 6: fraPente.Top = 302
     fraPente.Width = 192: fraPente.Height = 114
 
     Set chkPente = fraPente.Controls.Add("Forms.CheckBox.1", "chkPente")
@@ -227,61 +238,43 @@ Private Sub ConstruireControles()
     chkDecalIndPente.Value = False
 
     ' --- Cadre Indicateur pente ---------------------------------------------
+    ' Pas de mode "personnalise" : ces reglages sont toujours actifs. La
+    ' taille/couleur du texte pente vient du style de texte nomme choisi.
     Dim fraIndPente As MSForms.Frame
     Set fraIndPente = Me.Controls.Add("Forms.Frame.1", "fraIndPente")
     fraIndPente.Caption = "Indicateur pente"
-    fraIndPente.Left = 6: fraIndPente.Top = 390
-    fraIndPente.Width = 192: fraIndPente.Height = 90
+    fraIndPente.Left = 6: fraIndPente.Top = 422
+    fraIndPente.Width = 192: fraIndPente.Height = 102
 
-    Set chkPentePerso = fraIndPente.Controls.Add("Forms.CheckBox.1", "chkPentePerso")
-    chkPentePerso.Caption = "Personnaliser"
-    chkPentePerso.Left = 6: chkPentePerso.Top = 10
-    chkPentePerso.Width = 180: chkPentePerso.Height = 14
-    chkPentePerso.Value = False
-
-    CreerLabel fraIndPente, "lblPenteH", "H:", 6, 30, 12
-    Set txtPenteH = fraIndPente.Controls.Add("Forms.TextBox.1", "txtPenteH")
-    txtPenteH.Left = 20: txtPenteH.Top = 28: txtPenteH.Width = 40: txtPenteH.Height = 16
-    txtPenteH.Enabled = False
-
-    CreerLabel fraIndPente, "lblPenteL", "L:", 68, 30, 12
-    Set txtPenteL = fraIndPente.Controls.Add("Forms.TextBox.1", "txtPenteL")
-    txtPenteL.Left = 82: txtPenteL.Top = 28: txtPenteL.Width = 40: txtPenteL.Height = 16
-    txtPenteL.Enabled = False
-
-    CreerLabel fraIndPente, "lblPenteDec", "Dec:", 128, 30, 22
-    Set txtPenteDec = fraIndPente.Controls.Add("Forms.TextBox.1", "txtPenteDec")
-    txtPenteDec.Left = 152: txtPenteDec.Top = 28: txtPenteDec.Width = 34: txtPenteDec.Height = 16
-
-    CreerLabel fraIndPente, "lblPenteNiv", "Niv:", 6, 50, 18
+    CreerLabel fraIndPente, "lblPenteNiv", "Niveau (vide = niveau actif) :", 6, 10, 178
     Set cmbPenteNiveau = fraIndPente.Controls.Add("Forms.ComboBox.1", "cmbPenteNiveau")
-    cmbPenteNiveau.Left = 28: cmbPenteNiveau.Top = 48
-    cmbPenteNiveau.Width = 158: cmbPenteNiveau.Height = 16
-    cmbPenteNiveau.Enabled = False
+    cmbPenteNiveau.Left = 6: cmbPenteNiveau.Top = 24
+    cmbPenteNiveau.Width = 180: cmbPenteNiveau.Height = 16
 
-    CreerLabel fraIndPente, "lblPCTxt", "C.txt:", 6, 70, 26
-    Set txtPenteCoulTxt = fraIndPente.Controls.Add("Forms.TextBox.1", "txtPenteCoulTxt")
-    txtPenteCoulTxt.Left = 34: txtPenteCoulTxt.Top = 68
-    txtPenteCoulTxt.Width = 24: txtPenteCoulTxt.Height = 16
-    txtPenteCoulTxt.Enabled = False
+    CreerLabel fraIndPente, "lblPenteStyle", "Style de texte (vide = style actif) :", 6, 46, 178
+    Set cmbPenteStyle = fraIndPente.Controls.Add("Forms.ComboBox.1", "cmbPenteStyle")
+    cmbPenteStyle.Left = 6: cmbPenteStyle.Top = 60
+    cmbPenteStyle.Width = 180: cmbPenteStyle.Height = 16
 
-    CreerLabel fraIndPente, "lblPCFl", "C.fl:", 66, 70, 22
+    CreerLabel fraIndPente, "lblPenteDec", "Dec:", 6, 82, 24
+    Set txtPenteDec = fraIndPente.Controls.Add("Forms.TextBox.1", "txtPenteDec")
+    txtPenteDec.Left = 32: txtPenteDec.Top = 80: txtPenteDec.Width = 28: txtPenteDec.Height = 16
+
+    CreerLabel fraIndPente, "lblPCFl", "C.fl:", 68, 82, 24
     Set txtPenteCoulFl = fraIndPente.Controls.Add("Forms.TextBox.1", "txtPenteCoulFl")
-    txtPenteCoulFl.Left = 90: txtPenteCoulFl.Top = 68
+    txtPenteCoulFl.Left = 94: txtPenteCoulFl.Top = 80
     txtPenteCoulFl.Width = 24: txtPenteCoulFl.Height = 16
-    txtPenteCoulFl.Enabled = False
 
-    CreerLabel fraIndPente, "lblPFlLong", "Long:", 122, 70, 24
+    CreerLabel fraIndPente, "lblPFlLong", "Long:", 126, 82, 24
     Set txtPenteFlLong = fraIndPente.Controls.Add("Forms.TextBox.1", "txtPenteFlLong")
-    txtPenteFlLong.Left = 148: txtPenteFlLong.Top = 68
-    txtPenteFlLong.Width = 38: txtPenteFlLong.Height = 16
-    txtPenteFlLong.Enabled = False
+    txtPenteFlLong.Left = 152: txtPenteFlLong.Top = 80
+    txtPenteFlLong.Width = 34: txtPenteFlLong.Height = 16
 
     ' --- Cadre Etat ---------------------------------------------------------
     Dim fraEtat As MSForms.Frame
     Set fraEtat = Me.Controls.Add("Forms.Frame.1", "fraEtat")
     fraEtat.Caption = "Etat"
-    fraEtat.Left = 6: fraEtat.Top = 486
+    fraEtat.Left = 6: fraEtat.Top = 530
     fraEtat.Width = 192: fraEtat.Height = 64
 
     Set lblP1 = CreerLabel(fraEtat, "lblP1", "P1 : -", 6, 12, 180)
@@ -292,7 +285,7 @@ Private Sub ConstruireControles()
     Dim fraActions As MSForms.Frame
     Set fraActions = Me.Controls.Add("Forms.Frame.1", "fraActions")
     fraActions.Caption = "Actions"
-    fraActions.Left = 6: fraActions.Top = 556
+    fraActions.Left = 6: fraActions.Top = 600
     fraActions.Width = 192: fraActions.Height = 72
 
     Set btnRetourInterp = fraActions.Controls.Add("Forms.CommandButton.1", "btnRetourInterp")
@@ -344,6 +337,8 @@ Sub Initialiser(oSettings As CMstSettings)
     PositionnerNiveau cmbNiveau, m_oSettings.oCercle.NomNiveau
     RemplirNiveaux cmbNiveauTexte
     PositionnerNiveau cmbNiveauTexte, m_oSettings.oTexte.NomNiveau
+    RemplirStyles cmbStyleTexte
+    PositionnerStyle cmbStyleTexte, m_oSettings.oTexte.NomStyle
 
     ' Texte altitude : case + champs selon le mode
     chkTexteModele.Value = m_oSettings.oTexte.CommeModele
@@ -351,17 +346,14 @@ Sub Initialiser(oSettings As CMstSettings)
     txtDecimales.Text = CStr(m_oSettings.oTexte.Decimales)
     ActiverChampsTexte
 
-    ' Indicateur pente
-    chkPentePerso.Value = m_oSettings.oIndicPente.Perso
-    txtPenteH.Text = Format$(m_oSettings.oIndicPente.Hauteur, "0.000")
-    txtPenteL.Text = Format$(m_oSettings.oIndicPente.Largeur, "0.000")
+    ' Indicateur pente (reglages toujours actifs)
     RemplirNiveaux cmbPenteNiveau
     PositionnerNiveau cmbPenteNiveau, m_oSettings.oIndicPente.NomNiveau
-    txtPenteCoulTxt.Text = CStr(m_oSettings.oIndicPente.Couleur)
+    RemplirStyles cmbPenteStyle
+    PositionnerStyle cmbPenteStyle, m_oSettings.oIndicPente.NomStyle
     txtPenteCoulFl.Text = CStr(m_oSettings.oIndicPente.FlecheCouleur)
     txtPenteFlLong.Text = Format$(m_oSettings.oIndicPente.FlecheLongueur, "0.00")
     txtPenteDec.Text = CStr(m_oSettings.oIndicPente.Decimales)
-    ActiverChampsPente
 
     ' Pente decalage
     chkPente.Value = m_oSettings.oDecalage.PenteActive
@@ -407,25 +399,28 @@ Private Sub PositionnerNiveau(cmb As MSForms.ComboBox, sNom As String)
 End Sub
 
 '------------------------------------------------------------------------------
-Private Sub ActiverChampsPente()
-    Dim bActif As Boolean
-    bActif = m_oSettings.oIndicPente.Perso
-    txtPenteH.Enabled = bActif
-    txtPenteL.Enabled = bActif
-    cmbPenteNiveau.Enabled = bActif
-    txtPenteCoulTxt.Enabled = bActif
-    txtPenteCoulFl.Enabled = bActif
-    txtPenteFlLong.Enabled = bActif
+Private Sub RemplirStyles(cmb As MSForms.ComboBox)
+    cmb.Clear
+    cmb.AddItem ""   ' premier element vide = style du texte P1 / style actif
+    Dim oTS As TextStyle
+    For Each oTS In ActiveDesignFile.TextStyles
+        cmb.AddItem oTS.Name
+    Next
+    cmb.ListIndex = 0
 End Sub
 
 '------------------------------------------------------------------------------
-Sub RafraichirPente()
-    If m_oSettings Is Nothing Then Exit Sub
-    m_bInit = True
-    txtPenteH.Text = Format$(m_oSettings.oIndicPente.Hauteur, "0.000")
-    txtPenteL.Text = Format$(m_oSettings.oIndicPente.Largeur, "0.000")
-    txtPenteCoulTxt.Text = CStr(m_oSettings.oIndicPente.Couleur)
-    m_bInit = False
+' Repositionne une combo de styles sur le nom sauvegarde dans les settings.
+Private Sub PositionnerStyle(cmb As MSForms.ComboBox, sNom As String)
+    If Len(sNom) = 0 Then cmb.ListIndex = 0: Exit Sub
+    Dim i As Long
+    For i = 0 To cmb.ListCount - 1
+        If cmb.List(i) = sNom Then
+            cmb.ListIndex = i
+            Exit Sub
+        End If
+    Next
+    cmb.ListIndex = 0   ' style supprime : retour au defaut
 End Sub
 
 '------------------------------------------------------------------------------
@@ -435,16 +430,18 @@ Private Sub ActiverChampsTexte()
     bLibre = Not m_oSettings.oTexte.CommeModele
     txtCouleurTexte.Enabled = bLibre
     cmbNiveauTexte.Enabled = bLibre
+    cmbStyleTexte.Enabled = bLibre
 End Sub
 
 '------------------------------------------------------------------------------
 ' Appele par CSelectP1 apres la selection de P1 : en mode modele, affiche
-' la couleur et le niveau herites du texte selectionne (champs grises).
+' la couleur, le niveau et le style herites du texte selectionne (champs grises).
 Sub RafraichirTexte()
     If m_oSettings Is Nothing Then Exit Sub
     m_bInit = True
     txtCouleurTexte.Text = CStr(m_oSettings.oTexte.Couleur)
     cmbNiveauTexte.Text = m_oSettings.oTexte.NomNiveau
+    cmbStyleTexte.Text = m_oSettings.oTexte.NomStyle
     txtDecimales.Text = CStr(m_oSettings.oTexte.Decimales)
     m_bInit = False
 End Sub
@@ -563,6 +560,12 @@ Private Sub cmbNiveauTexte_Change()
     m_oSettings.oTexte.NomNiveau = ExtraireNiveau(cmbNiveauTexte.Text)
 End Sub
 
+Private Sub cmbStyleTexte_Change()
+    If m_bInit Then Exit Sub
+    If m_oSettings Is Nothing Then Exit Sub
+    m_oSettings.oTexte.NomStyle = Trim$(cmbStyleTexte.Text)
+End Sub
+
 Private Sub txtDecimales_Change()
     If m_bInit Then Exit Sub
     If m_oSettings Is Nothing Then Exit Sub
@@ -656,60 +659,16 @@ End Sub
 ' Evenements Indicateur pente
 '==============================================================================
 
-Private Sub chkPentePerso_Change()
-    If m_bInit Then Exit Sub
-    If m_oSettings Is Nothing Then Exit Sub
-    m_oSettings.oIndicPente.Perso = (chkPentePerso.Value = True)
-    ActiverChampsPente
-End Sub
-
-Private Sub txtPenteH_Change()
-    If m_bInit Then Exit Sub
-    If m_oSettings Is Nothing Then Exit Sub
-    Dim dVal As Double
-    dVal = Val(Replace(Trim$(txtPenteH.Text), ",", "."))
-    If dVal > 0 Then m_oSettings.oIndicPente.Hauteur = dVal
-End Sub
-
-Private Sub txtPenteH_KeyDown(ByVal KeyCode As MSForms.ReturnInteger, _
-                               ByVal Shift As Integer)
-    If KeyCode = vbKeyReturn And Not m_oSettings Is Nothing Then _
-        txtPenteH.Text = Format$(m_oSettings.oIndicPente.Hauteur, "0.000")
-End Sub
-
-Private Sub txtPenteL_Change()
-    If m_bInit Then Exit Sub
-    If m_oSettings Is Nothing Then Exit Sub
-    Dim dVal As Double
-    dVal = Val(Replace(Trim$(txtPenteL.Text), ",", "."))
-    If dVal > 0 Then m_oSettings.oIndicPente.Largeur = dVal
-End Sub
-
-Private Sub txtPenteL_KeyDown(ByVal KeyCode As MSForms.ReturnInteger, _
-                               ByVal Shift As Integer)
-    If KeyCode = vbKeyReturn And Not m_oSettings Is Nothing Then _
-        txtPenteL.Text = Format$(m_oSettings.oIndicPente.Largeur, "0.000")
-End Sub
-
 Private Sub cmbPenteNiveau_Change()
     If m_bInit Then Exit Sub
     If m_oSettings Is Nothing Then Exit Sub
     m_oSettings.oIndicPente.NomNiveau = ExtraireNiveau(cmbPenteNiveau.Text)
 End Sub
 
-Private Sub txtPenteCoulTxt_Change()
+Private Sub cmbPenteStyle_Change()
     If m_bInit Then Exit Sub
     If m_oSettings Is Nothing Then Exit Sub
-    Dim sVal As String: sVal = Trim$(txtPenteCoulTxt.Text)
-    If sVal = "" Then Exit Sub
-    Dim nCoul As Long: nCoul = CLng(Val(sVal))
-    If nCoul >= 0 And nCoul <= 255 Then m_oSettings.oIndicPente.Couleur = nCoul
-End Sub
-
-Private Sub txtPenteCoulTxt_KeyDown(ByVal KeyCode As MSForms.ReturnInteger, _
-                                     ByVal Shift As Integer)
-    If KeyCode = vbKeyReturn And Not m_oSettings Is Nothing Then _
-        txtPenteCoulTxt.Text = CStr(m_oSettings.oIndicPente.Couleur)
+    m_oSettings.oIndicPente.NomStyle = Trim$(cmbPenteStyle.Text)
 End Sub
 
 Private Sub txtPenteCoulFl_Change()
@@ -760,14 +719,17 @@ End Sub
 '==============================================================================
 
 Private Sub btnPlacerPente_Click()
+    g_bTransitionInterne = True
     CommandState.StartPrimitive New CPlacerPente
 End Sub
 
 Private Sub btnRetourInterp_Click()
+    g_bTransitionInterne = True
     CommandState.StartPrimitive New CPlacerPoint
 End Sub
 
 Private Sub btnChemin_Click()
+    g_bTransitionInterne = True
     CommandState.StartPrimitive New CPlacerChemin
 End Sub
 
