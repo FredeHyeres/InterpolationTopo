@@ -615,26 +615,9 @@ Sub DessinPenteDynamique(ByVal DrawMode As MsdDrawingMode, _
     Dim dDesX As Double, dDesY As Double
     DirectionP1P2 oP1, oP2, dDesX, dDesY
 
-    ' Angle aligne sur la fleche (direction descente), ajuste pour lisibilite
-    Dim dAngleTxt As Double
-    dAngleTxt = oCalc.Angle2D(dDesX, dDesY)
-    Const PI_D As Double = 3.14159265358979
-    If dAngleTxt > PI_D / 2# Then dAngleTxt = dAngleTxt - PI_D
-    If dAngleTxt < -PI_D / 2# Then dAngleTxt = dAngleTxt + PI_D
-
-    Dim dTH As Double
-    dTH = HauteurTexteModele(oSettings)
-
-    Dim dPerpX As Double, dPerpY As Double
-    dPerpX = -Sin(dAngleTxt): dPerpY = Cos(dAngleTxt)
-
-    Dim oPtTxt As Point3d
-    oPtTxt.X = oPtPlace.X + dPerpX * dTH * 0.8
-    oPtTxt.Y = oPtPlace.Y + dPerpY * dTH * 0.8
-    oPtTxt.Z = oPtPlace.Z
-
     Dim oRot As Matrix3d
-    oRot = Matrix3dFromAxisAndRotationAngle(2, dAngleTxt)
+    Dim oPtTxt As Point3d
+    PositionnerTextePente oPtPlace, dDesX, dDesY, sPente, oSettings, oCalc, oRot, oPtTxt
 
     Dim oTxt As TextElement
     On Error Resume Next
@@ -643,7 +626,7 @@ Sub DessinPenteDynamique(ByVal DrawMode As MsdDrawingMode, _
     Set oStylePenteD = ResolverStyle(oSettings.oIndicPente.NomStyle)
     If Not oStylePenteD Is Nothing Then oTxt.TextStyle = oStylePenteD
     Dim oTSd As TextStyle: Set oTSd = oTxt.TextStyle
-    oTSd.Justification = msdTextJustificationLeftBottom
+    oTSd.Justification = msdTextJustificationLeftCenter
     oTxt.TextStyle = oTSd
     oTxt.Rotation = oRot
     Err.Clear
@@ -686,25 +669,9 @@ Sub CreerPente(oPtPlace As Point3d, _
     Dim dDesX As Double, dDesY As Double
     DirectionP1P2 oP1, oP2, dDesX, dDesY
 
-    Dim dAngleTxt As Double
-    dAngleTxt = oCalc.Angle2D(dDesX, dDesY)
-    Const PI_C As Double = 3.14159265358979
-    If dAngleTxt > PI_C / 2# Then dAngleTxt = dAngleTxt - PI_C
-    If dAngleTxt < -PI_C / 2# Then dAngleTxt = dAngleTxt + PI_C
-
-    Dim dTH As Double
-    dTH = HauteurTexteModele(oSettings)
-
-    Dim dPerpX As Double, dPerpY As Double
-    dPerpX = -Sin(dAngleTxt): dPerpY = Cos(dAngleTxt)
-
-    Dim oPtTxt As Point3d
-    oPtTxt.X = oPtPlace.X + dPerpX * dTH * 0.8
-    oPtTxt.Y = oPtPlace.Y + dPerpY * dTH * 0.8
-    oPtTxt.Z = oPtPlace.Z
-
     Dim oRot As Matrix3d
-    oRot = Matrix3dFromAxisAndRotationAngle(2, dAngleTxt)
+    Dim oPtTxt As Point3d
+    PositionnerTextePente oPtPlace, dDesX, dDesY, sPente, oSettings, oCalc, oRot, oPtTxt
 
     Dim oTxt As TextElement
     On Error Resume Next
@@ -713,7 +680,7 @@ Sub CreerPente(oPtPlace As Point3d, _
     Set oStylePenteC = ResolverStyle(oSettings.oIndicPente.NomStyle)
     If Not oStylePenteC Is Nothing Then oTxt.TextStyle = oStylePenteC
     Dim oTSc As TextStyle: Set oTSc = oTxt.TextStyle
-    oTSc.Justification = msdTextJustificationLeftBottom
+    oTSc.Justification = msdTextJustificationLeftCenter
     oTxt.TextStyle = oTSc
     Set oTxt.Level = ResolverNiveau(oSettings.oIndicPente.NomNiveau, oSettings)
     oTxt.Rotation = oRot
@@ -850,6 +817,60 @@ Private Function ResolverStyle(sNomStyle As String) As TextStyle
     Err.Clear
     On Error GoTo 0
 End Function
+
+'------------------------------------------------------------------------------
+' Calcule la rotation lisible du texte pente et sa position, TOUJOURS en
+' retrait derriere la fleche (jamais de chevauchement, quel que soit le sens
+' de descente) : le texte est justifie LeftCenter (centre vertical MicroStation
+' natif), pose sur la meme ligne que la fleche, decale d'un recul qui inclut
+' la moitie de la fleche + un espace + la longueur du texte si son sens de
+' lecture (apres redressement pour rester lisible) coincide avec le sens de
+' descente -- sinon le texte se lit deja "vers l'arriere" et n'a pas besoin de
+' ce recul supplementaire.
+Private Sub PositionnerTextePente(oPtPlace As Point3d, dDesX As Double, dDesY As Double, _
+                                  sPente As String, oSettings As CMstSettings, _
+                                  oCalc As CInterpolation, _
+                                  oRot As Matrix3d, oPtTxt As Point3d)
+    Const PI_T As Double = 3.14159265358979
+
+    Dim dAngleTxt As Double, bFlip As Boolean
+    dAngleTxt = oCalc.Angle2D(dDesX, dDesY)
+    bFlip = False
+    If dAngleTxt > PI_T / 2# Then
+        dAngleTxt = dAngleTxt - PI_T
+        bFlip = True
+    ElseIf dAngleTxt < -PI_T / 2# Then
+        dAngleTxt = dAngleTxt + PI_T
+        bFlip = True
+    End If
+    oRot = Matrix3dFromAxisAndRotationAngle(2, dAngleTxt)
+
+    ' Hauteur/largeur de caractere du style choisi ; repli sur le modele P1
+    ' si aucun style nomme n'est selectionne (cf. HauteurTexteModele).
+    Dim dTH As Double, dCharW As Double
+    Dim oStyleInfo As TextStyle
+    Set oStyleInfo = ResolverStyle(oSettings.oIndicPente.NomStyle)
+    If Not oStyleInfo Is Nothing Then
+        dTH = oStyleInfo.Height
+        dCharW = oStyleInfo.Width
+    Else
+        dTH = HauteurTexteModele(oSettings)
+    End If
+    If dTH <= 0 Then dTH = 0.1
+    If dCharW <= 0 Then dCharW = dTH * 0.6
+
+    Dim dHalfFl As Double: dHalfFl = oSettings.oIndicPente.FlecheLongueur / 2#
+    Dim dGap As Double: dGap = dTH * 0.5
+    Dim dTxtLen As Double: dTxtLen = dCharW * Len(sPente)
+
+    Dim dRecul As Double
+    dRecul = dHalfFl + dGap
+    If Not bFlip Then dRecul = dRecul + dTxtLen
+
+    oPtTxt.X = oPtPlace.X - dDesX * dRecul
+    oPtTxt.Y = oPtPlace.Y - dDesY * dRecul
+    oPtTxt.Z = oPtPlace.Z
+End Sub
 
 '------------------------------------------------------------------------------
 ' Direction unitaire de P1 vers P2.
