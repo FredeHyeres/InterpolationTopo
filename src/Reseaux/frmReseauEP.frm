@@ -19,10 +19,15 @@ Attribute VB_Exposed = False
 ' Cadres :
 '   Etat        : lecture P1 et P2 (Fe / T / Prof), distance 2D, pente
 '   Recherche   : rayon de recherche autour du clic (u.m.)
-'   Indicateur  : niveau, style de texte, decimales, couleur/longueur fleche
-'                 (reglages toujours actifs, pas de mode "personnalise" :
-'                 la taille/couleur du texte pente vient du style de texte
-'                 nomme choisi, independants des reglages Interpolation V2)
+'   Indicateur  : niveau, style de texte, decimales, couleur/longueur du corps
+'                 de fleche, longueur de la pointe et choix pointe ouverte
+'                 (2 lignes) / fermee (triangle plein) -- memes reglages
+'                 partages (g_oSettings.oIndicPente) et meme rendu que
+'                 frmInterpolation / frmInterpolPonct : la fleche (corps +
+'                 pointe) est creee par CMoteurGraphique.CreerPente comme une
+'                 seule cellule orpheline "IndicPente", selectionnable en 1 clic.
+'                 (reglages toujours actifs, pas de mode "personnalise" : la
+'                 taille/couleur du texte pente vient du style de texte nomme)
 '
 ' Tous les controles sont crees au runtime dans ConstruireControles (le .frx
 ' n'est qu'un blob de formulaire vide, cf. CLAUDE.md).
@@ -54,6 +59,10 @@ Private WithEvents txtLongFleche As MSForms.TextBox
 Attribute txtLongFleche.VB_VarHelpID = -1
 Private WithEvents txtCoulFleche As MSForms.TextBox
 Attribute txtCoulFleche.VB_VarHelpID = -1
+Private WithEvents txtLongPointe As MSForms.TextBox
+Attribute txtLongPointe.VB_VarHelpID = -1
+Private WithEvents chkFermee As MSForms.CheckBox
+Attribute chkFermee.VB_VarHelpID = -1
 
 '==============================================================================
 ' Construction des controles
@@ -69,7 +78,7 @@ Private Sub ConstruireControles()
 
     Me.Caption = "Pente Reseau EU/EP"
     Me.Width = 212
-    Me.Height = 312
+    Me.Height = 338
 
     Dim dY As Double
     dY = 6
@@ -110,7 +119,7 @@ Private Sub ConstruireControles()
     Set fraInd = Me.Controls.Add("Forms.Frame.1", "fraInd")
     fraInd.Caption = "Indicateur pente (texte + fleche)"
     fraInd.Left = 6: fraInd.Top = dY
-    fraInd.Width = 192: fraInd.Height = 102
+    fraInd.Width = 192: fraInd.Height = 128
 
     CreerLabel fraInd, "lblNiv", "Niveau (vide = niveau actif) :", 6, 10, 178
     Set cmbNiveau = fraInd.Controls.Add("Forms.ComboBox.1", "cmbNiveau")
@@ -135,6 +144,16 @@ Private Sub ConstruireControles()
     Set txtLongFleche = fraInd.Controls.Add("Forms.TextBox.1", "txtLongFleche")
     txtLongFleche.Left = 152: txtLongFleche.Top = 80
     txtLongFleche.Width = 34: txtLongFleche.Height = 16
+
+    CreerLabel fraInd, "lblLP", "Pointe:", 6, 104, 40
+    Set txtLongPointe = fraInd.Controls.Add("Forms.TextBox.1", "txtLongPointe")
+    txtLongPointe.Left = 46: txtLongPointe.Top = 102
+    txtLongPointe.Width = 30: txtLongPointe.Height = 16
+
+    Set chkFermee = fraInd.Controls.Add("Forms.CheckBox.1", "chkFermee")
+    chkFermee.Caption = "Fermee (triangle)"
+    chkFermee.Left = 82: chkFermee.Top = 104
+    chkFermee.Width = 104: chkFermee.Height = 14
 End Sub
 
 '------------------------------------------------------------------------------
@@ -165,6 +184,8 @@ Sub Initialiser(oSettings As CMstSettings)
     txtDec.Text = CStr(m_oSettings.oIndicPente.Decimales)
     txtLongFleche.Text = Format$(m_oSettings.oIndicPente.FlecheLongueur, "0.00")
     txtCoulFleche.Text = CStr(m_oSettings.oIndicPente.FlecheCouleur)
+    txtLongPointe.Text = Format$(m_oSettings.oIndicPente.PointeLongueur, "0.00")
+    chkFermee.Value = m_oSettings.oIndicPente.PointeFermee
 
     ReinitialiserEtat
 
@@ -324,6 +345,26 @@ Private Sub txtCoulFleche_Change()
     If sVal = "" Then Exit Sub
     Dim n As Long: n = CLng(Val(sVal))
     If n >= 0 And n <= 255 Then m_oSettings.oIndicPente.FlecheCouleur = n
+End Sub
+
+Private Sub txtLongPointe_Change()
+    If m_bInit Then Exit Sub
+    If m_oSettings Is Nothing Then Exit Sub
+    Dim d As Double
+    d = Val(Replace(Trim$(txtLongPointe.Text), ",", "."))
+    If d > 0 Then m_oSettings.oIndicPente.PointeLongueur = d
+End Sub
+
+Private Sub txtLongPointe_KeyDown(ByVal KeyCode As MSForms.ReturnInteger, _
+                                    ByVal Shift As Integer)
+    If KeyCode = vbKeyReturn And Not m_oSettings Is Nothing Then _
+        txtLongPointe.Text = Format$(m_oSettings.oIndicPente.PointeLongueur, "0.00")
+End Sub
+
+Private Sub chkFermee_Change()
+    If m_bInit Then Exit Sub
+    If m_oSettings Is Nothing Then Exit Sub
+    m_oSettings.oIndicPente.PointeFermee = (chkFermee.Value = True)
 End Sub
 
 '==============================================================================

@@ -296,11 +296,12 @@ Private Sub DessinChemin(ByVal DrawMode As MsdDrawingMode, oPtCurseur As Point3d
     Set oCercle = CreateEllipseElement2(Nothing, oPtArr, _
                       g_oSettings.oCercle.Rayon, g_oSettings.oCercle.Rayon, Matrix3dIdentity())
     oCercle.Color = g_oSettings.oCercle.Couleur
+    g_oMoteur.AppliquerRemplissageCercle oCercle, g_oSettings
     oCercle.Redraw DrawMode
 
     Dim sAlt As String
     sAlt = g_oCalc.FormatAltitude(dZNew, 3, g_oSettings.oTexte.SepDecimal)
-    DessinTexteProvLocal DrawMode, oPtArr, sAlt
+    g_oMoteur.DessinTexteLibre DrawMode, oPtArr, dZNew, g_oSettings, g_oCalc
 
     ShowPrompt "CHEMIN  Z=" & sAlt & "  dist=" & Format$(dDist, "0.000") & _
                "  (Data=placer  Reset=nouv. selection)"
@@ -335,11 +336,12 @@ Private Sub DessinRayon(ByVal DrawMode As MsdDrawingMode, oPtCurseur As Point3d)
     Set oCercle = CreateEllipseElement2(Nothing, oPtR, _
                       g_oSettings.oCercle.Rayon, g_oSettings.oCercle.Rayon, Matrix3dIdentity())
     oCercle.Color = g_oSettings.oCercle.Couleur
+    g_oMoteur.AppliquerRemplissageCercle oCercle, g_oSettings
     oCercle.Redraw DrawMode
 
     Dim sAlt As String
     sAlt = g_oCalc.FormatAltitude(dZRay, 3, g_oSettings.oTexte.SepDecimal)
-    DessinTexteProvLocal DrawMode, oPtR, sAlt
+    g_oMoteur.DessinTexteLibre DrawMode, oPtR, dZRay, g_oSettings, g_oCalc
 
     ShowPrompt "RAYON  Z=" & sAlt & "  dist=" & Format$(dDist, "0.000") & _
                "  (Data=placer  Reset=continuer chemin)"
@@ -385,45 +387,6 @@ Private Sub DessinCroixLocal(ByVal DrawMode As MsdDrawingMode, _
     oB.X = oPt.X: oB.Y = oPt.Y + dTaille
     Set oL = CreateLineElement2(Nothing, oA, oB)
     oL.Color = 3: oL.Redraw DrawMode
-End Sub
-
-Private Sub DessinTexteProvLocal(ByVal DrawMode As MsdDrawingMode, _
-                                  oPt As Point3d, sAlt As String)
-    Dim oRot As Matrix3d
-    oRot = Matrix3dIdentity()
-    On Error Resume Next
-    If Not g_oSettings.oTextModele Is Nothing Then oRot = g_oSettings.oTextModele.Rotation
-    On Error GoTo 0
-    Dim oTxt As TextElement
-    Dim bSansModele As Boolean
-    On Error Resume Next
-    Set oTxt = CreateTextElement1(g_oSettings.oTextModele, sAlt, oPt, oRot)
-    If oTxt Is Nothing Then
-        Err.Clear
-        bSansModele = True
-        Set oTxt = CreateTextElement1(Nothing, sAlt, oPt, oRot)
-    End If
-    On Error GoTo 0
-    If bSansModele Or Not g_oSettings.oTexte.CommeModele Then
-        oTxt.Color = g_oSettings.oTexte.Couleur
-    Else
-        ' Reapplique le TextStyle NOMME du texte-modele P1 : CreateTextElement1
-        ' ne le transfere pas fidelement quand le modele vient d'une reference
-        ' attachee (chaque fichier a sa propre collection TextStyles).
-        On Error Resume Next
-        Dim sStyleNom As String
-        sStyleNom = g_oSettings.oTextModele.TextStyle.Name
-        If Err.Number = 0 And Len(sStyleNom) > 0 Then
-            Dim oStyleLocal As TextStyle
-            Set oStyleLocal = ActiveDesignFile.TextStyles(sStyleNom)
-            If Not oStyleLocal Is Nothing Then
-                oTxt.TextStyle = oStyleLocal
-            End If
-        End If
-        Err.Clear
-        On Error GoTo 0
-    End If
-    oTxt.Redraw DrawMode
 End Sub
 
 Private Function SourceP1Integree() As Boolean

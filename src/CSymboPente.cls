@@ -22,9 +22,11 @@ Option Explicit
 
 Public NomNiveau        As String    ' niveau du texte + fleche pente ("" = niveau actif/P1)
 Public NomStyle         As String    ' style de texte nomme du texte pente ("" = style actif)
-Public FlecheLongueur   As Double    ' longueur de la fleche (u.m.)
+Public FlecheLongueur   As Double    ' longueur du corps de la fleche (u.m.)
 Public FlecheCouleur    As Long      ' couleur de la fleche (index 0-255)
 Public Decimales        As Integer   ' decimales du texte pente (defaut 1)
+Public PointeLongueur   As Double    ' longueur des 2 lignes de la pointe (u.m.)
+Public PointeFermee     As Boolean   ' True = pointe en triangle plein, False = 2 lignes ouvertes
 
 '------------------------------------------------------------------------------
 Sub InitDefauts()
@@ -33,4 +35,6 @@ Sub InitDefauts()
     FlecheLongueur = 1#
     FlecheCouleur = 3
     Decimales = 1
+    PointeLongueur = 0.2
+    PointeFermee = False
 End Sub

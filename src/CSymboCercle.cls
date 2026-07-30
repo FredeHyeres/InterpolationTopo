@@ -18,13 +18,15 @@ Option Explicit
 Public Rayon        As Double   ' demi-diametre en unites maitre
 Public Couleur      As Long     ' index couleur MicroStation 0-255
 Public NomNiveau    As String   ' "" = meme niveau que le texte P1
+Public Plein        As Boolean  ' True = cercle rempli (fill = Couleur), False = vide
 
 '------------------------------------------------------------------------------
 ' Valeurs par defaut au demarrage de la commande
 Sub InitDefauts()
-    Rayon = 0.05    ' diametre = 0.10
+    Rayon = 0.075   ' diametre = 0.15 (15 cm)
     Couleur = 2     ' vert
     NomNiveau = ""  ' niveau du texte P1
+    Plein = True
 End Sub
 
 '------------------------------------------------------------------------------

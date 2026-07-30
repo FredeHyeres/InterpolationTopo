@@ -66,8 +66,24 @@ Sub CreerCercleSeul(oProj As Point3d, oSettings As CMstSettings)
     Set oCercle = CreateEllipseElement2(Nothing, oProj, _
                       oSettings.oCercle.Rayon, oSettings.oCercle.Rayon, Matrix3dIdentity())
     oCercle.Color = oSettings.oCercle.Couleur
+    AppliquerRemplissageCercle oCercle, oSettings
     Set oCercle.Level = ResolverNiveau(oSettings.oCercle.NomNiveau, oSettings)
     ActiveModelReference.AddElement oCercle
+End Sub
+
+'------------------------------------------------------------------------------
+' Applique l'attribut plein/vide du cercle (Couleur sert aussi de couleur de
+' remplissage). Reutilise pour la creation definitive et l'apercu dynamique.
+Public Sub AppliquerRemplissageCercle(oCercle As EllipseElement, oSettings As CMstSettings)
+    On Error Resume Next
+    If oSettings.oCercle.Plein Then
+        oCercle.FillMode = msdFillModeFilled
+        oCercle.FillColor = oSettings.oCercle.Couleur
+    Else
+        oCercle.FillMode = msdFillModeNotFilled
+    End If
+    Err.Clear
+    On Error GoTo 0
 End Sub
 
 '------------------------------------------------------------------------------
@@ -202,6 +218,7 @@ Private Sub CreerTexteEtCercle(oProj As Point3d, sAlt As String, _
     Set oCercle = CreateEllipseElement2(Nothing, oProj, _
                       oSettings.oCercle.Rayon, oSettings.oCercle.Rayon, Matrix3dIdentity())
     oCercle.Color = oSettings.oCercle.Couleur
+    AppliquerRemplissageCercle oCercle, oSettings
     Set oCercle.Level = ResolverNiveau(oSettings.oCercle.NomNiveau, oSettings)
     ActiveModelReference.AddElement oCercle
 End Sub
@@ -464,6 +481,7 @@ Sub DessinDynamique(ByVal DrawMode As MsdDrawingMode, _
     Set oCercle = CreateEllipseElement2(Nothing, oProj, _
                       oSettings.oCercle.Rayon, oSettings.oCercle.Rayon, Matrix3dIdentity())
     oCercle.Color = oSettings.oCercle.Couleur
+    AppliquerRemplissageCercle oCercle, oSettings
     oCercle.Redraw DrawMode
 
     ' Texte altitude provisoire (meme position que la creation definitive)
@@ -539,6 +557,7 @@ Sub DessinDecalage(ByVal DrawMode As MsdDrawingMode, _
     Set oCercle = CreateEllipseElement2(Nothing, oPtDecale, _
                       oSettings.oCercle.Rayon, oSettings.oCercle.Rayon, Matrix3dIdentity())
     oCercle.Color = oSettings.oCercle.Couleur
+    AppliquerRemplissageCercle oCercle, oSettings
     oCercle.Redraw DrawMode
 
     Dim oRot As Matrix3d
@@ -633,24 +652,19 @@ Sub DessinPenteDynamique(ByVal DrawMode As MsdDrawingMode, _
     On Error GoTo 0
     oTxt.Redraw DrawMode
 
-    ' Fleche
+    ' Fleche (apercu : simple Redraw, pas de niveau, pas de regroupement)
     Dim oPtDeb As Point3d, oPtFin As Point3d
     Dim oPtH1 As Point3d, oPtH2 As Point3d
     GeometrieFleche oPtPlace, dDesX, dDesY, oSettings.oIndicPente.FlecheLongueur, _
+                    oSettings.oIndicPente.PointeLongueur, _
                     oPtDeb, oPtFin, oPtH1, oPtH2
 
-    Dim oL As LineElement
-    Set oL = CreateLineElement2(Nothing, oPtDeb, oPtFin)
-    oL.Color = oSettings.oIndicPente.FlecheCouleur
-    oL.Redraw DrawMode
-
-    Dim oLH1 As LineElement, oLH2 As LineElement
-    Set oLH1 = CreateLineElement2(Nothing, oPtFin, oPtH1)
-    oLH1.Color = oSettings.oIndicPente.FlecheCouleur
-    oLH1.Redraw DrawMode
-    Set oLH2 = CreateLineElement2(Nothing, oPtFin, oPtH2)
-    oLH2.Color = oSettings.oIndicPente.FlecheCouleur
-    oLH2.Redraw DrawMode
+    Dim aFlecheD() As Element
+    aFlecheD = ElementsFleche(oPtDeb, oPtFin, oPtH1, oPtH2, oSettings, Nothing)
+    Dim iFD As Long
+    For iFD = LBound(aFlecheD) To UBound(aFlecheD)
+        aFlecheD(iFD).Redraw DrawMode
+    Next iFD
 End Sub
 
 '------------------------------------------------------------------------------
@@ -688,31 +702,84 @@ Sub CreerPente(oPtPlace As Point3d, _
     On Error GoTo 0
     ActiveModelReference.AddElement oTxt
 
-    ' Fleche permanente : meme niveau que le texte pente (un seul reglage)
+    ' Fleche permanente : meme niveau que le texte pente (un seul reglage),
+    ' regroupee en une seule cellule orpheline pour etre selectionnable en 1 clic.
     Dim oPtDeb As Point3d, oPtFin As Point3d
     Dim oPtH1 As Point3d, oPtH2 As Point3d
     GeometrieFleche oPtPlace, dDesX, dDesY, oSettings.oIndicPente.FlecheLongueur, _
+                    oSettings.oIndicPente.PointeLongueur, _
                     oPtDeb, oPtFin, oPtH1, oPtH2
 
     Dim oLvl As Level
     Set oLvl = ResolverNiveau(oSettings.oIndicPente.NomNiveau, oSettings)
 
-    Dim oL As LineElement
-    Set oL = CreateLineElement2(Nothing, oPtDeb, oPtFin)
-    oL.Color = oSettings.oIndicPente.FlecheCouleur
-    Set oL.Level = oLvl
-    ActiveModelReference.AddElement oL
+    Dim aFleche() As Element
+    aFleche = ElementsFleche(oPtDeb, oPtFin, oPtH1, oPtH2, oSettings, oLvl)
 
-    Dim oLH1 As LineElement, oLH2 As LineElement
-    Set oLH1 = CreateLineElement2(Nothing, oPtFin, oPtH1)
-    oLH1.Color = oSettings.oIndicPente.FlecheCouleur
-    Set oLH1.Level = oLvl
-    ActiveModelReference.AddElement oLH1
-    Set oLH2 = CreateLineElement2(Nothing, oPtFin, oPtH2)
-    oLH2.Color = oSettings.oIndicPente.FlecheCouleur
-    Set oLH2.Level = oLvl
-    ActiveModelReference.AddElement oLH2
+    Dim oCellFl As CellElement
+    Set oCellFl = CreateCellElement1("IndicPente", aFleche, oPtPlace, False)
+    Set oCellFl.Level = oLvl
+    ActiveModelReference.AddElement oCellFl
 End Sub
+
+'------------------------------------------------------------------------------
+' Construit les elements de la pointe de fleche selon oSettings.oIndicPente.PointeFermee :
+' False = 2 lignes ouvertes (oPtFin->oPtH1, oPtFin->oPtH2) comme avant ;
+' True  = triangle plein (oPtFin, oPtH1, oPtH2), corps arrete a sa base.
+' oLvl = niveau a affecter aux elements (Nothing = ne pas l'affecter : apercu dynamique).
+Private Function ElementsFleche(oPtDeb As Point3d, oPtFin As Point3d, _
+                                oPtH1 As Point3d, oPtH2 As Point3d, _
+                                oSettings As CMstSettings, oLvl As Level) As Element()
+    Dim arr() As Element
+
+    If oSettings.oIndicPente.PointeFermee Then
+        ReDim arr(0 To 1)
+
+        Dim oPtBase As Point3d
+        oPtBase.X = (oPtH1.X + oPtH2.X) / 2#
+        oPtBase.Y = (oPtH1.Y + oPtH2.Y) / 2#
+        oPtBase.Z = oPtFin.Z
+
+        Dim oLC As LineElement
+        Set oLC = CreateLineElement2(Nothing, oPtDeb, oPtBase)
+        oLC.Color = oSettings.oIndicPente.FlecheCouleur
+        If Not oLvl Is Nothing Then Set oLC.Level = oLvl
+        Set arr(0) = oLC
+
+        Dim vTri(0 To 2) As Point3d
+        vTri(0) = oPtFin: vTri(1) = oPtH1: vTri(2) = oPtH2
+        Dim oTri As ShapeElement
+        Set oTri = CreateShapeElement1(Nothing, vTri, msdFillModeFilled)
+        oTri.Color = oSettings.oIndicPente.FlecheCouleur
+        On Error Resume Next
+        oTri.FillColor = oSettings.oIndicPente.FlecheCouleur
+        Err.Clear
+        On Error GoTo 0
+        If Not oLvl Is Nothing Then Set oTri.Level = oLvl
+        Set arr(1) = oTri
+    Else
+        ReDim arr(0 To 2)
+
+        Dim oL As LineElement
+        Set oL = CreateLineElement2(Nothing, oPtDeb, oPtFin)
+        oL.Color = oSettings.oIndicPente.FlecheCouleur
+        If Not oLvl Is Nothing Then Set oL.Level = oLvl
+        Set arr(0) = oL
+
+        Dim oLH1 As LineElement, oLH2 As LineElement
+        Set oLH1 = CreateLineElement2(Nothing, oPtFin, oPtH1)
+        oLH1.Color = oSettings.oIndicPente.FlecheCouleur
+        If Not oLvl Is Nothing Then Set oLH1.Level = oLvl
+        Set arr(1) = oLH1
+
+        Set oLH2 = CreateLineElement2(Nothing, oPtFin, oPtH2)
+        oLH2.Color = oSettings.oIndicPente.FlecheCouleur
+        If Not oLvl Is Nothing Then Set oLH2.Level = oLvl
+        Set arr(2) = oLH2
+    End If
+
+    ElementsFleche = arr
+End Function
 
 '==============================================================================
 ' Utilitaires prives
@@ -895,9 +962,10 @@ End Sub
 '------------------------------------------------------------------------------
 ' Calcule les 4 points d'une fleche centree sur oPtCentre.
 ' oPtDeb/oPtFin = extremites du corps, oPtH1/oPtH2 = pointe de fleche.
+' dHeadLen = longueur des 2 lignes de la pointe (reglage independant, PointeLongueur).
 Private Sub GeometrieFleche(oPtCentre As Point3d, _
                              dDirX As Double, dDirY As Double, _
-                             dLongueur As Double, _
+                             dLongueur As Double, dHeadLen As Double, _
                              oPtDeb As Point3d, oPtFin As Point3d, _
                              oPtH1 As Point3d, oPtH2 As Point3d)
     Dim dHL As Double
@@ -910,8 +978,6 @@ Private Sub GeometrieFleche(oPtCentre As Point3d, _
     oPtFin.Y = oPtCentre.Y + dDirY * dHL
     oPtFin.Z = oPtCentre.Z
 
-    Dim dHeadLen As Double
-    dHeadLen = dLongueur * 0.2
     Const HEAD_ANGLE As Double = 0.4363
 
     oPtH1.X = oPtFin.X - dHeadLen * (dDirX * Cos(HEAD_ANGLE) - dDirY * Sin(HEAD_ANGLE))

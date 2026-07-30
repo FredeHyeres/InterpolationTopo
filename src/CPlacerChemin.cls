@@ -89,7 +89,7 @@ Private Sub IPrimitiveCommandEvents_Dynamics(Point As Point3d, ByVal View As Vie
         DessinCroixLocal DrawMode, oPtB, dTailleCroix
 
         sAltI = g_oCalc.FormatAltitude(dZi, 3, g_oSettings.oTexte.SepDecimal)
-        DessinTexteProvLocal DrawMode, oPtB, sAltI
+        g_oMoteur.DessinTexteLibre DrawMode, oPtB, dZi, g_oSettings, g_oCalc
 
         dPrevX = m_dPtsX(i): dPrevY = m_dPtsY(i): dPrevZ = dZi
     Next i
@@ -120,10 +120,11 @@ Private Sub IPrimitiveCommandEvents_Dynamics(Point As Point3d, ByVal View As Vie
     Set oCercle = CreateEllipseElement2(Nothing, oPtCur, _
                       g_oSettings.oCercle.Rayon, g_oSettings.oCercle.Rayon, Matrix3dIdentity())
     oCercle.Color = g_oSettings.oCercle.Couleur
+    g_oMoteur.AppliquerRemplissageCercle oCercle, g_oSettings
     oCercle.Redraw DrawMode
 
     sAltCur = g_oCalc.FormatAltitude(dZCursor, 3, g_oSettings.oTexte.SepDecimal)
-    DessinTexteProvLocal DrawMode, oPtCur, sAltCur
+    g_oMoteur.DessinTexteLibre DrawMode, oPtCur, dZCursor, g_oSettings, g_oCalc
 
     ' --- Barre d'etat ---
     If m_nPts = 0 Then
@@ -255,43 +256,3 @@ Private Sub DessinCroixLocal(ByVal DrawMode As MsdDrawingMode, _
     oL.Color = 3: oL.Redraw DrawMode
 End Sub
 
-Private Sub DessinTexteProvLocal(ByVal DrawMode As MsdDrawingMode, _
-                                  oPt As Point3d, sAlt As String)
-    Dim oRot As Matrix3d
-    Dim oTxt As TextElement
-
-    oRot = Matrix3dIdentity()
-    On Error Resume Next
-    If Not g_oSettings.oTextModele Is Nothing Then oRot = g_oSettings.oTextModele.Rotation
-    On Error GoTo 0
-
-    Dim bSansModele As Boolean
-    On Error Resume Next
-    Set oTxt = CreateTextElement1(g_oSettings.oTextModele, sAlt, oPt, oRot)
-    If oTxt Is Nothing Then
-        Err.Clear
-        bSansModele = True
-        Set oTxt = CreateTextElement1(Nothing, sAlt, oPt, oRot)
-    End If
-    On Error GoTo 0
-    If bSansModele Or Not g_oSettings.oTexte.CommeModele Then
-        oTxt.Color = g_oSettings.oTexte.Couleur
-    Else
-        ' Reapplique le TextStyle NOMME du texte-modele P1 : CreateTextElement1
-        ' ne le transfere pas fidelement quand le modele vient d'une reference
-        ' attachee (chaque fichier a sa propre collection TextStyles).
-        On Error Resume Next
-        Dim sStyleNom As String
-        sStyleNom = g_oSettings.oTextModele.TextStyle.Name
-        If Err.Number = 0 And Len(sStyleNom) > 0 Then
-            Dim oStyleLocal As TextStyle
-            Set oStyleLocal = ActiveDesignFile.TextStyles(sStyleNom)
-            If Not oStyleLocal Is Nothing Then
-                oTxt.TextStyle = oStyleLocal
-            End If
-        End If
-        Err.Clear
-        On Error GoTo 0
-    End If
-    oTxt.Redraw DrawMode
-End Sub
